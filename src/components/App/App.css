@@ -1,0 +1,9 @@
+.appTitle {
+  text-align: center
+}
+
+.appLogo {
+  display: block;
+  object-fit: cover;
+  margin: 5% auto;
+}

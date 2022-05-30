@@ -1,0 +1,11 @@
+# [Ignore node_modules folder]
+#
+# It's a third-party dependency folder. 
+# Please run 'npm install' to create.
+node_modules
+
+# [Ignore dist folder]
+#
+# It's a webpack building output. 
+# Please run 'npm run build-dev' for development or 'npm run build-prod' for production to create.
+dist
