@@ -22,15 +22,18 @@ module.exports = (env, argv) => {
       port: 9000,
       static: path.resolve(__dirname, 'public'),
       open: true,
+
+      // Falling back to '/' request when sending a request with an unknown path (eg: /home, /contact, ...)
+      historyApiFallback: true,
     } : {},
 
     entry: {
-      index: './src/index.js'
+      index: './src/index.jsx'
     },
 
     output: {
-      filename: '[name]_bundle.js',
-      path: path.resolve(__dirname, 'dist'),
+      filename: '[name]_bundle.js', // [entry name ('index')]_bundle.js
+      path: path.resolve(__dirname, 'build'),
       clean: true,
     },
 
