@@ -9,3 +9,9 @@ node_modules
 # It's a webpack building output. 
 # Please run 'npm run build-dev' for development or 'npm run build-prod' for production to create.
 build
+
+# [Ignore .DS_Store]
+#
+.DS_Store
+src/.DS_Store
+src/components/.DS_Store
