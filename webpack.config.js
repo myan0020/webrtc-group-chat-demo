@@ -11,20 +11,34 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 //
 
+const publicUrl = path.resolve(__dirname, 'public');
+
+
 module.exports = (env, argv) => {
   const isEnvDevelopment = (argv.mode === 'development');
+
+
   const config = {
     devtool: isEnvDevelopment ? 'inline-source-map' : 'source-map',
 
     devServer: isEnvDevelopment ? {
       hot: true,
-      host: 'localhost',
-      port: 9000,
-      static: path.resolve(__dirname, 'public'),
+      static: publicUrl,
       open: true,
 
       // Falling back to '/' request when sending a request with an unknown path (eg: /home, /contact, ...)
       historyApiFallback: true,
+
+      // Allowing CORS requests to json-server's origin from webpack dev server's origin,
+      // when env.proxy is 'jsonServer'
+      proxy: [
+        env.proxy === 'jsonServer' &&
+        {
+          context: ['/authors', '/profile'],
+          target: 'http://localhost:3001',
+          changeOrigin: true,
+        },
+      ].filter(Boolean),
     } : {},
 
     entry: {
@@ -33,7 +47,8 @@ module.exports = (env, argv) => {
 
     output: {
       filename: '[name]_bundle.js', // [entry name ('index')]_bundle.js
-      path: path.resolve(__dirname, 'build'),
+      path: publicUrl,
+      publicPath: publicUrl + '/',
       clean: true,
     },
 
