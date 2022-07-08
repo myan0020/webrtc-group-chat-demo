@@ -11,9 +11,6 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 //
 
-const publicUrl = path.resolve(__dirname, 'public');
-
-
 module.exports = (env, argv) => {
   const isEnvDevelopment = (argv.mode === 'development');
 
@@ -23,7 +20,7 @@ module.exports = (env, argv) => {
 
     devServer: isEnvDevelopment ? {
       hot: true,
-      static: publicUrl,
+      static: 'public',
       open: true,
 
       // Falling back to '/' request when sending a request with an unknown path (eg: /home, /contact, ...)
@@ -46,9 +43,9 @@ module.exports = (env, argv) => {
     },
 
     output: {
-      filename: '[name]_bundle.js', // [entry name ('index')]_bundle.js
-      path: publicUrl,
-      publicPath: publicUrl + '/',
+      filename: 'js/[name]_bundle.js', // [entry name ('index')]_bundle.js
+      path: path.resolve(__dirname, 'build'),
+      publicPath: '',
       clean: true,
     },
 
@@ -113,10 +110,16 @@ module.exports = (env, argv) => {
         {
           test: /\.(png|svg|jpg|jpeg|gif)$/i,
           type: 'asset/resource',
+          generator: {
+            filename: 'images/[hash].[ext]'
+          },
         },
         {
           test: /\.(woff|woff2|eot|ttf|otf)$/i,
           type: 'asset/resource',
+          generator: {
+            filename: 'fonts/[hash].[ext]'
+          },
         },
       ]
     }

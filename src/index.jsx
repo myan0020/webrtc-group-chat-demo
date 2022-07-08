@@ -19,18 +19,6 @@ console.log(`[In ${process.env.NODE_ENV} mode]`);
  */
 function App() {
 
-  // Test api mocking using devServer's proxy and json-server
-  fetch('/authors/1')
-    .then(response => response.json())
-    .then(result => {
-      console.log('[json-server]Success:', result);
-    })
-    .catch(error => {
-      console.error('[json-server]Error:', error);
-    });
-  //
-
-
   return (
     <>
       <BrowserRouter>

@@ -2,10 +2,12 @@
 
 const cp = require('child_process');
 
+const chalk = require('chalk');
+
 // First, 
 // start a json server child process for local api mocking
 const jsonServerProcess = cp.exec('npm run start:jsonServer')
-console.log('json-server starts lanuching')
+console.log(chalk.yellow('json-server starts lanuching'))
 
 jsonServerProcess.stdout.on('data', (chunk) => {
   if (chunk.substring(0, 11) !== 'json-server') {
@@ -14,7 +16,8 @@ jsonServerProcess.stdout.on('data', (chunk) => {
   }
 
   // Second, 
-  // when jsonServerProcess started in success, start a webpack dev server child process for public files serving
+  // when jsonServerProcess started in success, 
+  // start a webpack dev server child process for public files serving
   cp.exec('npm run start:devServer:proxying')
-  console.log('dev-server starts lanuching')
+  console.log(chalk.yellow('dev-server starts lanuching'))
 })
