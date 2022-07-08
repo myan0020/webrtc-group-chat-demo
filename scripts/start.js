@@ -14,7 +14,8 @@ jsonServerProcess.stdout.on('data', (chunk) => {
   }
 
   // Second, 
-  // when jsonServerProcess started in success, start a webpack dev server child process for public files serving
+  // when jsonServerProcess started in success, 
+  // start a webpack dev server child process for public files serving
   cp.exec('npm run start:devServer:proxying')
   console.log('dev-server starts lanuching')
 })
