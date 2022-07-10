@@ -5,11 +5,13 @@
   "main": "index.jsx",
   "scripts": {
     "start": "node ./scripts/start.js",
-    "start:jsonServer": "PORT=3001 node ./src/json-server/server.js",
-    "start:devServer": "webpack serve --mode=development --config=webpack.config.js --host localhost --port 3000",
-    "start:devServer:proxying": "webpack serve --env proxy=jsonServer --mode=development --config=webpack.config.js --host localhost --port 3000",
-    "build:dev": "webpack --mode=development --config=webpack.config.js",
-    "build:prod": "webpack --mode=production --config=webpack.config.js",
+    "start:expressServer": "node ./mock/express-server/server.js",
+    "start:jsonServer": "node ./mock/json-server/server.js",
+    "start:devServer": "webpack serve --mode=development --config=./config/webpack.config.js",
+    "start:devServer:expressServerProxying": "webpack serve --env proxy=expressServer --mode=development --config=./config/webpack.config.js",
+    "start:devServer:jsonServerProxying": "webpack serve --env proxy=jsonServer --mode=development --config=./config/webpack.config.js",
+    "build:dev": "webpack --mode=development --config=./config/webpack.config.js",
+    "build:prod": "webpack --mode=production --config=./config/webpack.config.js",
     "test": "echo \"Error: no test specified\" && exbit 1"
   },
   "keywords": [],
@@ -22,8 +24,10 @@
     "@babel/preset-react": "^7.17.12",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.7",
     "babel-loader": "^8.2.5",
+    "chalk": "^4.1.2",
     "core-js": "^3.22.7",
     "css-loader": "^6.7.1",
+    "express": "^4.18.1",
     "html-webpack-plugin": "^5.5.0",
     "json-server": "^0.17.0",
     "react-refresh": "^0.13.0",
@@ -33,7 +37,6 @@
     "webpack-dev-server": "^4.9.0"
   },
   "dependencies": {
-    "chalk": "^4.1.2",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
     "react-router-dom": "^6.3.0"

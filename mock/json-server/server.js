@@ -7,6 +7,7 @@
 
 const jsonServer = require('json-server')
 const path = require('path')
+const { jsonServerPort } = require('../../config/url')
 
 // calculate the relative file path for db.json 
 // from this script's process working directory 
@@ -14,16 +15,15 @@ const path = require('path')
 const dbFileDirRelativeToPwd = path.relative(process.cwd(), __dirname)
 let dbFilePathRelativeToPwd = dbFileDirRelativeToPwd.length > 0 ? (dbFileDirRelativeToPwd + '/db.json') : 'db.json'
 
-// lanuch json server with the calculated path for db.json
+// launch json server with the calculated path for db.json
 const router = jsonServer.router(dbFilePathRelativeToPwd)
 const middlewares = jsonServer.defaults()
-const host = process.env.HOST || 'localhost'
-const port = normalizePort(process.env.PORT || '3001')
+const host = 'localhost'
 const server = jsonServer.create()
 server.use(middlewares)
 server.use(router)
-server.listen(port, () => {
-  process.stdout.write(`json-server is running on http://${host}:${port}\n`)
+server.listen(jsonServerPort, () => {
+  process.stdout.write(`json-server is running on http://${host}:${jsonServerPort}\n`)
 })
 
 // utils

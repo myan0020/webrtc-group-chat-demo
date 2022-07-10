@@ -1,5 +1,6 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const { devServerPort, jsonServerPort, expressServerPort, jsonServerPaths, expressServerPaths } = require('./url');
 
 //
 // TODO [Created on 2022-5-29]: test react refresh (HMR)
@@ -14,7 +15,6 @@ const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin'
 module.exports = (env, argv) => {
   const isEnvDevelopment = (argv.mode === 'development');
 
-
   const config = {
     devtool: isEnvDevelopment ? 'inline-source-map' : 'source-map',
 
@@ -22,6 +22,7 @@ module.exports = (env, argv) => {
       hot: true,
       static: 'public',
       open: true,
+      port: devServerPort,
 
       // Falling back to '/' request when sending a request with an unknown path (eg: /home, /contact, ...)
       historyApiFallback: true,
@@ -29,10 +30,16 @@ module.exports = (env, argv) => {
       // Allowing CORS requests to json-server's origin from webpack dev server's origin,
       // when env.proxy is 'jsonServer'
       proxy: [
+        env.proxy === 'expressServer' &&
+        {
+          context: expressServerPaths,
+          target: `http://localhost:${expressServerPort}`,
+          changeOrigin: false,
+        },
         env.proxy === 'jsonServer' &&
         {
-          context: ['/authors', '/profile'],
-          target: 'http://localhost:3001',
+          context: jsonServerPaths,
+          target: `http://localhost:${jsonServerPort}`,
           changeOrigin: true,
         },
       ].filter(Boolean),
@@ -44,7 +51,7 @@ module.exports = (env, argv) => {
 
     output: {
       filename: 'js/[name]_bundle.js', // [entry name ('index')]_bundle.js
-      path: path.resolve(__dirname, 'build'),
+      path: path.resolve(process.cwd(), 'build'), // webpack process should always be executed in the root project directory
       publicPath: '',
       clean: true,
     },
