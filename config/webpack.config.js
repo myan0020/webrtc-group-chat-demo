@@ -27,14 +27,13 @@ module.exports = (env, argv) => {
       // Falling back to '/' request when sending a request with an unknown path (eg: /home, /contact, ...)
       historyApiFallback: true,
 
-      // Allowing CORS requests to json-server's origin from webpack dev server's origin,
-      // when env.proxy is 'jsonServer'
+      // Allowing CORS requests to api server's origin from webpack dev server's origin,
       proxy: [
         env.proxy === 'expressServer' &&
         {
           context: expressServerPaths,
           target: `http://localhost:${expressServerPort}`,
-          changeOrigin: false,
+          changeOrigin: true,
         },
         env.proxy === 'jsonServer' &&
         {
