@@ -1,0 +1,23 @@
+/* Local Styles */
+
+.header {
+  text-align: center;
+}
+
+.count {
+  text-align: center;
+}
+
+.changeState {
+  display: block;
+  font-size: large;
+  margin: 0px auto;
+  padding-left: 50px;
+  padding-right: 50px;
+}
+
+.logo {
+  display: block;
+  margin: 0 auto;
+  max-width: 10%;
+}

@@ -92,8 +92,10 @@ module.exports = (env, argv) => {
           },
         },
         {
+          // local styles should use modular css
           test: /\.css$/i,
-          exclude: /node_modules/,
+          exclude: /node_modules|src\/index.css/,
+          include: /src\/components/,
           use: [
             {
               loader: 'style-loader'
@@ -112,6 +114,25 @@ module.exports = (env, argv) => {
               }
             }
           ]
+        },
+        {
+          // global styles should not use modular css
+          test: /\.css$/i,
+          exclude: /node_modules/,
+          include: /src\/index.css/,
+          use: [
+            {
+              loader: 'style-loader'
+            },
+            {
+              loader: 'css-loader'
+            }
+          ]
+        },
+        {
+          test: /\.css$/,
+          include: /node_modules/,
+          use: ['style-loader', 'css-loader']
         },
         {
           test: /\.(png|svg|jpg|jpeg|gif)$/i,

@@ -1,12 +1,18 @@
 import React from 'react';
 import { Outlet } from "react-router-dom";
 
+import Header from '../Header/index.jsx';
+import Footer from '../Footer/index.jsx';
+import Navbar from '../../features/navigating/Navbar/index.jsx';
+
 export default function AppLayout() {
 
   return (
     <>
-      <h3>App Layout aaa</h3>
+      <Header />
+      <Navbar />
       <Outlet />
+      <Footer />
     </>
   )
 }

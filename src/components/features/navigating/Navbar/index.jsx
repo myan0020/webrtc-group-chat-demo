@@ -1,20 +1,23 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useContext } from "react";
+import { Link } from "react-router-dom";
+
+import { ThemeContext } from "../../../contexts/theme-context";
 
 export default function Navbar() {
+  const { theme } = useContext(ThemeContext);
 
   return (
     <>
-      <h3>Navigator</h3>
+      <h3 style={{ color: theme.headerTextColor }}>Navigator</h3>
       <nav>
-        <Link to="/home">Home</Link>
+        <Link to="/" style={{ color: theme.headerTextColor }}>
+          Home
+        </Link>
         &nbsp;&nbsp;
-        <Link to="/contact">Contact</Link> 
-        &nbsp;&nbsp;
-        <Link to="/login">Login</Link> 
-        &nbsp;&nbsp;
-        <Link to="/signup">Signup</Link>
+        <Link to="/WebSocket+WebRTC" style={{ color: theme.headerTextColor }}>
+          WebSocket + WebRTC
+        </Link>
       </nav>
     </>
-  )
+  );
 }

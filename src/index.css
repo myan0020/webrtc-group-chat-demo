@@ -1,13 +1,16 @@
+/* Global Styles */
+
 body {
-  background-color: cornsilk;
+  background-color: rgb(226, 177, 43);
+  margin: 0px;
+  padding: 0px;
+  
 }
 
-.appTitle {
-  text-align: center;
+div {
+  padding: 20px;
 }
 
-.appLogo {
-  display: block;
-  object-fit: cover;
-  margin: 5% auto;
+#root {
+  padding: 0px;
 }
