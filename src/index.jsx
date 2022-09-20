@@ -10,7 +10,7 @@ import AppLayout from "./components/generic/AppLayout/index.jsx";
 import Navbar from "./components/features/navigating/Navbar/index.jsx";
 import { TogglableThemeContextProvider } from "./components/contexts/theme-context.js";
 import VideoPlayer from "./components/features/VideoPlayer/VideoPlayer.jsx";
-import WebSocketClient from "./components/features/WebSocketClient/WebSocketClient.jsx";
+import WebRTCGroupChat from "./components/features/WebRTCGroupChat/WebRTCGroupChat.jsx";
 
 /**
  * Displaying the current environment ('development' or 'production')
@@ -25,11 +25,6 @@ function App() {
   const videoId = "sintel.m3u8"; // or named as 'sintel.m3u8' for HLS
   const clipFromInSeconds = 30; // ignored for HLS
   const clipToInSeconds = 50; //  ignored for HLS
-
-  // For WebSocketClient Component
-  const webSocketHost = "localhost";
-  const webSocketPort = "3002"; // same as mock express server port number
-  const webSocketUrl = `ws://${webSocketHost}:${webSocketPort}`;
 
   return (
     <TogglableThemeContextProvider>
@@ -46,10 +41,7 @@ function App() {
                 />
               }
             />
-            <Route
-              path="/WebSocket+WebRTC"
-              element={<WebSocketClient url={webSocketUrl} />}
-            />
+            <Route path="/WebSocket+WebRTC" element={<WebRTCGroupChat />} />
           </Route>
         </Routes>
       </BrowserRouter>

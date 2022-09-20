@@ -1,0 +1,40 @@
+.messageWrapper {
+  background-color: cadetblue;
+  /* height: 500px; */
+}
+
+.messageContent {
+  color: blueviolet;
+  word-wrap: break-word;
+}
+
+.videoWrapper {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: column;
+  /* grid-auto-rows: minmax(100px, auto); */
+}
+
+.videoContentLocal {
+  /* width: 100%;
+  height: 100%; */
+  /* background-color: black; */
+
+  flex: 1;
+
+  /* margin: 0 auto; */
+}
+.videoContentRemote01 {
+  /* width: 100%;
+  height: 100%; */
+  /* background-color: black; */
+  flex: 1;
+  /* margin: 0 auto; */
+}
+.videoContentRemote02 {
+  /* width: 100%;
+  height: 100%; */
+  /* background-color: black; */
+  flex: 1;
+  /* margin: 0 auto; */
+}
