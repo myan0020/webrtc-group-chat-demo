@@ -1,44 +1,14 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 
 import WebRTCGroupChatService from "./WebRTCGroupChatService.js";
+import VideoList from "./VideoList.jsx";
 import style from "./WebRTCGroupChat.module.css";
-// import { map } from "core-js/core/array";
-
-function VideoContaniner({ mediaStreamsMap }) {
-  // const [mediaStreamsMap, setMediaStreamsMap] = useState(mediaStreamsMap);
-
-  // const videoArrSize = mediaStreamsMap.size;
-
-  // let videos = [];
-  // for (let i = 0; i < videoArrSize; i++) {
-  //   const videoDom = docume
-  //   const video = (
-  //     <video
-  //       autoPlay
-  //       // id={"videoLocal"}
-  //       className={style.videoContent}
-  //       // ref={localVideoElementRef}
-  //       srcObject={}
-  //     />
-  //   );
-  //   videos.push();
-  // }
-  // mediaStreamsMap.forEach((mediaStream, peerId) => {});
-
-  return (
-    <div
-      // autoPlay
-      id={"videoContainer"}
-      // className={style.videoContentLocal}
-      // ref={localVideoElementRef}
-    />
-  );
-}
 
 export default function WebRTCGroupChat() {
-  //
-  // State Definitions
-  //
+  /**
+   * State Definitions
+   */
+
   // hook 1
   const [inputUserName, setInputUserName] = useState("user");
   // hook 2
@@ -55,37 +25,16 @@ export default function WebRTCGroupChat() {
   const [joinedRoomId, setJoinedRoomId] = useState("");
   // hook 8
   const [localMediaStream, setLocalMediaStream] = useState();
-  // 9
+  // hook 9
   const [peerMediaStreamsMap, setPeerMediaStreamsMap] = useState(new Map());
   // hook 10
   const [isCalling, setIsCalling] = useState(false);
 
-  // hook ???
-  const localVideoElementRef = useRef(null);
-  const remoteVideoElement01Ref = useRef(null);
-  const remoteVideoElement02Ref = useRef(null);
-  const remoteElements = [remoteVideoElement01Ref, remoteVideoElement02Ref];
-  //
-  // Ref Definitions
-  //
-  // hook 10
-  // const joinedRoomIdRef = useRef(joinedRoomId);
-  // // hook 10
-  // const peerConnectionRef = useRef(newPeerConnection);
-
-  // joinedRoomIdRef.current = joinedRoomId;
-
-  // newPeerConnectionRef.current = newPeerConnection;
-
-  //
-  // Side Effects
-  //
-  // hook 12
-
   /**
-   * Authentication
+   * Side Effects
    */
 
+  // hook 11: authentication
   useEffect(() => {
     WebRTCGroupChatService.onLoginInSuccess((payload) => {
       const authenticatedUsername = payload.username;
@@ -102,10 +51,7 @@ export default function WebRTCGroupChat() {
     });
   }, []);
 
-  /**
-   * Chat room information
-   */
-
+  // hook 12: chat room actions
   useEffect(() => {
     WebRTCGroupChatService.onRoomsInfoUpdated((payload) => {
       const rooms = payload.rooms;
@@ -125,114 +71,41 @@ export default function WebRTCGroupChat() {
     });
   }, []);
 
-  /**
-   * WebRTC media streams
-   */
-
-  useEffect(() => {
-    WebRTCGroupChatService.onLocalMediaStreamChanged((mediaStream) => {
-      // window.videoLocalSrc = mediaStream;
-      setLocalMediaStream(mediaStream);
-    });
-
-    WebRTCGroupChatService.onPeerMediaStreamMapChanged((peerStreamsMap) => {
-      console.log(`onPeerMediaStreamMapChanged called with peer stream map size ${peerStreamsMap.size}`)
-      const map = new Map(peerStreamsMap)
-      // const curPeerMediaStreams = Array.from(peerMediaStreamMap.values());
-      setPeerMediaStreamsMap(map);
-    });
-  }, []);
-  useEffect(() => {
-    if (!localVideoElementRef) {
-    } else if (!localMediaStream) {
-      const videoElement = localVideoElementRef.current;
-      if (!videoElement) return;
-      const srcObject = videoElement.srcObject;
-      if (!srcObject) return;
-      localVideoElementRef.current.srcObject
-        .getVideoTracks()
-        .forEach((track) => {
-          track.stop();
-          localVideoElementRef.current.srcObject.removeTrack(track);
-        });
-      Ï;
-    } else if (localMediaStream) {
-      const videoElement = localVideoElementRef.current;
-      if (!videoElement) return;
-      videoElement.srcObject = localMediaStream;
-    } else {
-    }
-  }, [localMediaStream]);
-  useEffect(() => {
-    console.log(`new peerMediaStreamsMap size is ${peerMediaStreamsMap.size}`)
-    const activePeerMediaSize = peerMediaStreamsMap.size;
-    const peerMediaStreams = Array.from(peerMediaStreamsMap.values())
-    if (activePeerMediaSize < remoteElements.count) {
-    }
-    let remoteEleIndex = 0;
-    // let displayingMediaStreamIdSet = new Set()
-
-    for (let index = 0; index < remoteElements.length; index ++) {
-      const remoteVideoElement = remoteElements[remoteEleIndex].current;
-      if (!remoteVideoElement || !remoteVideoElement.srcObject) continue;
-      
-      // remoteVideoElement.srcObject.getVideoTracks().forEach((track) => {
-      //   track.stop();
-      //   remoteVideoElement.srcObject.removeTrack(track);
-      // });
-      remoteVideoElement.srcObject = null
-    }
-
-    for (remoteEleIndex = 0; remoteEleIndex < remoteElements.length; remoteEleIndex ++) {
-      const remoteVideoElement = remoteElements[remoteEleIndex].current;
-      if (!remoteVideoElement) continue;
-      if (remoteEleIndex < peerMediaStreams.length) {
-
-
-        // displayingMediaStreamIdSet.add(peerMediaStreams[remoteEleIndex].id)
-        remoteVideoElement.srcObject = peerMediaStreams[remoteEleIndex];
-      } else {
-        // remoteElements[remoteEleIndex] = null;
-        // if (remoteVideoElement.srcObject && !displayingMediaStreamIdSet.has(remoteVideoElement.srcObject.id)) {
-        //   remoteVideoElement.srcObject.getVideoTracks().forEach((track) => {
-        //     track.stop();
-        //     remoteVideoElement.srcObject.removeTrack(track);
-        //   });
-        // }
-      }
-    }
-    
-      
-
-    
-        
-
-    // peerMediaStreams.map((mediaStream, index) => {
-    //   remoteElements[index].current.srcObject = mediaStream;
-    // })
-  }, [peerMediaStreamsMap]);
-
-  /**
-   * WebRTC connection
-   */
-
+  // hook 13: media calling state
   useEffect(() => {
     WebRTCGroupChatService.onWebRTCCallingStateChanged((isCalling) => {
       setIsCalling(isCalling);
     });
   }, []);
 
-  //
-  // Event Handlers
-  //
+  // hook 14: WebRTC media streams
+  useEffect(() => {
+    WebRTCGroupChatService.onLocalMediaStreamChanged((mediaStream) => {
+      setLocalMediaStream(mediaStream);
+    });
+    WebRTCGroupChatService.onPeerMediaStreamMapChanged((peerStreamsMap) => {
+      console.log(
+        `onPeerMediaStreamMapChanged called with peer stream map size ${peerStreamsMap.size}`
+      );
+      const map = new Map(peerStreamsMap);
+      setPeerMediaStreamsMap(map);
+    });
+  }, []);
+
+  /**
+   * Event Handlers
+   */
+
   // input new user name
   const onInputNewUserNameChange = (e) => {
     setInputUserName(e.target.value);
   };
+
   // input new room name
   const onInputNewRoomNameChange = (e) => {
     setInputRoomName(e.target.value);
   };
+
   // click to login or logout
   const onLoginoutClick = (e) => {
     if (!isLogin && inputUserName.length > 0) {
@@ -241,42 +114,50 @@ export default function WebRTCGroupChat() {
     }
     WebRTCGroupChatService.logout();
   };
+
+  // set keyboard shortcuts
   const onKeyDown = (e) => {
-    if (e.key !== 'Enter') return;
+    if (e.key !== "Enter") return;
     if (joinedRoomId.length > 0) return;
     if (isLogin) {
-      onCreateNewRoomClick()
+      onCreateNewRoomClick();
       return;
-    } 
+    }
     if (inputUserName.length === 0) return;
     WebRTCGroupChatService.login(inputUserName);
   };
+
   // click to create a new room
   const onCreateNewRoomClick = (e) => {
     if (!inputRoomName.length > 0 || joinedRoomId.length > 0) return;
     WebRTCGroupChatService.createNewRoom(inputRoomName);
   };
+
   // click to select a room
   const onSelectedRoomChange = (e) => {
     const selectedIndex = e.target.selectedIndex;
     const roomId = e.target.options[selectedIndex].value;
     setSelectedRoomId(roomId);
   };
+
   // click to join the selected room
   const onJoinSelectedRoomClick = (e) => {
     if (!selectedRoomId.length > 0) return;
     WebRTCGroupChatService.joinRoom(selectedRoomId);
   };
+
   // click to leave the current room
   const onLeaveFromCurRoomClick = (e) => {
     WebRTCGroupChatService.leaveRoom();
   };
+
   // click to start calling
   const onStartMediaCallingClick = (e) => {
     if (joinedRoomId.length > 0) {
       WebRTCGroupChatService.startCalling();
     }
   };
+
   // click to start calling
   const onHangUpMediaCallingClick = (e) => {
     if (joinedRoomId.length > 0) {
@@ -284,9 +165,10 @@ export default function WebRTCGroupChat() {
     }
   };
 
-  //
-  // Stateful Rendering
-  //
+  /**
+   * Stateful Rendering
+   */
+
   const roomRenderedSize = "3";
   const roomsSelectRendered = (
     <select
@@ -344,11 +226,7 @@ export default function WebRTCGroupChat() {
         onKeyDown={onKeyDown}
         autoFocus
       />
-      <button
-        type="button"
-        onClick={onLoginoutClick}
-        className={style.button}
-      >
+      <button type="button" onClick={onLoginoutClick} className={style.button}>
         login
       </button>
     </p>
@@ -387,27 +265,13 @@ export default function WebRTCGroupChat() {
       </p>
     </>
   );
-  const videoBlockRendered = isCalling ? (
-    <div className={style.videoWrapper} id={"videoWrapper"}>
-      <video
-        autoPlay
-        id={"videoLocal"}
-        className={style.videoContentLocal}
-        ref={localVideoElementRef}
-      />
-      <video
-        autoPlay
-        id={"videoRemoteOne"}
-        className={style.videoContentRemote01}
-        ref={remoteVideoElement01Ref}
-      />
-      <video
-        autoPlay
-        id={"videoRemoteTwo"}
-        className={style.videoContentRemote02}
-        ref={remoteVideoElement02Ref}
-      />
-    </div>
+  const localVideo = isCalling ? (
+    <VideoList mediaStreamsMap={new Map([["local", localMediaStream]])} />
+  ) : (
+    <></>
+  );
+  const peerVideoList = isCalling ? (
+    <VideoList mediaStreamsMap={peerMediaStreamsMap} />
   ) : (
     <></>
   );
@@ -416,7 +280,12 @@ export default function WebRTCGroupChat() {
     <div id="rtc" className={style.messageWrapper}>
       <p>Web Socket + WebRTC Group Chat Client</p>
       {loginoutBlockRendered}
-      {videoBlockRendered}
+
+      <div>Check Local Video</div>
+      <div>{localVideo}</div>
+
+      <div>Check Peer Video List</div>
+      <div>{peerVideoList}</div>
     </div>
   );
 }

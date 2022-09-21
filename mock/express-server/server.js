@@ -70,7 +70,12 @@ app.post("/logout", function (req, res) {
   const userId = req.session.userId;
   const username = req.session.username;
 
-  // TODO: do some work to close the session user's WebRTC connection
+  // TODO:
+  //
+  // Very important!!!
+  // 
+  // WebSocket connection does not close at a right moment or for a right user
+  //
 
   console.log(
     `[WebSocket] before logout action been executed, the connections' userIds are [${chalk.yellow`logString`}]`
@@ -89,9 +94,14 @@ app.post("/logout", function (req, res) {
   }
 
   // TODO:
+  //
+  // Very important!!!
+  // 
   // this 'session.destroy' method is used incorrectly,
   // and it will cause all sessiones to be deleted
   // after the first session.destroy being called
+  //
+
   req.session.destroy(function () {
     if (userId && userId.length > 0) {
       authenticatedUserIds.delete(userId);

@@ -16,6 +16,7 @@ const create_web_socket = (session) => {
   console.log(
     `[WebSocket] will be created to the user named ${chalk.green`${session.username}`}`
   );
+
   const wss = new WebSocket.Server({ noServer: true });
 
   wss.on("connection", function (ws, request) {
@@ -130,9 +131,6 @@ const create_web_socket = (session) => {
           if (leftRoom) {
             userRoomMap.delete(sessionUserId);
             leftRoom.deleteStreamParticipant(sessionUserId);
-
-            // TODO: do some work to close the session user's WebRTC connection
-
             leftRoom.deleteParticipant(sessionUserId);
             console.log(
               `[WebSocket] ${chalk.green`LEAVE_ROOM_SUCCESS`} signal msg ${chalk.green`to`} the user named ${chalk.green`${sessionUserName}`}`
@@ -184,13 +182,13 @@ const create_web_socket = (session) => {
           if (!userRoomMap.has(sessionUserId)) return;
 
           const callingRoomId = userRoomMap.get(sessionUserId);
-
-          // const callingRoomId = payload.roomId;
           const callingRoom = rooms[callingRoomId];
           if (!callingRoom) return;
+
           if (!callingRoom.participants.has(sessionUserId)) return;
           callingRoom.addStreamParticipant(sessionUserId, sessionUserName);
           if (callingRoom.streamParticipants.size <= 1) return;
+
           setTimeout(() => {
             callingRoom.streamParticipants.forEach((_, participantUserId) => {
               if (participantUserId !== sessionUserId) {
@@ -244,9 +242,6 @@ const create_web_socket = (session) => {
               }
             });
           }, 0);
-
-          // TODO: do some work to close the session user's WebRTC connection
-
           break;
         }
 
