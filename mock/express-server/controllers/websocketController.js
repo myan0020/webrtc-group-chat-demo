@@ -218,10 +218,32 @@ const create_web_socket = (session) => {
           );
 
           if (!userRoomMap.has(sessionUserId)) return;
-          const hangUpRoomId = payload.roomId;
+          const hangUpRoomId = userRoomMap.get(sessionUserId);
+          if (!hangUpRoomId || hangUpRoomId.length === 0) return;
           const hangUpRoom = rooms[hangUpRoomId];
           if (!hangUpRoom) return;
+      
           hangUpRoom.deleteStreamParticipant(sessionUserId);
+          
+          setTimeout(() => {
+            hangUpRoom.streamParticipants.forEach((_, participantUserId) => {
+              if (participantUserId !== sessionUserId) {
+                const websocket =
+                  sessionMap.get(participantUserId);
+                console.log(
+                  `[WebSocket] ${chalk.green`WEBRTC_HANG_UP`} signal msg ${chalk.green`to`} the user named ${chalk.green`${websocket.username}`}`
+                );
+                sendSerializedSignalThroughWebsocket(
+                  websocket,
+                  signalType.WEBRTC_HANG_UP,
+                  {
+                    from: sessionUserId,
+                    to: participantUserId,
+                  }
+                );
+              }
+            });
+          }, 0);
 
           // TODO: do some work to close the session user's WebRTC connection
 

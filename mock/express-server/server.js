@@ -1,7 +1,7 @@
 // const createError = require('http-errors');
+// const cookieParser = require('cookie-parser');
 const http = require("http");
 const express = require("express");
-// const cookieParser = require('cookie-parser');
 const chalk = require("chalk");
 const { expressServerPort, webSocketServerPort } = require("../../config/url");
 const logger = require("morgan");
@@ -75,9 +75,9 @@ app.post("/logout", function (req, res) {
   console.log(
     `[WebSocket] before logout action been executed, the connections' userIds are [${chalk.yellow`logString`}]`
   );
-  for (sessionUserId of sessionMap.keys()) {
+  for (let sessionUserId of Array.from(sessionMap.keys())) {
     console.log(
-      `[Connection-UserId] ${chalk.yellow`sessionUserId`}`
+      `[Connection-UserId] ${chalk.yellow`${sessionUserId}`}`
     );
   }
 
