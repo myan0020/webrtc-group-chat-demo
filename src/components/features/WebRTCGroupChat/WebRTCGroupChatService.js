@@ -8,27 +8,7 @@
 
 import axios from "axios";
 
-/**
- * User id management
- */
-
-let _selfId = "";
-const _peerIds = {
-  ids: [],
-  push: function (id) {
-    this.ids.push(id);
-  },
-
-  includes: function (id) {
-    return this.ids.includes(id);
-  },
-  indexOf: function (id) {
-    return this.ids.indexOf(id);
-  },
-  get length() {
-    return this.ids.length;
-  },
-};
+let _selfId = '';
 
 /**
  * Internal paramters checking
@@ -332,18 +312,13 @@ function _addLocalMediaStreamToPeer(peerId, peerConnection) {
 function _addNewPeerMediaStreamReceivedFrom(peerId, event) {
   if (!peerId) {
     console.log(
-      `WebRTCGroupChatService: unexpected peerId of ${peerId} during peer connection ontrack event`
+      `WebRTCGroupChatService: unexpected peerId content of ${peerId} during a peer connection 'ontrack'`
     );
     return;
   }
   if (peerId.length > 0) {
     const prevPeerMediaStreamCount = _peerMediaStreamMap.size;
     _peerMediaStreamMap.set(peerId, event.streams[0]); // store this src
-    console.log(
-      `WebRTCGroupChatService: the remote media streams received, its first item has ${
-        event.streams[0].getTracks().length
-      } track(s)`
-    );
     console.log(
       `WebRTCGroupChatService: _peerMediaStreamMap size changed from ${prevPeerMediaStreamCount} to ${_peerMediaStreamMap.size}`
     );
@@ -352,7 +327,7 @@ function _addNewPeerMediaStreamReceivedFrom(peerId, event) {
     }
   } else {
     console.log(
-      `WebRTCGroupChatService: unexpected peerId of ${peerId} during peer connection ontrack event`
+      `WebRTCGroupChatService: unexpected peerId length of ${peerId} during a peer connection 'ontrack'`
     );
   }
 }
@@ -471,6 +446,7 @@ function _clearALLPeerConnections() {
   _peerConnectionMap.forEach((peerConnection, peerId) => {
     if (peerConnection) {
       peerConnection.close();
+      console.log(`WebRTCGroupChatService: after the close peerConnection for peerId of ${peerId}, the current peerConnection signalingState is ${peerConnection.signalingState}, the localDescription type is ${peerConnection.localDescription ? peerConnection.localDescription.type : 'unknown'}, the remoteDescription type is ${peerConnection.remoteDescription ? peerConnection.remoteDescription.type : 'unknown'}`)
       console.log(
         `WebRTCGroupChatService: the peerConnection with peerId of ${peerId} is closed`
       );
@@ -502,11 +478,9 @@ function _requestToUnschedulePeerConnection() {
 
 // add a peer connection
 function _addPeerConnection(peerId) {
-  console.log("WebRTCGroupChatService: add peer connection");
-  // add another peer connection for use
-  if (peerId.length === 0) {
+  if (!peerId || peerId.length === 0) {
     console.log(
-      `WebRTCGroupChatService: unexpected peerId of ${peerId} when adding peer connection`
+      `WebRTCGroupChatService: unexpected peerId of ${peerId} during creating and adding a newpeer connection`
     );
     return;
   }
@@ -529,19 +503,42 @@ function _addPeerConnection(peerId) {
         })
       );
       console.log(
-        `WebRTCGroupChatService: send a new ICE candidate, from ${_selfId} to ${peerId}`
+        `WebRTCGroupChatService: a peer connection's 'onicecandidate' fired with a new ICE candidate, then it's sent from ${_selfId} to ${peerId}`
       );
     }
   };
 
   peerConnection.oniceconnectionstatechange = (event) => {
     console.log(
-      `WebRTCGroupChatService: oniceconnectionstatechange with the state of '${peerConnection.iceConnectionState}'`
+      `WebRTCGroupChatService: a peer connection's 'oniceconnectionstatechange' fired with the state of '${peerConnection.iceConnectionState}'`
     );
+  };
+
+  peerConnection.onnegotiationneeded = (event) => {
+    console.log(
+      `WebRTCGroupChatService: a peer connection's 'onnegotiationneeded' fired, maybe it's time to create a new SDP offer?`
+    );
+
+    // peerConnection
+    // .createOffer()
+    // .then((offer) => {
+    //   console.log(
+    //     `WebRTCGroupChatService: a new offer created to peerId of ${peerId} because of 'onnegotiationneeded'`
+    //   );
+    //   _onCreateOfferSuccess(offer, peerConnection, peerId, _websocket);
+    // })
+    // .catch((error) => {
+    //   console.error(`WebRTCGroupChatService: Found error of ${error} during creating a offer`);
+    // });
   };
 
   // display remote video streams when they arrive using local <video> MediaElement
   peerConnection.ontrack = function (event) {
+    console.log(
+      `WebRTCGroupChatService: a peer connection's 'ontrack' fired, the remote media streams received, it has ${event.streams.length} streams, the first mediaStream obj has ${
+        event.streams[0].getTracks().length
+      } track(s)`
+    );
     const peerId = _peerConnectionMap.getFirstKeyByValue(peerConnection);
     _addNewPeerMediaStreamReceivedFrom(peerId, event);
   };
@@ -549,9 +546,9 @@ function _addPeerConnection(peerId) {
 
 // locate a peer connection according to its id
 function _locatePeerConnection(peerId) {
-  if (peerId.length === 0) {
+  if (!peerId || peerId.length === 0) {
     console.log(
-      `WebRTCGroupChatService: unexpected peerId of ${peerId} during 'locatePeerConnection' action`
+      `WebRTCGroupChatService: unexpected peerId length during '${arguments.callee.name}' method`
     );
     return;
   }
@@ -559,7 +556,7 @@ function _locatePeerConnection(peerId) {
     const prevPeerIdsSize = _peerConnectionMap.size();
     _addPeerConnection(peerId);
     console.log(
-      `WebRTCGroupChatService: peer connection count changed from ${prevPeerIdsSize} to ${_peerConnectionMap.size()}`
+      `WebRTCGroupChatService: after '_addPeerConnection' method, peer connection count changed from ${prevPeerIdsSize} to ${_peerConnectionMap.size()}`
     );
   }
   return _peerConnectionMap.get(peerId);
@@ -567,7 +564,9 @@ function _locatePeerConnection(peerId) {
 
 function _onCreateOfferSuccess(offer, peerConnection, peerId, websocket) {
   if (offer && peerConnection && websocket && peerId) {
+    console.log(`WebRTCGroupChatService: before using the offer to 'setLocalDescription', the current peerConnection signalingState is ${peerConnection.signalingState}, the localDescription type is ${peerConnection.localDescription ? peerConnection.localDescription.type : 'unknown'}, the remoteDescription type is ${peerConnection.remoteDescription ? peerConnection.remoteDescription.type : 'unknown'}`)
     peerConnection.setLocalDescription(offer).then(() => {
+      console.log(`WebRTCGroupChatService: after the offer has been set with 'setLocalDescription', the current peerConnection signalingState is ${peerConnection.signalingState}, the localDescription type is ${peerConnection.localDescription ? peerConnection.localDescription.type : 'unknown'}, the remoteDescription type is ${peerConnection.remoteDescription ? peerConnection.remoteDescription.type : 'unknown'}`)
       const data = {
         type: _SignalMessageType.WEBRTC_NEW_OFFER,
         payload: {
@@ -582,7 +581,9 @@ function _onCreateOfferSuccess(offer, peerConnection, peerId, websocket) {
 
 function _onCreateAnswerSuccess(answer, peerConnection, peerId, websocket) {
   if (peerId && answer && peerConnection && websocket) {
+    console.log(`WebRTCGroupChatService: before using the answer to 'setLocalDescription', the current peerConnection signalingState is ${peerConnection.signalingState}, the localDescription type is ${peerConnection.localDescription ? peerConnection.localDescription.type : 'unknown'}, the remoteDescription type is ${peerConnection.remoteDescription ? peerConnection.remoteDescription.type : 'unknown'}`)
     peerConnection.setLocalDescription(answer).then(() => {
+      console.log(`WebRTCGroupChatService: after the answer has been set with 'setLocalDescription', the current peerConnection signalingState is ${peerConnection.signalingState}, the localDescription type is ${peerConnection.localDescription ? peerConnection.localDescription.type : 'unknown'}, the remoteDescription type is ${peerConnection.remoteDescription ? peerConnection.remoteDescription.type : 'unknown'}`)
       const data = {
         type: _SignalMessageType.WEBRTC_NEW_ANSWER,
         payload: {
@@ -604,11 +605,10 @@ function _initiateAndSendOffer(payload) {
   const peerConnection = _locatePeerConnection(peerId);
   if (!peerConnection) {
     console.log(
-      `WebRTCGroupChatService: cannot get peer connection with peerId of ${peerId}`
+      `WebRTCGroupChatService: cannot get a peer connection with peerId of ${peerId} during '${arguments.callee.name}' method`
     );
     return;
   };
-  // create offer
   peerConnection
     .createOffer()
     .then((offer) => {
@@ -627,17 +627,27 @@ function _initiateAndSendAnswer(payload) {
   const peerId = payload.from;
   const offer = payload.offer;
 
-  if (!peerId || !offer || peerId.length === 0) return;
+  if (!peerId || !offer || peerId.length === 0) {
+    console.log(
+      `WebRTCGroupChatService: unexpected peerId or offer during '${arguments.callee.name}' method`
+    );
+    return;
+  };
   const peerConnection = _locatePeerConnection(peerId);
-  console.log("WebRTCGroupChatService: a new offer received from " + peerId);
+  console.log(`WebRTCGroupChatService: a new offer received from peerId of ${peerId}`);
   if (!peerConnection) return;
   // set remote description
+  console.log(`WebRTCGroupChatService: before using the offer to 'setRemoteDescription', the current peerConnection signalingState is ${peerConnection.signalingState}, the localDescription type is ${peerConnection.localDescription ? peerConnection.localDescription.type : 'unknown'}, the remoteDescription type is ${peerConnection.remoteDescription ? peerConnection.remoteDescription.type : 'unknown'}`)
   peerConnection
     .setRemoteDescription(offer)
     .then(() => {
+      console.log(`WebRTCGroupChatService: after the offer has been set with 'setRemoteDescription', the current peerConnection signalingState is ${peerConnection.signalingState}, the localDescription type is ${peerConnection.localDescription ? peerConnection.localDescription.type : 'unknown'}, the remoteDescription type is ${peerConnection.remoteDescription ? peerConnection.remoteDescription.type : 'unknown'}`)
       return peerConnection.createAnswer();
     })
     .then((answer) => {
+      console.log(
+        `WebRTCGroupChatService: a new answer is created to peerId of ${peerId}`
+      );
       _onCreateAnswerSuccess(answer, peerConnection, peerId, _websocket);
     })
     .catch((error) => {
@@ -652,19 +662,36 @@ function _setupNewPeerAnswer(payload) {
 
   if (!peerId || !answer || peerId.length === 0) {
     console.log(
-      `WebRTCGroupChatService: found errors with a new answer of ${answer}, from ${peerId},  with peerId length ${peerId.length} `
+      `WebRTCGroupChatService: unexpected peerId of ${peerId} or answer of ${answer}, during '${arguments.callee.name}' method`
     );
     return;
   }
   const peerConnection = _locatePeerConnection(peerId);
-  console.log("WebRTCGroupChatService: new answer from " + peerId);
   if (!peerConnection) {
     console.log(
-      `WebRTCGroupChatService: cannot find a peer connection with peerId ${peerId}`
+      `WebRTCGroupChatService: cannot find the peer connection with peerId of ${peerId} during '${arguments.callee.name}' method`
     );
     return;
   }
-  peerConnection.setRemoteDescription(answer);
+  console.log(
+    `WebRTCGroupChatService: a remote answer will be set to a peer connection with peerId of ${peerId}`
+  );
+  console.log(`WebRTCGroupChatService: before using the answer to 'setRemoteDescription', the current peerConnection signalingState is ${peerConnection.signalingState}, the localDescription type is ${peerConnection.localDescription ? peerConnection.localDescription.type : 'unknown'}, the remoteDescription type is ${peerConnection.remoteDescription ? peerConnection.remoteDescription.type : 'unknown'}`)
+
+  peerConnection.setRemoteDescription(answer).then(
+    () => {
+      console.log(`WebRTCGroupChatService: after the answer has been set with 'setRemoteDescription', the current peerConnection signalingState is ${peerConnection.signalingState}, the localDescription type is ${peerConnection.localDescription ? peerConnection.localDescription.type : 'unknown'}, the remoteDescription type is ${peerConnection.remoteDescription ? peerConnection.remoteDescription.type : 'unknown'}`)
+
+      console.log(
+        `WebRTCGroupChatService: a remote answer has been set to a peer connection with peerId of ${peerId}`
+      );
+    },
+    (error) => {
+      console.log(
+        `WebRTCGroupChatService: fail to set a remote answer to a peer connection with peerId of ${peerId}, with an error of ${error}`
+      );
+    }
+  )
 }
 
 // handle ice candidate
@@ -674,21 +701,20 @@ function _addNewICECandidate(payload) {
 
   if (!peerId || !iceCandidate || peerId.length === 0) {
     console.log(
-      `WebRTCGroupChatService: found errors with a new iceCandidate of ${iceCandidate}, from ${peerId},  with peerId length ${peerId.length} `
+      `WebRTCGroupChatService: unexpected peerId of ${peerId} or iceCandidate of ${iceCandidate} during '${arguments.callee.name}' method`
     );
     return;
   }
   const peerConnection = _locatePeerConnection(peerId);
-  console.log("WebRTCGroupChatService: get new_ice_candidate from " + peerId);
   if (!peerConnection) {
     console.log(
-      `WebRTCGroupChatService: cannot find a peer connection with peerId ${peerId}`
+      `WebRTCGroupChatService: cannot find the peer connection with peerId ${peerId} during '${arguments.callee.name}' method`
     );
     return;
   }
   if (!iceCandidate.candidate) {
     console.log(
-      `WebRTCGroupChatService: unexpected iceCandidate.candidate with ${iceCandidate.candidate}`
+      `WebRTCGroupChatService: unexpected ICE candidate data structure of ${iceCandidate} during '${arguments.callee.name}' method`
     );
     peerConnection.addIceCandidate(null);
     return;
@@ -707,6 +733,7 @@ function _closePeerConnectionTo(peerId) {
   const peerConnection = _peerConnectionMap.get(peerId);
   if (!peerConnection) return;
   peerConnection.close();
+  console.log(`WebRTCGroupChatService: after the close peerConnection for peerId of ${peerId}, the current peerConnection signalingState is ${peerConnection.signalingState}, the localDescription type is ${peerConnection.localDescription ? peerConnection.localDescription.type : 'unknown'}, the remoteDescription type is ${peerConnection.remoteDescription ? peerConnection.remoteDescription.type : 'unknown'}`)
   _peerConnectionMap.delete(peerId);
 }
 

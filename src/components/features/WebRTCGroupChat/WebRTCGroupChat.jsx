@@ -170,6 +170,8 @@ export default function WebRTCGroupChat() {
    */
 
   const roomRenderedSize = "3";
+
+  // room options select rendering
   const roomsSelectRendered = (
     <select
       size={roomRenderedSize}
@@ -183,6 +185,8 @@ export default function WebRTCGroupChat() {
       ))}
     </select>
   );
+
+  // 'join' or 'leave' room rendering
   const joinLeaveButtonRendered =
     joinedRoomId.length > 0 ? (
       <button
@@ -202,6 +206,8 @@ export default function WebRTCGroupChat() {
         join the selected room
       </button>
     );
+
+  // media calling button rendering
   const mediaCallingButtonRendered = isCalling ? (
     <button onClick={onHangUpMediaCallingClick} className={style.button}>
       Hang Up
@@ -215,6 +221,8 @@ export default function WebRTCGroupChat() {
       Start Calling
     </button>
   );
+
+  // login or logout rendering
   const loginoutBlockRendered = !isLogin ? (
     <p>
       <label>Enter your username</label>
@@ -265,13 +273,25 @@ export default function WebRTCGroupChat() {
       </p>
     </>
   );
+
+  // video rendering
   const localVideo = isCalling ? (
-    <VideoList mediaStreamsMap={new Map([["local", localMediaStream]])} />
+    <>
+      <div>Check Local Video</div>
+      <div>
+        <VideoList mediaStreamsMap={new Map([["local", localMediaStream]])} />
+      </div>
+    </>
   ) : (
     <></>
   );
   const peerVideoList = isCalling ? (
-    <VideoList mediaStreamsMap={peerMediaStreamsMap} />
+    <div>
+      <div>Check Peer Video List</div>
+      <div>
+        <VideoList mediaStreamsMap={peerMediaStreamsMap} />
+      </div>
+    </div>
   ) : (
     <></>
   );
@@ -281,11 +301,8 @@ export default function WebRTCGroupChat() {
       <p>Web Socket + WebRTC Group Chat Client</p>
       {loginoutBlockRendered}
 
-      <div>Check Local Video</div>
-      <div>{localVideo}</div>
-
-      <div>Check Peer Video List</div>
-      <div>{peerVideoList}</div>
+      {localVideo}
+      {peerVideoList}
     </div>
   );
 }
