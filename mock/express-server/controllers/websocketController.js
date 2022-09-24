@@ -51,16 +51,9 @@ const create_web_socket = (session) => {
           //
           // When a new GroupChatRoom is created,
           // broadcast the latest rooms info to each client
-          // &&
-          // broadcast the latest participants info to each client in this new GroupChatRoom
           //
           sessionMap.forEach((ws, userId) => {
             if (ws.readyState === WebSocket.OPEN) {
-              // ws.send(
-              //   createSerializedSignalMessage(signalType.UPDATE_ROOMS, {
-              //     rooms: rooms,
-              //   })
-              // );
               console.log(
                 `[WebSocket] ${chalk.green`UPDATE_ROOMS`} signal msg ${chalk.green`to`} the user named ${chalk.green`${sessionUserName}`}`
               );
@@ -75,7 +68,7 @@ const create_web_socket = (session) => {
           });
           //
           // after broadcasting, make the client
-          // who creates the new GroupChatRoom to join it first
+          // who creates the new GroupChatRoom to join it first right now
           //
           userRoomMap.set(sessionUserId, roomId);
           console.log(
@@ -99,7 +92,9 @@ const create_web_socket = (session) => {
 
           const joinedRoomId = payload.roomId;
           const joinedRoom = rooms[joinedRoomId];
+
           if (joinedRoom) {
+            //
             // If there is a newcomer requesting to join into the room,
             // Let it join (as a normal participant) first
             //
@@ -132,9 +127,11 @@ const create_web_socket = (session) => {
             userRoomMap.delete(sessionUserId);
             leftRoom.deleteStreamParticipant(sessionUserId);
             leftRoom.deleteParticipant(sessionUserId);
+
             console.log(
               `[WebSocket] ${chalk.green`LEAVE_ROOM_SUCCESS`} signal msg ${chalk.green`to`} the user named ${chalk.green`${sessionUserName}`}`
             );
+
             sendSerializedSignalThroughWebsocket(
               ws,
               signalType.LEAVE_ROOM_SUCCESS,
@@ -144,7 +141,6 @@ const create_web_socket = (session) => {
                 userId: sessionUserId,
               }
             );
-
             //
             // If this 'leftRoom' become an empty room, automatically delete it
             // and notify all authenticated clients
@@ -171,6 +167,7 @@ const create_web_socket = (session) => {
           break;
         }
 
+        //
         // if finding that the number of the current room's stream participants is greater than 1,
         // the new peer should be provided WebRTC peer connection offers from each earlier stream participant
         //
@@ -244,61 +241,22 @@ const create_web_socket = (session) => {
           break;
         }
 
-        case signalType.WEBRTC_NEW_OFFER: {
+        case signalType.WEBRTC_NEW_PASSTHROUGH: {
           if (!userRoomMap.has(sessionUserId)) return;
-          const websocketToTransferOffer = sessionMap.get(payload.userId);
-          const offer = payload.offer;
-          if (offer && websocketToTransferOffer) {
+          const websocketToPassThrough = sessionMap.get(payload.userId);
+          const {sdp, iceCandidate, offerMakingTime} = payload;
+          
+          if ((sdp || iceCandidate) && websocketToPassThrough) {
             console.log(
-              `[WebSocket] ${chalk.green`WEBRTC_NEW_OFFER`} signal msg ${chalk.green`from`} the user named ${chalk.green`${sessionUserName}`} ${chalk.green`to`} the user named ${chalk.green`${websocketToTransferOffer.username}`}`
+              `[WebSocket] ${chalk.green`WEBRTC_NEW_PASSTHROUGH`} signal msg of type ${sdp && iceCandidate ? 'unexpected payload' : (sdp ? sdp.type : (iceCandidate ? 'ICE' : 'unknown'))} ${chalk.green`from`} the user named ${chalk.green`${sessionUserName}`} ${chalk.green`to`} the user named ${chalk.green`${websocketToPassThrough.username}`}`
             );
             sendSerializedSignalThroughWebsocket(
-              websocketToTransferOffer,
-              signalType.WEBRTC_NEW_OFFER,
+              websocketToPassThrough,
+              signalType.WEBRTC_NEW_PASSTHROUGH,
               {
-                offer: offer,
-                from: sessionUserId,
-                to: payload.userId,
-              }
-            );
-          }
-          break;
-        }
-
-        case signalType.WEBRTC_NEW_ANSWER: {
-          if (!userRoomMap.has(sessionUserId)) return;
-          const websocketToTransferAnswer = sessionMap.get(payload.userId);
-          const answer = payload.answer;
-          if (answer && websocketToTransferAnswer) {
-            console.log(
-              `[WebSocket] ${chalk.green`WEBRTC_NEW_ANSWER`} signal msg ${chalk.green`from`} the user named ${chalk.green`${sessionUserName}`} ${chalk.green`to`} the user named ${chalk.green`${websocketToTransferAnswer.username}`}`
-            );
-            sendSerializedSignalThroughWebsocket(
-              websocketToTransferAnswer,
-              signalType.WEBRTC_NEW_ANSWER,
-              {
-                answer: answer,
-                from: sessionUserId,
-                to: payload.userId,
-              }
-            );
-          }
-          break;
-        }
-
-        case signalType.WEBRTC_NEW_ICE_CANDIDATE: {
-          if (!userRoomMap.has(sessionUserId)) return;
-          const websocketToTransfer = sessionMap.get(payload.userId);
-          const iceCandidate = payload.iceCandidate;
-          if (iceCandidate && websocketToTransfer) {
-            console.log(
-              `[WebSocket] ${chalk.green`WEBRTC_NEW_ICE_CANDIDATE`} signal msg ${chalk.green`from`} the user named ${chalk.green`${sessionUserName}`} ${chalk.green`to`} the user named ${chalk.green`${websocketToTransfer.username}`}`
-            );
-            sendSerializedSignalThroughWebsocket(
-              websocketToTransfer,
-              signalType.WEBRTC_NEW_ICE_CANDIDATE,
-              {
-                iceCandidate: iceCandidate,
+                sdp,
+                offerMakingTime,
+                iceCandidate,
                 from: sessionUserId,
                 to: payload.userId,
               }

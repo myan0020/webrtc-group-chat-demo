@@ -16,10 +16,8 @@ const SignalMessageTypeObject = {
   // WebRTC connection singals
   WEBRTC_NEW_CALLING: 9,
   WEBRTC_NEW_PEER: 10,
-  WEBRTC_NEW_OFFER: 11,
-  WEBRTC_NEW_ANSWER: 12,
-  WEBRTC_NEW_ICE_CANDIDATE: 13,
-  WEBRTC_HANG_UP: 14,
+  WEBRTC_NEW_PASSTHROUGH: 11,
+  WEBRTC_HANG_UP: 12,
 };
 const SignalMessageTypeSet = new Set(Object.values(SignalMessageTypeObject));
 
@@ -48,9 +46,7 @@ exports.type = {
   // WebRTC connection singals
   WEBRTC_NEW_CALLING: SignalMessageTypeObject.WEBRTC_NEW_CALLING,
   WEBRTC_NEW_PEER: SignalMessageTypeObject.WEBRTC_NEW_PEER,
-  WEBRTC_NEW_OFFER: SignalMessageTypeObject.WEBRTC_NEW_OFFER,
-  WEBRTC_NEW_ANSWER: SignalMessageTypeObject.WEBRTC_NEW_ANSWER,
-  WEBRTC_NEW_ICE_CANDIDATE: SignalMessageTypeObject.WEBRTC_NEW_ICE_CANDIDATE,
+  WEBRTC_NEW_PASSTHROUGH: SignalMessageTypeObject.WEBRTC_NEW_PASSTHROUGH,
   WEBRTC_HANG_UP: SignalMessageTypeObject.WEBRTC_HANG_UP,
 };
 
