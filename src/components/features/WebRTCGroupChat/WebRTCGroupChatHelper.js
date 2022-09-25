@@ -1,6 +1,6 @@
 /**
  *
- * WebRTCGroupChatService collects all WebRTC connection establishment logic including authtication,
+ * WebRTCGroupChatHelper collects all WebRTC connection establishment logic including authtication,
  * peer connections management, (local && remote) media streams management, signaling, and ICE candidates management.
  *
  * The module's exported properties are designed to build any custom UI aiming to realize the real-time group-chatting feature
@@ -86,7 +86,7 @@ function _createSignal(url) {
   if (!passChecking) return;
   _websocket = new WebSocket(url);
   _websocket.addEventListener("open", function (event) {
-    console.log("WebRTCGroupChatService: websocket connected");
+    console.log("WebRTCGroupChatHelper: websocket connected");
     // external usage
     if (_handleWebSocketOpened) {
       _handleWebSocketOpened(event);
@@ -99,7 +99,7 @@ function _createSignal(url) {
 
     switch (type) {
       case _SignalMessageType.UPDATE_ROOMS: {
-        console.log("WebRTCGroupChatService: UPDATE_ROOMS signal received");
+        console.log("WebRTCGroupChatHelper: UPDATE_ROOMS signal received");
 
         // external usage
         if (_handleRoomsUpdated) {
@@ -109,7 +109,7 @@ function _createSignal(url) {
       }
       case _SignalMessageType.JOIN_ROOM_SUCCESS: {
         console.log(
-          "WebRTCGroupChatService: JOIN_ROOM_SUCCESS signal received"
+          "WebRTCGroupChatHelper: JOIN_ROOM_SUCCESS signal received"
         );
 
         // external usage
@@ -120,7 +120,7 @@ function _createSignal(url) {
       }
       case _SignalMessageType.LEAVE_ROOM_SUCCESS: {
         console.log(
-          "WebRTCGroupChatService: LEAVE_ROOM_SUCCESS signal received"
+          "WebRTCGroupChatHelper: LEAVE_ROOM_SUCCESS signal received"
         );
 
         // external usage
@@ -130,7 +130,7 @@ function _createSignal(url) {
         break;
       }
       case _SignalMessageType.WEBRTC_NEW_PEER: {
-        console.log("WebRTCGroupChatService: WEBRTC_NEW_PEER signal received");
+        console.log("WebRTCGroupChatHelper: WEBRTC_NEW_PEER signal received");
 
         // internal usage
         _handleNewPeerArivalInternally(payload);
@@ -143,7 +143,7 @@ function _createSignal(url) {
       }
       case _SignalMessageType.WEBRTC_NEW_PASSTHROUGH: {
         console.log(
-          "WebRTCGroupChatService: WEBRTC_NEW_PASSTHROUGH signal received"
+          "WebRTCGroupChatHelper: WEBRTC_NEW_PASSTHROUGH signal received"
         );
 
         // internal usage
@@ -151,7 +151,7 @@ function _createSignal(url) {
         break;
       }
       case _SignalMessageType.WEBRTC_HANG_UP: {
-        console.log("WebRTCGroupChatService: WEBRTC_HANG_UP signal received");
+        console.log("WebRTCGroupChatHelper: WEBRTC_HANG_UP signal received");
 
         // internal usage
         _handleHangedUpByRemotePeer(payload);
@@ -163,7 +163,7 @@ function _createSignal(url) {
   });
   _websocket.addEventListener("close", function (event) {
     console.log(
-      "WebRTCGroupChatService: client side heared websocket onclose event"
+      "WebRTCGroupChatHelper: client side heared websocket onclose event"
     );
 
     _destroySignal();
@@ -177,7 +177,7 @@ function _createSignal(url) {
 function _destroySignal() {
   if (_websocket) {
     console.log(
-      "WebRTCGroupChatService: client side will close websocket connection"
+      "WebRTCGroupChatHelper: client side will close websocket connection"
     );
     _websocket.close();
     _websocket = null;
@@ -238,7 +238,7 @@ function _logout() {
     .then((response) => {
       const type = response.data.type;
       if (type === _SignalMessageType.LOG_OUT_SUCCESS) {
-        console.log("WebRTCGroupChatService: LOG_OUT_SUCCESS signal received");
+        console.log("WebRTCGroupChatHelper: LOG_OUT_SUCCESS signal received");
 
         if (_handleLogoutSuccess) {
           _handleLogoutSuccess();
@@ -286,7 +286,7 @@ const _peerConnectionMap = {
     this.map.set(key, value);
     const curSize = this.map.size;
     console.log(
-      `WebRTCGroupChatService: _peerConnectionMap set executed, and its size changed from ${prevSize} to ${curSize}`
+      `WebRTCGroupChatHelper: _peerConnectionMap set executed, and its size changed from ${prevSize} to ${curSize}`
     );
   },
   get(key) {
@@ -302,7 +302,7 @@ const _peerConnectionMap = {
     this.map.delete(key);
     const curSize = this.map.size;
     console.log(
-      `WebRTCGroupChatService: _peerConnectionMap delete executed, and its size changed from ${prevSize} to ${curSize}`
+      `WebRTCGroupChatHelper: _peerConnectionMap delete executed, and its size changed from ${prevSize} to ${curSize}`
     );
   },
   clear() {
@@ -310,7 +310,7 @@ const _peerConnectionMap = {
     this.map.clear();
     const curSize = this.map.size;
     console.log(
-      `WebRTCGroupChatService: _peerConnectionMap clear executed, and its size changed from ${prevSize} to ${curSize}`
+      `WebRTCGroupChatHelper: _peerConnectionMap clear executed, and its size changed from ${prevSize} to ${curSize}`
     );
   },
   forEach(func) {
@@ -320,26 +320,37 @@ const _peerConnectionMap = {
 
 function _handleNewPeerArivalInternally(payload) {
   const peerId = payload.userId;
+  const isNewPeerPolite = payload.isPolite;
+
   if (!peerId || peerId.length === 0) {
     console.log(
-      `WebRTCGroupChatService: unexpected peerId ( ${peerId} ) during '_handleNewPeerArivalInternally' method`
+      `WebRTCGroupChatHelper: unexpected peerId ( ${peerId} ) during '_handleNewPeerArivalInternally' method`
     );
     return;
   }
-  _locatePeerConnection(peerId);
+  const peerConnection = _locatePeerConnection(peerId);
+  if (!peerConnection) {
+    return;
+  }
+
+  // offer collision setup
+  peerConnection.makingOffer = false;
+  peerConnection.ignoreRemoteOffer = false;
+  peerConnection.isSettingRemoteAnswerPending = false;
+  peerConnection.isLocalPoliteDuringOfferCollision = !isNewPeerPolite;
 }
 
 function _handleNewPassthroughArival(payload) {
   const peerId = payload.from;
-  const { sdp, iceCandidate, offerMakingTime: peerOfferMakingTime } = payload;
+  const { sdp, iceCandidate } = payload;
   const isSDP = sdp !== undefined;
   const isICE = iceCandidate !== undefined;
 
-  console.log(`WebRTCGroupChatService: does this passthrough carry sdp (${isSDP}) ? or ICE (${isICE}) ?`);
+  console.log(`WebRTCGroupChatHelper: does this passthrough carry sdp (${isSDP}) ? or ICE (${isICE}) ?`);
 
   if (!peerId || peerId.length === 0 || (!isSDP && !isICE)) {
     console.log(
-      `WebRTCGroupChatService: unexpected new passthrough ( sdp: ${sdp}, iceCandidate: ${iceCandidate} ) for peerId of ${peerId}, during '_handleNewPassthroughArival' method`
+      `WebRTCGroupChatHelper: unexpected new passthrough ( sdp: ${sdp}, iceCandidate: ${iceCandidate} ) for peerId of ${peerId}, during '_handleNewPassthroughArival' method`
     );
     return;
   }
@@ -347,13 +358,19 @@ function _handleNewPassthroughArival(payload) {
   const peerConnection = _locatePeerConnection(peerId);
   if (!peerConnection) {
     console.log(
-      `WebRTCGroupChatService: unexpected non-existent peer connection ( ${peerConnection} ) with peerId of ${peerId} after '_locatePeerConnection' method`
+      `WebRTCGroupChatHelper: unexpected non-existent peer connection ( ${peerConnection} ) with peerId of ${peerId} after '_locatePeerConnection' method`
     );
     return;
   }
 
+  // offer collision setup
+  peerConnection.makingOffer = false;
+  peerConnection.ignoreRemoteOffer = false;
+  peerConnection.isSettingRemoteAnswerPending = false;
+  peerConnection.isLocalPoliteDuringOfferCollision = false;
+  
   console.log(
-    `WebRTCGroupChatService: before consuming the new passthrough, the current peerConnection signalingState is ${
+    `WebRTCGroupChatHelper: before consuming the new passthrough, the current peerConnection signalingState is ${
       peerConnection.signalingState
     }, the localDescription type is ${
       peerConnection.localDescription
@@ -369,13 +386,13 @@ function _handleNewPassthroughArival(payload) {
   // distinguish the type of new passthrough, and then process it based on its type
   if (isSDP && isICE) {
     console.error(
-      `WebRTCGroupChatService: unexpected new passthrough type, it cannot be both 'SDP' and 'ICE'`
+      `WebRTCGroupChatHelper: unexpected new passthrough type, it cannot be both 'SDP' and 'ICE'`
     );
     return;
   }
 
   console.log(
-    `WebRTCGroupChatService: start consuming the new passthrough ... ...`
+    `WebRTCGroupChatHelper: start consuming the new passthrough ... ...`
   );
 
   if (isICE) {
@@ -383,14 +400,14 @@ function _handleNewPassthroughArival(payload) {
       .addIceCandidate(iceCandidate)
       .then(() => {
         console.log(
-          `WebRTCGroupChatService: peerId (${peerId})'s 'addIceCandidate' done with no issue`
+          `WebRTCGroupChatHelper: peerId (${peerId})'s 'addIceCandidate' done with no issue`
         );
       })
       .catch((error) => {
         // Suppress ignored offer's candidates
-        if (!peerConnection.ignoreRemoteOfferDuringOfferCollision) {
+        if (!peerConnection.ignoreRemoteOffer) {
           console.error(
-            `WebRTCGroupChatService: Found error with message of ${error}`
+            `WebRTCGroupChatHelper: Found error with message of ${error}`
           );
         }
       });
@@ -406,7 +423,7 @@ function _handleNewPassthroughArival(payload) {
 
   if (isOfferCollision) {
     console.log(
-      `WebRTCGroupChatService: an offer collision has happened ( signalingState: ${
+      `WebRTCGroupChatHelper: an offer collision has happened ( signalingState: ${
         peerConnection.signalingState
       }, isSettingRemoteAnswerPending: ${
         peerConnection.isSettingRemoteAnswerPending
@@ -416,27 +433,13 @@ function _handleNewPassthroughArival(payload) {
         sdp.type
       } )`
     );
-
-    const lastLocalOfferMakingTime = Number(peerConnection.timeOfLastOfferMaking);
-    const lastPeerOfferMakingTime = Number(peerOfferMakingTime);
-    if (!isNaN(lastLocalOfferMakingTime) && !isNaN(lastPeerOfferMakingTime)) {
-      peerConnection.isLocalPoliteDuringOfferCollision = (lastLocalOfferMakingTime > lastPeerOfferMakingTime);
-    }
-  
-    console.log(
-      `WebRTCGroupChatService: the 'lastLocalOfferMakingTime' is ${
-        lastLocalOfferMakingTime
-      }, and the 'lastPeerOfferMakingTime' is ${
-        lastPeerOfferMakingTime
-      }`
-    );
   }
 
-  peerConnection.ignoreRemoteOfferDuringOfferCollision = isOfferCollision && !peerConnection.isLocalPoliteDuringOfferCollision;
+  peerConnection.ignoreRemoteOffer = isOfferCollision && !peerConnection.isLocalPoliteDuringOfferCollision;
 
-  if (peerConnection.ignoreRemoteOfferDuringOfferCollision) {
+  if (peerConnection.ignoreRemoteOffer) {
     console.log(
-      `WebRTCGroupChatService: the local peer ignore the ${
+      `WebRTCGroupChatHelper: the local peer ignore the ${
         sdp.type
       } typed SDP for peer connection of peerId ( ${
         peerId
@@ -457,6 +460,14 @@ function _handleNewPassthroughArival(payload) {
         return;
       }
 
+      console.log(
+        `WebRTCGroupChatHelper: the local peer accept the ${
+          sdp.type
+        } typed SDP as a param of 'setRemoteDescription' for peer connection of peerId ( ${
+          peerId
+        } ), during this offer collision`
+      );
+
       return peerConnection.setLocalDescription();
     })
     .then(() => {
@@ -465,6 +476,10 @@ function _handleNewPassthroughArival(payload) {
       }
 
       if (_websocket) {
+        console.log(
+          `WebRTCGroupChatHelper: the local peer send the new answer`
+        );
+
         const data = {
           type: _SignalMessageType.WEBRTC_NEW_PASSTHROUGH,
           payload: {
@@ -477,7 +492,7 @@ function _handleNewPassthroughArival(payload) {
     })
     .catch((error) => {
       console.error(
-        `WebRTCGroupChatService: Found an error with message of ${
+        `WebRTCGroupChatHelper: Found an error with message of ${
           error
         } during 'setRemoteDescription' or 'setLocalDescription'`
       );
@@ -487,7 +502,7 @@ function _handleNewPassthroughArival(payload) {
 function _locatePeerConnection(peerId) {
   if (!peerId || peerId.length === 0) {
     console.log(
-      `WebRTCGroupChatService: unexpected peerId ( ${peerId} ) during '_locatePeerConnection'`
+      `WebRTCGroupChatHelper: unexpected peerId ( ${peerId} ) during '_locatePeerConnection'`
     );
     return;
   }
@@ -495,7 +510,7 @@ function _locatePeerConnection(peerId) {
     const prevPeerIdsSize = _peerConnectionMap.size();
     _addPeerConnection(peerId);
     console.log(
-      `WebRTCGroupChatService: after '_addPeerConnection' method, peer connection count changed from ${prevPeerIdsSize} to ${_peerConnectionMap.size()}`
+      `WebRTCGroupChatHelper: after '_addPeerConnection' method, peer connection count changed from ${prevPeerIdsSize} to ${_peerConnectionMap.size()}`
     );
   }
   return _peerConnectionMap.get(peerId);
@@ -504,20 +519,14 @@ function _locatePeerConnection(peerId) {
 function _addPeerConnection(peerId) {
   if (!peerId || peerId.length === 0) {
     console.log(
-      `WebRTCGroupChatService: unexpected peerId of ${
+      `WebRTCGroupChatHelper: unexpected peerId of ${
         peerId
       } during creating and adding a new peer connection`
     );
     return;
   }
   const peerConnection = new RTCPeerConnection(_peerConnectionConfig);
-  console.log(`WebRTCGroupChatService: a new 'RTCPeerConnection' is created`);
-
-  // offer collision setup
-  peerConnection.makingOffer = false;
-  peerConnection.ignoreRemoteOfferDuringOfferCollision = false;
-  peerConnection.isSettingRemoteAnswerPending = false;
-  peerConnection.isLocalPoliteDuringOfferCollision = false;
+  console.log(`WebRTCGroupChatHelper: a new 'RTCPeerConnection' is created`);
 
   _peerConnectionMap.set(peerId, peerConnection);
   _addLocalMediaStreamToPeerConnetion(peerId, peerConnection);
@@ -536,20 +545,20 @@ function _addPeerConnection(peerId) {
         })
       );
       console.log(
-        `WebRTCGroupChatService: a peer connection's 'onicecandidate' fired with a new ICE candidate, then it's sent from ${_selfId} to ${peerId}`
+        `WebRTCGroupChatHelper: a peer connection's 'onicecandidate' fired with a new ICE candidate, then it's sent from ${_selfId} to ${peerId}`
       );
     }
   };
 
   peerConnection.oniceconnectionstatechange = (event) => {
     console.log(
-      `WebRTCGroupChatService: a peer connection's 'oniceconnectionstatechange' fired with the state of '${peerConnection.iceConnectionState}'`
+      `WebRTCGroupChatHelper: a peer connection's 'oniceconnectionstatechange' fired with the state of '${peerConnection.iceConnectionState}'`
     );
   };
 
   peerConnection.onnegotiationneeded = (event) => {
     console.log(
-      `WebRTCGroupChatService: a peer connection's 'onnegotiationneeded' fired, maybe it's time to create a new SDP offer ?`
+      `WebRTCGroupChatHelper: a peer connection's 'onnegotiationneeded' fired, maybe it's time to create a new SDP offer ?`
     );
   
     peerConnection.makingOffer = true;
@@ -564,12 +573,8 @@ function _addPeerConnection(peerId) {
         }
 
         console.log(
-          `WebRTCGroupChatService: a new localDescription of type '${offer.type}' created to peerId of ${peerId} during 'onnegotiationneeded'`
+          `WebRTCGroupChatHelper: a new localDescription of type '${offer.type}' created to peerId of ${peerId} during 'onnegotiationneeded'`
         );
-
-        const offerMakingTime = Date.now();
-        peerConnection.timeOfLastOfferMaking = offerMakingTime;
-        
 
         if (_websocket) {
           const data = {
@@ -577,7 +582,6 @@ function _addPeerConnection(peerId) {
             payload: {
               sdp: offer,
               userId: peerId,
-              offerMakingTime: offerMakingTime,
             },
           };
           _websocket.send(JSON.stringify(data));
@@ -585,7 +589,7 @@ function _addPeerConnection(peerId) {
       })
       .catch((error) => {
         console.error(
-          `WebRTCGroupChatService: Found error with message of ${error}`
+          `WebRTCGroupChatHelper: Found error with message of ${error}`
         );
       })
       .finally(() => {
@@ -595,7 +599,7 @@ function _addPeerConnection(peerId) {
 
   peerConnection.ontrack = function (event) {
     console.log(
-      `WebRTCGroupChatService: a peer connection's 'ontrack' fired, the remote media streams received, it has ${
+      `WebRTCGroupChatHelper: a peer connection's 'ontrack' fired, the remote media streams received, it has ${
         event.streams.length
       } streams, the first mediaStream obj has ${
         event.streams[0].getTracks().length
@@ -605,7 +609,7 @@ function _addPeerConnection(peerId) {
     const secondTrack = event.streams[0].getTracks()[1];
     
     if (firstTrack) {
-      console.log(`WebRTCGroupChatService : the first track info ( kind: ${
+      console.log(`WebRTCGroupChatHelper : the first track info ( kind: ${
         firstTrack.kind
       }, enabled: ${
         firstTrack.enabled
@@ -614,7 +618,7 @@ function _addPeerConnection(peerId) {
       } )`)
     }
     if (secondTrack) {
-      console.log(`WebRTCGroupChatService : the second track info ( kind: ${
+      console.log(`WebRTCGroupChatHelper : the second track info ( kind: ${
         secondTrack.kind
       }, enabled: ${
         secondTrack.enabled
@@ -651,7 +655,7 @@ function _requestToUnschedulePeerConnection() {
 function _closePeerConnectionTo(peerId) {
   if (!peerId || peerId.length === 0) {
     console.log(
-      `WebRTCGroupChatService: unexpected peerId when stopping peer side connection`
+      `WebRTCGroupChatHelper: unexpected peerId when stopping peer side connection`
     );
     return;
   }
@@ -659,7 +663,7 @@ function _closePeerConnectionTo(peerId) {
   if (!peerConnection) return;
   peerConnection.close();
   console.log(
-    `WebRTCGroupChatService: after the close peerConnection for peerId of ${peerId}, the current peerConnection signalingState is ${
+    `WebRTCGroupChatHelper: after the close peerConnection for peerId of ${peerId}, the current peerConnection signalingState is ${
       peerConnection.signalingState
     }, the localDescription type is ${
       peerConnection.localDescription
@@ -679,7 +683,7 @@ function _clearALLPeerConnections() {
     if (peerConnection) {
       peerConnection.close();
       console.log(
-        `WebRTCGroupChatService: after the close peerConnection for peerId of ${peerId}, the current peerConnection signalingState is ${
+        `WebRTCGroupChatHelper: after the close peerConnection for peerId of ${peerId}, the current peerConnection signalingState is ${
           peerConnection.signalingState
         }, the localDescription type is ${
           peerConnection.localDescription
@@ -692,12 +696,12 @@ function _clearALLPeerConnections() {
         }`
       );
       console.log(
-        `WebRTCGroupChatService: the peerConnection with peerId of ${peerId} is closed`
+        `WebRTCGroupChatHelper: the peerConnection with peerId of ${peerId} is closed`
       );
     }
   });
   _peerConnectionMap.clear();
-  console.log(`WebRTCGroupChatService: all peerConnections cleared`);
+  console.log(`WebRTCGroupChatHelper: all peerConnections cleared`);
 }
 
 /**
@@ -715,11 +719,11 @@ let _handleLocalMediaStreamChanged;
 let _handlePeerMediaStreamMapChanged;
 
 async function _createLocalMediaStream() {
-  console.log(`WebRTCGroupChatService: start to create local media stream`);
+  console.log(`WebRTCGroupChatHelper: start to create local media stream`);
   return navigator.mediaDevices
     .getUserMedia(_mediaStreamConstraints)
     .then((mediaStream) => {
-      console.log(`WebRTCGroupChatService: local media stream created`);
+      console.log(`WebRTCGroupChatHelper: local media stream created`);
       _localMediaStream = mediaStream;
       if (_handleLocalMediaStreamChanged) {
         _handleLocalMediaStreamChanged(mediaStream);
@@ -729,15 +733,24 @@ async function _createLocalMediaStream() {
 
 function _addLocalMediaStreamToPeerConnetion(peerId, peerConnection) {
   if (_localMediaStream) {
-    _localMediaStream.getTracks().forEach((track) => {
+    _localMediaStream.getTracks().forEach((track, index) => {
       console.log(
-        `WebRTCGroupChatService: add track of local media stream to a peer connection to ${peerId}`
+        `WebRTCGroupChatHelper: add track of local media stream to a peer connection to ${peerId}`
       );
-      peerConnection.addTrack(track, _localMediaStream);
+      // peerConnection.addTrack(track, _localMediaStream);
+
+      // TEST:
+      if (index === 1) {
+        setTimeout(() => {
+          peerConnection.addTrack(track, _localMediaStream);
+        }, 3000);
+      } else {
+        peerConnection.addTrack(track, _localMediaStream);
+      }
     });
   } else {
     console.log(
-      `WebRTCGroupChatService: cannot add track of local media stream to a peer connection to ${peerId}`
+      `WebRTCGroupChatHelper: cannot add track of local media stream to a peer connection to ${peerId}`
     );
   }
 }
@@ -745,7 +758,7 @@ function _addLocalMediaStreamToPeerConnetion(peerId, peerConnection) {
 function _addNewPeerMediaStreamReceivedFrom(peerId, event) {
   if (!peerId) {
     console.log(
-      `WebRTCGroupChatService: unexpected peerId content of ${peerId} during a peer connection 'ontrack'`
+      `WebRTCGroupChatHelper: unexpected peerId content of ${peerId} during a peer connection 'ontrack'`
     );
     return;
   }
@@ -753,14 +766,14 @@ function _addNewPeerMediaStreamReceivedFrom(peerId, event) {
     const prevPeerMediaStreamCount = _peerMediaStreamMap.size;
     _peerMediaStreamMap.set(peerId, event.streams[0]); // store this src
     console.log(
-      `WebRTCGroupChatService: _peerMediaStreamMap size changed from ${prevPeerMediaStreamCount} to ${_peerMediaStreamMap.size}`
+      `WebRTCGroupChatHelper: _peerMediaStreamMap size changed from ${prevPeerMediaStreamCount} to ${_peerMediaStreamMap.size}`
     );
     if (_handlePeerMediaStreamMapChanged) {
       _handlePeerMediaStreamMapChanged(_peerMediaStreamMap);
     }
   } else {
     console.log(
-      `WebRTCGroupChatService: unexpected peerId length of ${peerId} during a peer connection 'ontrack'`
+      `WebRTCGroupChatHelper: unexpected peerId length of ${peerId} during a peer connection 'ontrack'`
     );
   }
 }
@@ -768,14 +781,14 @@ function _addNewPeerMediaStreamReceivedFrom(peerId, event) {
 function _closePeerMediaStreamTo(peerId) {
   if (!peerId || peerId.length === 0) {
     console.log(
-      `WebRTCGroupChatService: unexpected peerId when stopping peer media stream`
+      `WebRTCGroupChatHelper: unexpected peerId when stopping peer media stream`
     );
     return;
   }
   const prevPeerMediaStreamCount = _peerMediaStreamMap.size;
   _peerMediaStreamMap.delete(peerId);
   console.log(
-    `WebRTCGroupChatService: deleted a peer media stream, and _peerMediaStreamMap size changed from ${prevPeerMediaStreamCount} to ${_peerMediaStreamMap.size}`
+    `WebRTCGroupChatHelper: deleted a peer media stream, and _peerMediaStreamMap size changed from ${prevPeerMediaStreamCount} to ${_peerMediaStreamMap.size}`
   );
   if (_handlePeerMediaStreamMapChanged) {
     _handlePeerMediaStreamMapChanged(_peerMediaStreamMap);
@@ -787,7 +800,7 @@ function _clearPeerMediaStreamMap() {
     const prevPeerMediaStreamCount = _peerMediaStreamMap.size;
     _peerMediaStreamMap.clear();
     console.log(
-      `WebRTCGroupChatService: clear all peer media streams, and _peerMediaStreamMap size changed from ${prevPeerMediaStreamCount} to ${_peerMediaStreamMap.size}`
+      `WebRTCGroupChatHelper: clear all peer media streams, and _peerMediaStreamMap size changed from ${prevPeerMediaStreamCount} to ${_peerMediaStreamMap.size}`
     );
     if (_handlePeerMediaStreamMapChanged) {
       _handlePeerMediaStreamMapChanged(_peerMediaStreamMap);
@@ -821,7 +834,7 @@ let _isCalling = false;
 
 function _changeCallingState(toCalling) {
   console.log(
-    `WebRTCGroupChatService: change calling state to toCalling of ${toCalling}`
+    `WebRTCGroupChatHelper: change calling state to toCalling of ${toCalling}`
   );
 
   // change state to no calling
@@ -847,7 +860,7 @@ function _startCalling() {
   _changeCallingState(true);
   _createLocalMediaStream().then(_requestToSchedulePeerConnection, (error) => {
     console.log(
-      `WebRTCGroupChatService: met error of ${error} when creating local media stream`
+      `WebRTCGroupChatHelper: met error of ${error} when creating local media stream`
     );
     _changeCallingState(false);
   });
@@ -958,11 +971,11 @@ export default {
    */
 
   login: function (username) {
-    console.log(`WebRTCGroupChatService: login as ${username}`);
+    console.log(`WebRTCGroupChatHelper: login as ${username}`);
     _login(username);
   },
   logout: function () {
-    console.log(`WebRTCGroupChatService: logout`);
+    console.log(`WebRTCGroupChatHelper: logout`);
     _logout();
   },
 

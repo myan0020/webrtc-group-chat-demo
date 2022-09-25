@@ -8,7 +8,7 @@ const videoProcessor = require("../media-processing/videoProcessor");
  * Clip and send a video based on the range in seconds
  */
 
-exports.get_video_clip = (req, res, next) => {
+exports.getVideoClip = (req, res, next) => {
   const videoId = req.query.id;
   const range = req.query.rangeInSeconds;
   const regxResult = /(\d+)\-(\d+)/g.exec(range);
@@ -55,7 +55,7 @@ exports.get_video_clip = (req, res, next) => {
  * Use HLS protocol to send a video
  */
 
-exports.get_video_hls = (req, res, next) => {
+exports.getVideoHLS = (req, res, next) => {
   const hlsID = req.query.id;
 
   const regxResult = /([\w-]+)\.(\w+)/g.exec(hlsID);

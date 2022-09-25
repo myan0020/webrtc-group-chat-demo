@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const Author = require('../models/author');
 
 // GET author information by author id
-exports.author_detail = (req, res, next) => {
+exports.authorDetail = (req, res, next) => {
   const mongooseId = mongoose.Types.ObjectId(req.params.id);
   Author
     .findById(mongooseId)
@@ -24,7 +24,7 @@ exports.author_detail = (req, res, next) => {
 };
 
 // GET author information list, sorted by `family_name` in ascending order
-exports.author_list = (req, res, next) => {
+exports.authorList = (req, res, next) => {
   Author
     .find()
     .sort({ family_name: 1 })

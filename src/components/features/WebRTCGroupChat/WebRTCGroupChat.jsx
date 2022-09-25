@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-import WebRTCGroupChatService from "./WebRTCGroupChatService.js";
+import WebRTCGroupChatHelper from "./WebRTCGroupChatHelper.js";
 import VideoList from "./VideoList.jsx";
 import style from "./WebRTCGroupChat.module.css";
 
@@ -36,14 +36,14 @@ export default function WebRTCGroupChat() {
 
   // hook 11: authentication
   useEffect(() => {
-    WebRTCGroupChatService.onLoginInSuccess((payload) => {
+    WebRTCGroupChatHelper.onLoginInSuccess((payload) => {
       const authenticatedUsername = payload.username;
       if (authenticatedUsername.length > 0) {
         setIsLogin(true);
         setAuthenticatedUsername(authenticatedUsername);
       }
     });
-    WebRTCGroupChatService.onLogoutInSuccess(() => {
+    WebRTCGroupChatHelper.onLogoutInSuccess(() => {
       setIsLogin(false);
       setJoinedRoomId("");
       setRooms({});
@@ -53,37 +53,37 @@ export default function WebRTCGroupChat() {
 
   // hook 12: chat room actions
   useEffect(() => {
-    WebRTCGroupChatService.onRoomsInfoUpdated((payload) => {
+    WebRTCGroupChatHelper.onRoomsInfoUpdated((payload) => {
       const rooms = payload.rooms;
       if (rooms) {
         setRooms(rooms);
       }
     });
-    WebRTCGroupChatService.onJoinRoomInSuccess((payload) => {
+    WebRTCGroupChatHelper.onJoinRoomInSuccess((payload) => {
       const roomId = payload.roomId;
       const roomName = payload.roomName;
       if (roomId.length > 0 && roomName.length > 0) {
         setJoinedRoomId(roomId);
       }
     });
-    WebRTCGroupChatService.onLeaveRoomInSuccess((payload) => {
+    WebRTCGroupChatHelper.onLeaveRoomInSuccess((payload) => {
       setJoinedRoomId("");
     });
   }, []);
 
   // hook 13: media calling state
   useEffect(() => {
-    WebRTCGroupChatService.onWebRTCCallingStateChanged((isCalling) => {
+    WebRTCGroupChatHelper.onWebRTCCallingStateChanged((isCalling) => {
       setIsCalling(isCalling);
     });
   }, []);
 
   // hook 14: WebRTC media streams
   useEffect(() => {
-    WebRTCGroupChatService.onLocalMediaStreamChanged((mediaStream) => {
+    WebRTCGroupChatHelper.onLocalMediaStreamChanged((mediaStream) => {
       setLocalMediaStream(mediaStream);
     });
-    WebRTCGroupChatService.onPeerMediaStreamMapChanged((peerStreamsMap) => {
+    WebRTCGroupChatHelper.onPeerMediaStreamMapChanged((peerStreamsMap) => {
       console.log(
         `onPeerMediaStreamMapChanged called with peer stream map size ${peerStreamsMap.size}`
       );
@@ -109,10 +109,10 @@ export default function WebRTCGroupChat() {
   // click to login or logout
   const onLoginoutClick = (e) => {
     if (!isLogin && inputUserName.length > 0) {
-      WebRTCGroupChatService.login(inputUserName);
+      WebRTCGroupChatHelper.login(inputUserName);
       return;
     }
-    WebRTCGroupChatService.logout();
+    WebRTCGroupChatHelper.logout();
   };
 
   // set keyboard shortcuts
@@ -124,13 +124,13 @@ export default function WebRTCGroupChat() {
       return;
     }
     if (inputUserName.length === 0) return;
-    WebRTCGroupChatService.login(inputUserName);
+    WebRTCGroupChatHelper.login(inputUserName);
   };
 
   // click to create a new room
   const onCreateNewRoomClick = (e) => {
     if (!inputRoomName.length > 0 || joinedRoomId.length > 0) return;
-    WebRTCGroupChatService.createNewRoom(inputRoomName);
+    WebRTCGroupChatHelper.createNewRoom(inputRoomName);
   };
 
   // click to select a room
@@ -143,25 +143,25 @@ export default function WebRTCGroupChat() {
   // click to join the selected room
   const onJoinSelectedRoomClick = (e) => {
     if (!selectedRoomId.length > 0) return;
-    WebRTCGroupChatService.joinRoom(selectedRoomId);
+    WebRTCGroupChatHelper.joinRoom(selectedRoomId);
   };
 
   // click to leave the current room
   const onLeaveFromCurRoomClick = (e) => {
-    WebRTCGroupChatService.leaveRoom();
+    WebRTCGroupChatHelper.leaveRoom();
   };
 
   // click to start calling
   const onStartMediaCallingClick = (e) => {
     if (joinedRoomId.length > 0) {
-      WebRTCGroupChatService.startCalling();
+      WebRTCGroupChatHelper.startCalling();
     }
   };
 
   // click to start calling
   const onHangUpMediaCallingClick = (e) => {
     if (joinedRoomId.length > 0) {
-      WebRTCGroupChatService.hangUpCalling();
+      WebRTCGroupChatHelper.hangUpCalling();
     }
   };
 
