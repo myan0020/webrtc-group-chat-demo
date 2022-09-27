@@ -20,21 +20,28 @@ export default function WebRTCGroupChat() {
   // hook 5
   const [rooms, setRooms] = useState({});
   // hook 6
-  const [authenticatedUsername, setAuthenticatedUsername] = useState("");
+  const [authenticatedUsername, setAuthenticatedUsername] =
+    useState("");
   // hook 7
   const [joinedRoomId, setJoinedRoomId] = useState("");
   // hook 8
   const [localMediaStream, setLocalMediaStream] = useState();
   // hook 9
-  const [peerMediaStreamsMap, setPeerMediaStreamsMap] = useState(new Map());
+  const [peerMediaStreamsMap, setPeerMediaStreamsMap] = useState(
+    new Map()
+  );
   // hook 10
   const [isCalling, setIsCalling] = useState(false);
+  // hook 11
+  const [isMicEnabled, setIsMicEnabled] = useState(false);
+  // hook 12
+  const [isCameraEnabled, setIsCameraEnabled] = useState(false);
 
   /**
    * Side Effects
    */
 
-  // hook 11: authentication
+  // hook 13: authentication
   useEffect(() => {
     WebRTCGroupChatHelper.onLoginInSuccess((payload) => {
       const authenticatedUsername = payload.username;
@@ -51,7 +58,7 @@ export default function WebRTCGroupChat() {
     });
   }, []);
 
-  // hook 12: chat room actions
+  // hook 14: chat room actions
   useEffect(() => {
     WebRTCGroupChatHelper.onRoomsInfoUpdated((payload) => {
       const rooms = payload.rooms;
@@ -71,25 +78,30 @@ export default function WebRTCGroupChat() {
     });
   }, []);
 
-  // hook 13: media calling state
+  // hook 15: media calling state
   useEffect(() => {
     WebRTCGroupChatHelper.onWebRTCCallingStateChanged((isCalling) => {
       setIsCalling(isCalling);
     });
   }, []);
 
-  // hook 14: WebRTC media streams
+  // hook 16: WebRTC media streams
   useEffect(() => {
     WebRTCGroupChatHelper.onLocalMediaStreamChanged((mediaStream) => {
       setLocalMediaStream(mediaStream);
+
+      setIsMicEnabled(WebRTCGroupChatHelper.localMicEnabled);
+      setIsCameraEnabled(WebRTCGroupChatHelper.localCameraEnabled);
     });
-    WebRTCGroupChatHelper.onPeerMediaStreamMapChanged((peerStreamsMap) => {
-      console.log(
-        `onPeerMediaStreamMapChanged called with peer stream map size ${peerStreamsMap.size}`
-      );
-      const map = new Map(peerStreamsMap);
-      setPeerMediaStreamsMap(map);
-    });
+    WebRTCGroupChatHelper.onPeerMediaStreamMapChanged(
+      (peerStreamsMap) => {
+        console.log(
+          `onPeerMediaStreamMapChanged called with peer stream map size ${peerStreamsMap.size}`
+        );
+        const map = new Map(peerStreamsMap);
+        setPeerMediaStreamsMap(map);
+      }
+    );
   }, []);
 
   /**
@@ -165,6 +177,24 @@ export default function WebRTCGroupChat() {
     }
   };
 
+  // click to mute
+  const onToggleMicClick = (e) => {
+    if (joinedRoomId.length > 0 && isCalling) {
+      const curEnabled = WebRTCGroupChatHelper.localMicEnabled;
+      WebRTCGroupChatHelper.localMicEnabled = !curEnabled;
+      setIsMicEnabled(!curEnabled);
+    }
+  };
+
+  // click to mute
+  const onToggleCameraClick = (e) => {
+    if (joinedRoomId.length > 0 && isCalling) {
+      const curEnabled = WebRTCGroupChatHelper.localCameraEnabled;
+      WebRTCGroupChatHelper.localCameraEnabled = !curEnabled;
+      setIsCameraEnabled(!curEnabled);
+    }
+  };
+
   /**
    * Stateful Rendering
    */
@@ -179,7 +209,11 @@ export default function WebRTCGroupChat() {
       className={style.userSelect}
     >
       {Object.keys(rooms).map((roomId) => (
-        <option key={roomId} value={roomId} className={style.userOption}>
+        <option
+          key={roomId}
+          value={roomId}
+          className={style.userOption}
+        >
           {rooms[roomId].name}
         </option>
       ))}
@@ -191,7 +225,7 @@ export default function WebRTCGroupChat() {
     joinedRoomId.length > 0 ? (
       <button
         onClick={onLeaveFromCurRoomClick}
-        type="button"
+        type='button'
         className={style.button}
       >
         leave the current room
@@ -199,7 +233,7 @@ export default function WebRTCGroupChat() {
     ) : (
       <button
         onClick={onJoinSelectedRoomClick}
-        type="button"
+        type='button'
         disabled={selectedRoomId.length === 0}
         className={style.button}
       >
@@ -209,7 +243,10 @@ export default function WebRTCGroupChat() {
 
   // media calling button rendering
   const mediaCallingButtonRendered = isCalling ? (
-    <button onClick={onHangUpMediaCallingClick} className={style.button}>
+    <button
+      onClick={onHangUpMediaCallingClick}
+      className={style.button}
+    >
       Hang Up
     </button>
   ) : (
@@ -227,14 +264,18 @@ export default function WebRTCGroupChat() {
     <p>
       <label>Enter your username</label>
       <input
-        placeholder="username"
+        placeholder='username'
         onChange={onInputNewUserNameChange}
         value={inputUserName}
         className={style.userInput}
         onKeyDown={onKeyDown}
         autoFocus
       />
-      <button type="button" onClick={onLoginoutClick} className={style.button}>
+      <button
+        type='button'
+        onClick={onLoginoutClick}
+        className={style.button}
+      >
         login
       </button>
     </p>
@@ -244,7 +285,7 @@ export default function WebRTCGroupChat() {
       <p>{roomsSelectRendered}</p>
       <p>
         <input
-          placeholder="Enter your custom room name"
+          placeholder='Enter your custom room name'
           onChange={onInputNewRoomNameChange}
           value={inputRoomName}
           className={style.userInput}
@@ -252,9 +293,11 @@ export default function WebRTCGroupChat() {
           autoFocus
         />
         <button
-          type="button"
+          type='button'
           onClick={onCreateNewRoomClick}
-          disabled={inputRoomName.length === 0 || joinedRoomId.length > 0}
+          disabled={
+            inputRoomName.length === 0 || joinedRoomId.length > 0
+          }
           className={style.button}
         >
           Create Room
@@ -264,7 +307,7 @@ export default function WebRTCGroupChat() {
       </p>
       <p>
         <button
-          type="button"
+          type='button'
           onClick={onLoginoutClick}
           className={style.button}
         >
@@ -279,7 +322,9 @@ export default function WebRTCGroupChat() {
     <>
       <div>Check Local Video</div>
       <div>
-        <VideoList mediaStreamsMap={new Map([["local", localMediaStream]])} />
+        <VideoList
+          mediaStreamsMap={new Map([["local", localMediaStream]])}
+        />
       </div>
     </>
   ) : (
@@ -296,13 +341,41 @@ export default function WebRTCGroupChat() {
     <></>
   );
 
+  // muting
+  const toggleMicButtonRendering = (
+    <div>
+      <button
+        onClick={onToggleMicClick}
+        className={style.button}
+      >
+        {isMicEnabled ? "Disable Mic" : "Enable Mic"}
+      </button>
+    </div>
+  );
+  const toggleCameraButtonRendering = (
+    <div>
+      <button
+        onClick={onToggleCameraClick}
+        className={style.button}
+      >
+        {isCameraEnabled ? "Disable Camera" : "Enable Camera"}
+      </button>
+    </div>
+  );
+
   return (
-    <div id="rtc" className={style.messageWrapper}>
+    <div
+      id='rtc'
+      className={style.messageWrapper}
+    >
       <p>Web Socket + WebRTC Group Chat Client</p>
       {loginoutBlockRendered}
 
       {localVideo}
       {peerVideoList}
+
+      {isCalling && toggleMicButtonRendering}
+      {isCalling && toggleCameraButtonRendering}
     </div>
   );
 }

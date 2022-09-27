@@ -86,7 +86,7 @@ app.use((err, req, res, next) => {
 /**
  * Create a WebSocket server completely detached from the HTTP server
  *
- * the user who hasn't logged in cannot cannot open the websocket connection
+ * note: the user who hasn't logged in cannot cannot open the websocket connection
  */
 
 httpServer.on("upgrade", websocketController.handleUpgrade);
