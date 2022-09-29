@@ -461,9 +461,9 @@ function _handleNewPassthroughArival(payload) {
   }
 
   console.log(
-    `WebRTCGroupChatHelper: before seting 'setRemoteDescription', the remoteDescription is ${
-      peerConnection.remoteDesciption
-        ? peerConnection.remoteDesciption.type
+    `WebRTCGroupChatHelper: before setting 'setRemoteDescription', the remoteDescription is ${
+      peerConnection.remoteDescription
+        ? peerConnection.remoteDescription.type
         : "unknown"
     }`
   );
@@ -471,14 +471,21 @@ function _handleNewPassthroughArival(payload) {
   peerConnection
     .setRemoteDescription(sdp) // SRD rolls back as needed
     .then(() => {
+      console.log(
+        `WebRTCGroupChatHelper: the local peer accept the ( ${sdp.type} ) typed SDP as a param of 'setRemoteDescription' for peer connection of peerId ( ${peerId} )`
+      );
+      console.log(
+        `WebRTCGroupChatHelper: after setting 'setRemoteDescription', the remoteDescription is ${
+          peerConnection.remoteDescription
+            ? peerConnection.remoteDescription.type
+            : "unknown"
+        }`
+      );
+
       if (sdp.type == "answer") {
         peerConnection.isSettingRemoteAnswerPending = false;
         return;
       }
-
-      console.log(
-        `WebRTCGroupChatHelper: the local peer accept the ${sdp.type} typed SDP as a param of 'setRemoteDescription' for peer connection of peerId ( ${peerId} )`
-      );
 
       return peerConnection.setLocalDescription();
     })
@@ -622,6 +629,22 @@ function _addPeerConnection(peerId) {
   };
 
   peerConnection.ontrack = function (event) {
+    if (event.track && event.track.kind === "video") {
+      _videoTransceiver = event.transceiver;
+
+      // TEST:
+      // window._videoTransceiver = _videoTransceiver;
+
+      console.log(`WebRTCGroupChatHelper: a video transceiver has been set during 'ontrack'`)
+    } else if (event.track && event.track.kind === "audio") {
+      _audioTransceiver = event.transceiver;
+
+      // TEST:
+      // window._audioTransceiver = _audioTransceiver;
+      
+      console.log(`WebRTCGroupChatHelper: an audio transceiver has been set during 'ontrack'`)
+    }
+
     console.log(
       `WebRTCGroupChatHelper: a peer connection's 'ontrack' fired with a (id: ${
         event.track.id
@@ -728,6 +751,9 @@ let _mediaStreamConstraints = {
 let _localMediaStream;
 const _peerMediaStreamMap = new Map(); // [[ peerId, mediaStream ], ...]
 
+let _videoTransceiver;
+let _audioTransceiver;
+
 let _handleLocalMediaStreamChanged;
 let _handlePeerMediaStreamMapChanged;
 
@@ -789,6 +815,101 @@ function _addIncomingNewTrack(peerId, incomingNewTrack) {
   if (_handlePeerMediaStreamMapChanged) {
     _handlePeerMediaStreamMapChanged(_peerMediaStreamMap);
   }
+}
+
+function _getLocalMediaTrackEnabled(trackKind) {
+  let trackEnabled = false;
+
+  if (!_localMediaStream) {
+    return trackEnabled;
+  }
+
+  let track;
+  if (trackKind === 'audio' && _localMediaStream.getAudioTracks()) {
+    track = _localMediaStream.getAudioTracks()[0]
+  } else if (trackKind === 'video' && _localMediaStream.getVideoTracks()) {
+    track = _localMediaStream.getVideoTracks()[0]
+  }
+
+  if (!track) {
+    console.error(
+      `WebRTCGroupChatHelper: unexpected empty track when 'get' enabling ( ${trackKind} ) kind of local media device`
+    );
+    return trackEnabled;
+  }
+
+  trackEnabled = track.enabled;
+  return trackEnabled;
+}
+
+function _setLocalMediaTrackEnabled(trackKind, enabled) {
+  if (!_localMediaStream) {
+    console.error(
+      `WebRTCGroupChatHelper: unexpected empty _localMediaStream when 'set' enabling ( ${trackKind} ) kind of local media device`
+    );
+    return;
+  }
+
+  let track;
+  if (trackKind === 'audio' && _localMediaStream.getAudioTracks()) {
+    track = _localMediaStream.getAudioTracks()[0];
+  } else if (trackKind === 'video' && _localMediaStream.getVideoTracks()) {
+    track = _localMediaStream.getVideoTracks()[0];
+  }
+
+  if (!track) {
+    console.error(
+      `WebRTCGroupChatHelper: unexpected empty track when enabling ( ${trackKind} ) kind of local media device`
+    );
+    return;
+  }
+  track.enabled = enabled;
+}
+
+function _getLocalMediaTrackMuted(trackKind) {
+  let isLocalMediaTrackMuted = true;
+  let transceiver;
+
+  if (trackKind === 'audio') {
+    transceiver = _audioTransceiver;
+  } else if (trackKind === 'video') {
+    transceiver = _videoTransceiver;
+  }
+
+  if (!transceiver) {
+    return isLocalMediaTrackMuted;
+  }
+
+  switch (transceiver.currentDirection) {
+    case 'inactive':
+    case 'recvonly': 
+      isLocalMediaTrackMuted = true;
+      break;
+    default:
+      isLocalMediaTrackMuted = false;
+      break;
+  }
+
+  return isLocalMediaTrackMuted;
+}
+
+function _setLocalMediaTrackMuted(trackKind, muted) {
+  let transceiver;
+
+  if (trackKind === 'audio') {
+    transceiver = _audioTransceiver;
+  } else if (trackKind === 'video') {
+    transceiver = _videoTransceiver;
+  }
+
+  if (!transceiver) {
+    console.error(
+      `WebRTCGroupChatHelper: unexpected transceiver of ${transceiver ? transceiver : 'unknown'} when muting ( ${trackKind} ) kind of local media device`
+    );
+    return;
+  }
+
+  transceiver.direction = muted ? 'recvonly' : 'sendrecv';
 }
 
 function _closePeerMediaStreamTo(peerId) {
@@ -1018,36 +1139,32 @@ export default {
     _hangUpCalling();
   },
 
-  // media tracks controlling during media calling
+  // media tracks enabling during media calling
   get localMicEnabled() {
-    if (!_localMediaStream) {
-      return false;
-    }
-    return _localMediaStream.getAudioTracks()[0].enabled;
-  },
-  get localCameraEnabled() {
-    if (!_localMediaStream) {
-      return false;
-    }
-    return _localMediaStream.getVideoTracks()[0].enabled;
+    return _getLocalMediaTrackEnabled('audio');
   },
   set localMicEnabled(enabled) {
-    if (!_localMediaStream) {
-      console.error(
-        `WebRTCGroupChatHelper: unexpected _localMediaStream of ${_localMediaStream} when setting local microphone enabling`
-      );
-      return;
-    }
-    _localMediaStream.getAudioTracks()[0].enabled = enabled;
+    _setLocalMediaTrackEnabled('audio', enabled);
+  },
+  get localCameraEnabled() {
+    return _getLocalMediaTrackEnabled('video');
   },
   set localCameraEnabled(enabled) {
-    if (!_localMediaStream) {
-      console.error(
-        `WebRTCGroupChatHelper: unexpected _localMediaStream of ${_localMediaStream} when setting local camera enabling`
-      );
-      return;
-    }
-    _localMediaStream.getVideoTracks()[0].enabled = enabled;
+    _setLocalMediaTrackEnabled('video', enabled);
+  },
+
+  // media tracks' transceiver controlling during media calling
+  get localMicMuted() {
+    return _getLocalMediaTrackMuted('audio')
+  },
+  set localMicMuted(muted) {
+    _setLocalMediaTrackMuted('audio', muted);
+  },
+  get localCameraMuted() {
+    return _getLocalMediaTrackMuted('video')
+  },
+  set localCameraMuted(muted) {
+    _setLocalMediaTrackMuted('video', muted);
   },
 
   //

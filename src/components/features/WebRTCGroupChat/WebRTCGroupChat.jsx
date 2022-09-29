@@ -36,6 +36,10 @@ export default function WebRTCGroupChat() {
   const [isMicEnabled, setIsMicEnabled] = useState(false);
   // hook 12
   const [isCameraEnabled, setIsCameraEnabled] = useState(false);
+  // hook 13
+  const [isMicMuted, setIsMicMuted] = useState(true);
+  // hook 14
+  const [isCameraMuted, setIsCameraMuted] = useState(true);
 
   /**
    * Side Effects
@@ -100,6 +104,10 @@ export default function WebRTCGroupChat() {
         );
         const map = new Map(peerStreamsMap);
         setPeerMediaStreamsMap(map);
+
+        // TODO: it is the temperary location where the code below is called
+        setIsMicMuted(WebRTCGroupChatHelper.localMicMuted);
+        setIsCameraMuted(WebRTCGroupChatHelper.localCameraMuted);
       }
     );
   }, []);
@@ -177,8 +185,8 @@ export default function WebRTCGroupChat() {
     }
   };
 
-  // click to mute
-  const onToggleMicClick = (e) => {
+  // click to toggle enabling
+  const onToggleMicEnablingClick = (e) => {
     if (joinedRoomId.length > 0 && isCalling) {
       const curEnabled = WebRTCGroupChatHelper.localMicEnabled;
       WebRTCGroupChatHelper.localMicEnabled = !curEnabled;
@@ -186,12 +194,30 @@ export default function WebRTCGroupChat() {
     }
   };
 
-  // click to mute
-  const onToggleCameraClick = (e) => {
+  // click to toggle enabling
+  const onToggleCameraEnablingClick = (e) => {
     if (joinedRoomId.length > 0 && isCalling) {
       const curEnabled = WebRTCGroupChatHelper.localCameraEnabled;
       WebRTCGroupChatHelper.localCameraEnabled = !curEnabled;
       setIsCameraEnabled(!curEnabled);
+    }
+  };
+
+  // click to toggle muting
+  const onToggleMicMutingClick = (e) => {
+    if (joinedRoomId.length > 0 && isCalling) {
+      const curMuted = WebRTCGroupChatHelper.localMicMuted;
+      WebRTCGroupChatHelper.localMicMuted = !curMuted;
+      setIsMicMuted(!curMuted);
+    }
+  };
+
+  // click to toggle muting
+  const onToggleCameraMutingClick = (e) => {
+    if (joinedRoomId.length > 0 && isCalling) {
+      const curMuted = WebRTCGroupChatHelper.localCameraMuted;
+      WebRTCGroupChatHelper.localCameraMuted = !curMuted;
+      setIsCameraMuted(!curMuted);
     }
   };
 
@@ -341,24 +367,46 @@ export default function WebRTCGroupChat() {
     <></>
   );
 
-  // muting
-  const toggleMicButtonRendering = (
+  // enabling
+  const toggleMicEnablingButtonRendering = (
     <div>
       <button
-        onClick={onToggleMicClick}
+        onClick={onToggleMicEnablingClick}
         className={style.button}
       >
         {isMicEnabled ? "Disable Mic" : "Enable Mic"}
       </button>
     </div>
   );
-  const toggleCameraButtonRendering = (
+  const toggleCameraEnablingButtonRendering = (
     <div>
       <button
-        onClick={onToggleCameraClick}
+        onClick={onToggleCameraEnablingClick}
         className={style.button}
       >
         {isCameraEnabled ? "Disable Camera" : "Enable Camera"}
+      </button>
+    </div>
+  );
+
+  // muting
+  const toggleMicMutingButtonRendering = (
+    <div>
+      <button
+        onClick={onToggleMicMutingClick}
+        className={style.button}
+      >
+        {isMicMuted ? "Unmute Mic" : "Mute Mic"}
+      </button>
+    </div>
+  );
+  const toggleCameraMutingButtonRendering = (
+    <div>
+      <button
+        onClick={onToggleCameraMutingClick}
+        className={style.button}
+      >
+        {isCameraMuted ? "Unmute Camera" : "Mute Camera"}
       </button>
     </div>
   );
@@ -374,8 +422,11 @@ export default function WebRTCGroupChat() {
       {localVideo}
       {peerVideoList}
 
-      {isCalling && toggleMicButtonRendering}
-      {isCalling && toggleCameraButtonRendering}
+      {isCalling && toggleMicEnablingButtonRendering}
+      {isCalling && toggleCameraEnablingButtonRendering}
+
+      {isCalling && toggleMicMutingButtonRendering}
+      {isCalling && toggleCameraMutingButtonRendering}
     </div>
   );
 }
