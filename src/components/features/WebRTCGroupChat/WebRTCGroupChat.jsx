@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-import WebRTCGroupChatHelper from "./WebRTCGroupChatHelper.js";
+import WebRTCGroupChatController from "./WebRTCGroupChatController.js";
 import VideoList from "./VideoList.jsx";
 import style from "./WebRTCGroupChat.module.css";
 
@@ -47,14 +47,14 @@ export default function WebRTCGroupChat() {
 
   // hook 13: authentication
   useEffect(() => {
-    WebRTCGroupChatHelper.onLoginInSuccess((payload) => {
+    WebRTCGroupChatController.onLoginInSuccess((payload) => {
       const authenticatedUsername = payload.username;
       if (authenticatedUsername.length > 0) {
         setIsLogin(true);
         setAuthenticatedUsername(authenticatedUsername);
       }
     });
-    WebRTCGroupChatHelper.onLogoutInSuccess(() => {
+    WebRTCGroupChatController.onLogoutInSuccess(() => {
       setIsLogin(false);
       setJoinedRoomId("");
       setRooms({});
@@ -64,40 +64,40 @@ export default function WebRTCGroupChat() {
 
   // hook 14: chat room actions
   useEffect(() => {
-    WebRTCGroupChatHelper.onRoomsInfoUpdated((payload) => {
+    WebRTCGroupChatController.onRoomsInfoUpdated((payload) => {
       const rooms = payload.rooms;
       if (rooms) {
         setRooms(rooms);
       }
     });
-    WebRTCGroupChatHelper.onJoinRoomInSuccess((payload) => {
+    WebRTCGroupChatController.onJoinRoomInSuccess((payload) => {
       const roomId = payload.roomId;
       const roomName = payload.roomName;
       if (roomId.length > 0 && roomName.length > 0) {
         setJoinedRoomId(roomId);
       }
     });
-    WebRTCGroupChatHelper.onLeaveRoomInSuccess((payload) => {
+    WebRTCGroupChatController.onLeaveRoomInSuccess((payload) => {
       setJoinedRoomId("");
     });
   }, []);
 
   // hook 15: media calling state
   useEffect(() => {
-    WebRTCGroupChatHelper.onWebRTCCallingStateChanged((isCalling) => {
+    WebRTCGroupChatController.onWebRTCCallingStateChanged((isCalling) => {
       setIsCalling(isCalling);
     });
   }, []);
 
   // hook 16: WebRTC media streams
   useEffect(() => {
-    WebRTCGroupChatHelper.onLocalMediaStreamChanged((mediaStream) => {
+    WebRTCGroupChatController.onLocalMediaStreamChanged((mediaStream) => {
       setLocalMediaStream(mediaStream);
 
-      setIsMicEnabled(WebRTCGroupChatHelper.localMicEnabled);
-      setIsCameraEnabled(WebRTCGroupChatHelper.localCameraEnabled);
+      setIsMicEnabled(WebRTCGroupChatController.localMicEnabled);
+      setIsCameraEnabled(WebRTCGroupChatController.localCameraEnabled);
     });
-    WebRTCGroupChatHelper.onPeerMediaStreamMapChanged(
+    WebRTCGroupChatController.onPeerMediaStreamMapChanged(
       (peerStreamsMap) => {
         console.log(
           `onPeerMediaStreamMapChanged called with peer stream map size ${peerStreamsMap.size}`
@@ -106,8 +106,8 @@ export default function WebRTCGroupChat() {
         setPeerMediaStreamsMap(map);
 
         // TODO: it is the temperary location where the code below is called
-        setIsMicMuted(WebRTCGroupChatHelper.localMicMuted);
-        setIsCameraMuted(WebRTCGroupChatHelper.localCameraMuted);
+        setIsMicMuted(WebRTCGroupChatController.localMicMuted);
+        setIsCameraMuted(WebRTCGroupChatController.localCameraMuted);
       }
     );
   }, []);
@@ -129,10 +129,10 @@ export default function WebRTCGroupChat() {
   // click to login or logout
   const onLoginoutClick = (e) => {
     if (!isLogin && inputUserName.length > 0) {
-      WebRTCGroupChatHelper.login(inputUserName);
+      WebRTCGroupChatController.login(inputUserName);
       return;
     }
-    WebRTCGroupChatHelper.logout();
+    WebRTCGroupChatController.logout();
   };
 
   // set keyboard shortcuts
@@ -144,13 +144,13 @@ export default function WebRTCGroupChat() {
       return;
     }
     if (inputUserName.length === 0) return;
-    WebRTCGroupChatHelper.login(inputUserName);
+    WebRTCGroupChatController.login(inputUserName);
   };
 
   // click to create a new room
   const onCreateNewRoomClick = (e) => {
     if (!inputRoomName.length > 0 || joinedRoomId.length > 0) return;
-    WebRTCGroupChatHelper.createNewRoom(inputRoomName);
+    WebRTCGroupChatController.createNewRoom(inputRoomName);
   };
 
   // click to select a room
@@ -163,33 +163,33 @@ export default function WebRTCGroupChat() {
   // click to join the selected room
   const onJoinSelectedRoomClick = (e) => {
     if (!selectedRoomId.length > 0) return;
-    WebRTCGroupChatHelper.joinRoom(selectedRoomId);
+    WebRTCGroupChatController.joinRoom(selectedRoomId);
   };
 
   // click to leave the current room
   const onLeaveFromCurRoomClick = (e) => {
-    WebRTCGroupChatHelper.leaveRoom();
+    WebRTCGroupChatController.leaveRoom();
   };
 
   // click to start calling
   const onStartMediaCallingClick = (e) => {
     if (joinedRoomId.length > 0) {
-      WebRTCGroupChatHelper.startCalling();
+      WebRTCGroupChatController.startCalling();
     }
   };
 
   // click to start calling
   const onHangUpMediaCallingClick = (e) => {
     if (joinedRoomId.length > 0) {
-      WebRTCGroupChatHelper.hangUpCalling();
+      WebRTCGroupChatController.hangUpCalling();
     }
   };
 
   // click to toggle enabling
   const onToggleMicEnablingClick = (e) => {
     if (joinedRoomId.length > 0 && isCalling) {
-      const curEnabled = WebRTCGroupChatHelper.localMicEnabled;
-      WebRTCGroupChatHelper.localMicEnabled = !curEnabled;
+      const curEnabled = WebRTCGroupChatController.localMicEnabled;
+      WebRTCGroupChatController.localMicEnabled = !curEnabled;
       setIsMicEnabled(!curEnabled);
     }
   };
@@ -197,8 +197,8 @@ export default function WebRTCGroupChat() {
   // click to toggle enabling
   const onToggleCameraEnablingClick = (e) => {
     if (joinedRoomId.length > 0 && isCalling) {
-      const curEnabled = WebRTCGroupChatHelper.localCameraEnabled;
-      WebRTCGroupChatHelper.localCameraEnabled = !curEnabled;
+      const curEnabled = WebRTCGroupChatController.localCameraEnabled;
+      WebRTCGroupChatController.localCameraEnabled = !curEnabled;
       setIsCameraEnabled(!curEnabled);
     }
   };
@@ -206,8 +206,8 @@ export default function WebRTCGroupChat() {
   // click to toggle muting
   const onToggleMicMutingClick = (e) => {
     if (joinedRoomId.length > 0 && isCalling) {
-      const curMuted = WebRTCGroupChatHelper.localMicMuted;
-      WebRTCGroupChatHelper.localMicMuted = !curMuted;
+      const curMuted = WebRTCGroupChatController.localMicMuted;
+      WebRTCGroupChatController.localMicMuted = !curMuted;
       setIsMicMuted(!curMuted);
     }
   };
@@ -215,8 +215,8 @@ export default function WebRTCGroupChat() {
   // click to toggle muting
   const onToggleCameraMutingClick = (e) => {
     if (joinedRoomId.length > 0 && isCalling) {
-      const curMuted = WebRTCGroupChatHelper.localCameraMuted;
-      WebRTCGroupChatHelper.localCameraMuted = !curMuted;
+      const curMuted = WebRTCGroupChatController.localCameraMuted;
+      WebRTCGroupChatController.localCameraMuted = !curMuted;
       setIsCameraMuted(!curMuted);
     }
   };
@@ -344,27 +344,23 @@ export default function WebRTCGroupChat() {
   );
 
   // video rendering
-  const localVideo = isCalling ? (
+  const localVideo = (
     <>
       <div>Check Local Video</div>
       <div>
         <VideoList
-          mediaStreamsMap={new Map([["local", localMediaStream]])}
+          mediaStreamsMap={localMediaStream ? new Map([["local", localMediaStream]]) : new Map()}
         />
       </div>
     </>
-  ) : (
-    <></>
   );
-  const peerVideoList = isCalling ? (
+  const peerVideoList = (
     <div>
       <div>Check Peer Video List</div>
       <div>
         <VideoList mediaStreamsMap={peerMediaStreamsMap} />
       </div>
     </div>
-  ) : (
-    <></>
   );
 
   // enabling

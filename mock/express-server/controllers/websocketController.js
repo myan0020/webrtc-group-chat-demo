@@ -12,6 +12,25 @@ const authenticatedUserIds =
   require("./sessionController").authenticatedUserIds;
 const chalk = require("chalk");
 
+exports.handleUpgrade = (request, socket, head) => {
+  sessionParser(request, {}, function next() {
+    if (!authenticatedUserIds.has(request.session.userId)) {
+      socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
+      socket.destroy();
+      return;
+    }
+
+    const wss = createWebSocket(request.session);
+
+    wss.handleUpgrade(request, socket, head, function (ws) {
+      console.log(
+        `[WebSocket] will emit a ${chalk.yellow`connection`} event `
+      );
+      wss.emit("connection", ws, request);
+    });
+  });
+};
+
 const createWebSocket = (session) => {
   console.log(
     `[WebSocket] will be created to the user named ${chalk.green`${session.username}`}`
@@ -54,7 +73,12 @@ const handleWebSocketConnection = (ws, request, sessionMap) => {
   });
 };
 
-const handleWebSocketMessage = (ws, sessionUserName, sessionUserId, data) => {
+const handleWebSocketMessage = (
+  ws,
+  sessionUserName,
+  sessionUserId,
+  data
+) => {
   const parsedMessage = JSON.parse(data);
   const type = parsedMessage.type;
   const payload = parsedMessage.payload;
@@ -75,18 +99,13 @@ const handleWebSocketMessage = (ws, sessionUserName, sessionUserId, data) => {
       break;
     }
 
-    case signalType.WEBRTC_NEW_CALLING: {
-      handleWebRTCNewCalling(ws, sessionUserName, sessionUserId, payload);
-      break;
-    }
-
-    case signalType.WEBRTC_HANG_UP: {
-      handleWebRTCHangUp(ws, sessionUserName, sessionUserId, payload);
-      break;
-    }
-
     case signalType.WEBRTC_NEW_PASSTHROUGH: {
-      handleWebRTCNewPassthrough(ws, sessionUserName, sessionUserId, payload);
+      handleWebRTCNewPassthrough(
+        ws,
+        sessionUserName,
+        sessionUserId,
+        payload
+      );
       break;
     }
 
@@ -103,7 +122,12 @@ const handleWebSocketClose = (ws, sessionUserName, sessionUserId) => {
   sessionMap.delete(sessionUserId);
 };
 
-const handleCreateRoom = (ws, sessionUserName, sessionUserId, payload) => {
+const handleCreateRoom = (
+  ws,
+  sessionUserName,
+  sessionUserId,
+  payload
+) => {
   console.log(
     `[WebSocket] ${chalk.green`CREATE_ROOM`} signal msg ${chalk.blue`from`} the user named ${chalk.green`${sessionUserName}`}`
   );
@@ -121,9 +145,13 @@ const handleCreateRoom = (ws, sessionUserName, sessionUserId, payload) => {
       console.log(
         `[WebSocket] ${chalk.green`UPDATE_ROOMS`} signal msg ${chalk.blue`to`} the user named ${chalk.green`${sessionUserName}`}`
       );
-      sendSerializedSignalThroughWebsocket(ws, signalType.UPDATE_ROOMS, {
-        rooms: rooms,
-      });
+      sendSerializedSignalThroughWebsocket(
+        ws,
+        signalType.UPDATE_ROOMS,
+        {
+          rooms: rooms,
+        }
+      );
     }
   });
   //
@@ -134,38 +162,81 @@ const handleCreateRoom = (ws, sessionUserName, sessionUserId, payload) => {
   console.log(
     `[WebSocket] ${chalk.green`JOIN_ROOM_SUCCESS`} signal msg ${chalk.blue`to`} the user named ${chalk.green`${sessionUserName}`}`
   );
-  sendSerializedSignalThroughWebsocket(ws, signalType.JOIN_ROOM_SUCCESS, {
-    roomId: room.id,
-    roomName: room.name,
-  });
+  sendSerializedSignalThroughWebsocket(
+    ws,
+    signalType.JOIN_ROOM_SUCCESS,
+    {
+      roomId: room.id,
+      roomName: room.name,
+    }
+  );
 };
 
-const handleJoinRoom = (ws, sessionUserName, sessionUserId, payload) => {
+const handleJoinRoom = (
+  ws,
+  sessionUserName,
+  sessionUserId,
+  payload
+) => {
   console.log(
     `[WebSocket] ${chalk.green`JOIN_ROOM`} signal msg ${chalk.blue`from`} the user named ${chalk.green`${sessionUserName}`}`
   );
 
   const joinedRoomId = payload.roomId;
   const joinedRoom = rooms[joinedRoomId];
+  if (!joinedRoom) return;
 
-  if (joinedRoom) {
-    //
-    // If there is a newcomer requesting to join into the room,
-    // Let it join (as a normal participant) first
-    //
-    joinedRoom.addParticipant(sessionUserId, sessionUserName);
-    userRoomMap.set(sessionUserId, joinedRoomId);
-    console.log(
-      `[WebSocket] ${chalk.green`JOIN_ROOM_SUCCESS`} signal msg ${chalk.blue`to`} the user named ${chalk.green`${sessionUserName}`}`
-    );
-    sendSerializedSignalThroughWebsocket(ws, signalType.JOIN_ROOM_SUCCESS, {
+  joinedRoom.addParticipant(sessionUserId, sessionUserName);
+  userRoomMap.set(sessionUserId, joinedRoomId);
+  sendSerializedSignalThroughWebsocket(
+    ws,
+    signalType.JOIN_ROOM_SUCCESS,
+    {
       roomId: joinedRoom.id,
       roomName: joinedRoom.name,
-    });
+    }
+  );
+  if (joinedRoom.participants.size <= 1) {
+    return;
   }
+
+  const otherParticipantUserIdList = [];
+
+  // notify others who are already in the joined room
+  joinedRoom.participants.forEach((_, participantUserId) => {
+    if (participantUserId !== sessionUserId) {
+      const othersWebsocket = sessionMap.get(participantUserId);
+      // console.log(
+      //   `[WebSocket] ${chalk.green`JOIN_ROOM`} signal msg ${chalk.blue`to`} the user named ${chalk.green`${othersWebsocket.username}`}`
+      // );
+      sendSerializedSignalThroughWebsocket(
+        othersWebsocket,
+        signalType.WEBRTC_NEW_PEER_ARIVAL,
+        {
+          userId: sessionUserId,
+          isPolite: false,
+        }
+      );
+      otherParticipantUserIdList.push(participantUserId);
+    }
+  });
+
+  sendSerializedSignalThroughWebsocket(
+    ws,
+    signalType.WEBRTC_NEW_PEER_ARIVAL,
+    {
+      userIdList: otherParticipantUserIdList,
+      isPolite: true,
+    }
+  );
 };
 
-const handleLeaveRoom = (ws, sessionUserName, sessionUserId, payload) => {
+const handleLeaveRoom = (
+  ws,
+  sessionUserName,
+  sessionUserId,
+  payload
+) => {
   console.log(
     `[WebSocket] ${chalk.green`LEAVE_ROOM`} signal msg ${chalk.blue`from`} the user named ${chalk.green`${sessionUserName}`}`
   );
@@ -173,115 +244,65 @@ const handleLeaveRoom = (ws, sessionUserName, sessionUserId, payload) => {
   const leftRoomId = userRoomMap.get(sessionUserId);
   const leftRoom = rooms[leftRoomId];
 
-  if (leftRoom) {
-    userRoomMap.delete(sessionUserId);
-    leftRoom.deleteStreamParticipant(sessionUserId);
-    leftRoom.deleteParticipant(sessionUserId);
+  if (!leftRoom) {
+    return;
+  }
 
-    console.log(
-      `[WebSocket] ${chalk.green`LEAVE_ROOM_SUCCESS`} signal msg ${chalk.blue`to`} the user named ${chalk.green`${sessionUserName}`}`
-    );
-
-    sendSerializedSignalThroughWebsocket(ws, signalType.LEAVE_ROOM_SUCCESS, {
+  userRoomMap.delete(sessionUserId);
+  leftRoom.deleteParticipant(sessionUserId);
+  sendSerializedSignalThroughWebsocket(
+    ws,
+    signalType.LEAVE_ROOM_SUCCESS,
+    {
       roomId: leftRoomId,
       roomName: leftRoom.name,
       userId: sessionUserId,
-    });
-    //
-    // If this 'leftRoom' become an empty room, automatically delete it
-    // and notify all authenticated clients
-    //
-    if (leftRoom.participants.size === 0) {
-      delete rooms[leftRoomId];
-      sessionMap.forEach((ws, _) => {
-        if (ws.readyState === WebSocket.OPEN) {
-          console.log(
-            `[WebSocket] ${chalk.green`UPDATE_ROOMS`} signal msg ${chalk.blue`to`} the user named ${chalk.green`${sessionUserName}`}`
-          );
-          sendSerializedSignalThroughWebsocket(ws, signalType.UPDATE_ROOMS, {
-            rooms: rooms,
-          });
-        }
-      });
     }
+  );
+
+  // console.log(
+  //   `[WebSocket] ${chalk.green`LEAVE_ROOM_SUCCESS`} signal msg ${chalk.blue`to`} the user named ${chalk.green`${sessionUserName}`}`
+  // );
+
+
+  leftRoom.participants.forEach((_, participantUserId) => {
+    if (participantUserId !== sessionUserId) {
+      const otherWebsocket = sessionMap.get(participantUserId);
+      // console.log(
+      //   `[WebSocket] ${chalk.green`WEBRTC_HANG_UP`} signal msg ${chalk.blue`to`} the user named ${chalk.green`${websocket.username}`}`
+      // );
+      sendSerializedSignalThroughWebsocket(
+        otherWebsocket,
+        signalType.WEBRTC_NEW_PEER_LEAVE,
+        {
+          userId: sessionUserId,
+        }
+      );
+    }
+  });
+
+  
+  //
+  // If this 'leftRoom' become an empty room, automatically delete it
+  // and notify all authenticated clients
+  //
+  if (leftRoom.participants.size === 0) {
+    delete rooms[leftRoomId];
+    sessionMap.forEach((ws, _) => {
+      if (ws.readyState === WebSocket.OPEN) {
+        console.log(
+          `[WebSocket] ${chalk.green`UPDATE_ROOMS`} signal msg ${chalk.blue`to`} the user named ${chalk.green`${sessionUserName}`}`
+        );
+        sendSerializedSignalThroughWebsocket(
+          ws,
+          signalType.UPDATE_ROOMS,
+          {
+            rooms: rooms,
+          }
+        );
+      }
+    });
   }
-};
-
-const handleWebRTCNewCalling = (
-  ws,
-  sessionUserName,
-  sessionUserId,
-  payload
-) => {
-  //
-  // if finding that the number of the current room's stream participants is greater than 1,
-  // the new peer should be provided WebRTC peer connection offers from each earlier stream participant
-  //
-  console.log(
-    `[WebSocket] ${chalk.green`WEBRTC_NEW_CALLING`} signal msg ${chalk.blue`from`} the user named ${chalk.green`${sessionUserName}`}`
-  );
-
-  if (!userRoomMap.has(sessionUserId)) return;
-
-  const callingRoomId = userRoomMap.get(sessionUserId);
-  const callingRoom = rooms[callingRoomId];
-  if (!callingRoom) return;
-
-  if (!callingRoom.participants.has(sessionUserId)) return;
-  callingRoom.addStreamParticipant(sessionUserId, sessionUserName);
-  if (callingRoom.streamParticipants.size <= 1) return;
-
-  setTimeout(() => {
-    callingRoom.streamParticipants.forEach((_, participantUserId) => {
-      if (participantUserId !== sessionUserId) {
-        const websocketToAcceptNewPeer = sessionMap.get(participantUserId);
-        console.log(
-          `[WebSocket] ${chalk.green`WEBRTC_NEW_PEER`} signal msg ${chalk.blue`to`} the user named ${chalk.green`${websocketToAcceptNewPeer.username}`}`
-        );
-        sendSerializedSignalThroughWebsocket(
-          websocketToAcceptNewPeer,
-          signalType.WEBRTC_NEW_PEER,
-          {
-            userId: sessionUserId,
-            isPolite: true,
-          }
-        );
-      }
-    });
-  }, 0);
-};
-
-const handleWebRTCHangUp = (ws, sessionUserName, sessionUserId, payload) => {
-  console.log(
-    `[WebSocket] ${chalk.green`WEBRTC_HANG_UP`} signal msg ${chalk.blue`from`} the user named ${chalk.green`${sessionUserName}`}`
-  );
-
-  if (!userRoomMap.has(sessionUserId)) return;
-  const hangUpRoomId = userRoomMap.get(sessionUserId);
-  if (!hangUpRoomId || hangUpRoomId.length === 0) return;
-  const hangUpRoom = rooms[hangUpRoomId];
-  if (!hangUpRoom) return;
-
-  hangUpRoom.deleteStreamParticipant(sessionUserId);
-
-  setTimeout(() => {
-    hangUpRoom.streamParticipants.forEach((_, participantUserId) => {
-      if (participantUserId !== sessionUserId) {
-        const websocket = sessionMap.get(participantUserId);
-        console.log(
-          `[WebSocket] ${chalk.green`WEBRTC_HANG_UP`} signal msg ${chalk.blue`to`} the user named ${chalk.green`${websocket.username}`}`
-        );
-        sendSerializedSignalThroughWebsocket(
-          websocket,
-          signalType.WEBRTC_HANG_UP,
-          {
-            from: sessionUserId,
-            to: participantUserId,
-          }
-        );
-      }
-    });
-  }, 0);
 };
 
 const handleWebRTCNewPassthrough = (
@@ -317,21 +338,4 @@ const handleWebRTCNewPassthrough = (
       }
     );
   }
-};
-
-exports.handleUpgrade = (request, socket, head) => {
-  sessionParser(request, {}, function next() {
-    if (!authenticatedUserIds.has(request.session.userId)) {
-      socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
-      socket.destroy();
-      return;
-    }
-
-    const wss = createWebSocket(request.session);
-
-    wss.handleUpgrade(request, socket, head, function (ws) {
-      console.log(`[WebSocket] will emit a ${chalk.yellow`connection`} event `);
-      wss.emit("connection", ws, request);
-    });
-  });
 };

@@ -5,19 +5,16 @@ const SignalMessageTypeObject = {
   LOG_IN_SUCCESS: 1,
   LOG_OUT_SUCCESS: 2,
 
-  // Chat room singals
   CREATE_ROOM: 3,
   UPDATE_ROOMS: 4,
   JOIN_ROOM: 5,
   JOIN_ROOM_SUCCESS: 6,
   LEAVE_ROOM: 7,
   LEAVE_ROOM_SUCCESS: 8,
-
   // WebRTC connection singals
-  WEBRTC_NEW_CALLING: 9,
-  WEBRTC_NEW_PEER: 10,
+  WEBRTC_NEW_PEER_ARIVAL: 9, 
+  WEBRTC_NEW_PEER_LEAVE: 10,
   WEBRTC_NEW_PASSTHROUGH: 11,
-  WEBRTC_HANG_UP: 12,
 };
 const SignalMessageTypeSet = new Set(Object.values(SignalMessageTypeObject));
 
@@ -31,7 +28,17 @@ const SignalMessage = function (selectedType, payload) {
   this.payload = payload;
 };
 
-exports.type = {
+
+
+const createMessage = (selectedType, payload) => {
+  return new SignalMessage(selectedType, payload);
+};
+
+const createSerializedMessage = (selectedType, payload) => {
+  return JSON.stringify(createMessage(selectedType, payload));
+};
+
+const type = {
   LOG_IN_SUCCESS: SignalMessageTypeObject.LOG_IN_SUCCESS,
   LOG_OUT_SUCCESS: SignalMessageTypeObject.LOG_OUT_SUCCESS,
 
@@ -44,19 +51,12 @@ exports.type = {
   LEAVE_ROOM_SUCCESS: SignalMessageTypeObject.LEAVE_ROOM_SUCCESS,
 
   // WebRTC connection singals
-  WEBRTC_NEW_CALLING: SignalMessageTypeObject.WEBRTC_NEW_CALLING,
-  WEBRTC_NEW_PEER: SignalMessageTypeObject.WEBRTC_NEW_PEER,
+  WEBRTC_NEW_PEER_ARIVAL: SignalMessageTypeObject.WEBRTC_NEW_PEER_ARIVAL,
+  WEBRTC_NEW_PEER_LEAVE: SignalMessageTypeObject.WEBRTC_NEW_PEER_LEAVE,
   WEBRTC_NEW_PASSTHROUGH: SignalMessageTypeObject.WEBRTC_NEW_PASSTHROUGH,
-  WEBRTC_HANG_UP: SignalMessageTypeObject.WEBRTC_HANG_UP,
 };
 
-const createMessage = (selectedType, payload) => {
-  return new SignalMessage(selectedType, payload);
-};
-
-const createSerializedMessage = (selectedType, payload) => {
-  return JSON.stringify(createMessage(selectedType, payload));
-};
+exports.type = type;
 
 exports.sendThroughResponese = (res, selectedType, payload) => {
   if (!res) {

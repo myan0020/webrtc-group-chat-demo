@@ -18,20 +18,6 @@ function GroupChatRoom(roomId, roomName) {
   this.deleteParticipant = (userId) => {
     this.participants.delete(userId);
   };
-
-  // stream participant related
-  //
-  this.streamParticipants = new Map();
-  this.addStreamParticipant = (userId, username) => {
-    const participant = {
-      id: userId,
-      name: username,
-    };
-    this.streamParticipants.set(userId, participant);
-  };
-  this.deleteStreamParticipant = (userId) => {
-    delete this.streamParticipants.delete(userId);
-  };
 }
 
 module.exports = GroupChatRoom;

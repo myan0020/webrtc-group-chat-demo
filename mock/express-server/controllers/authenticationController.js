@@ -45,7 +45,6 @@ exports.handleLogout = (req, res, next) => {
   if (userId && userId.length > 0 && userRoomMap.get(userId)) {
     const joinedRoomId = userRoomMap.get(userId);
     rooms[joinedRoomId].deleteParticipant(userId);
-    rooms[joinedRoomId].deleteStreamParticipant(userId);
   }
 
   // TODO:
