@@ -118,8 +118,6 @@ function _handleSocketLeaveRoomSuccess(payload) {
     "WebRTCGroupChatController: LEAVE_ROOM_SUCCESS signal received"
   );
 
-  // _closePeerConnectionTo()
-
   // external usage
   if (_handleLeaveRoomSuccess) {
     _handleLeaveRoomSuccess(payload);
@@ -147,9 +145,9 @@ function _handleSocketNewWebRTCPassthroughArival(payload) {
 }
 
 function _handleSocketNewWebRTCPeerLeave(payload) {
-  // console.log(
-  //   "WebRTCGroupChatController: WEBRTC_HANG_UP signal received"
-  // );
+  console.log(
+    "WebRTCGroupChatController: WEBRTC_NEW_PEER_LEAVE signal received"
+  );
   // internal usage
   _handleNewPeerLeave(payload);
 }
@@ -528,6 +526,16 @@ function _handleNewPassthroughArival(payload) {
     });
 }
 
+function _handleNewPeerLeave(payload) {
+  const peerId = payload.userId;
+  if (!peerId || peerId.length === 0) {
+    return;
+  }
+
+  _deletePeerTransceiver(peerId);
+  _closePeerConnection(peerId);
+}
+
 function _locatePeerConnection(peerId) {
   if (!peerId || peerId.length === 0) {
     console.log(
@@ -669,97 +677,60 @@ function _handlePeerConnectionNegotiationEvent(event) {
 }
 
 function _handlePeerConnectionTrackEvent(event) {
-  console.log(`TEST: _handlePeerConnectionTrackEvent`);
-
-  if (!(event.target instanceof RTCPeerConnection) || !event.track) {
+  if (!(event.target instanceof RTCPeerConnection) || !event.track || !event.transceiver) {
+    console.log(
+      `WebRTCGroupChatController: unexpected event target / track / transceiver during 'ontrack'`
+    );
     return;
   }
 
   const peerConnection = event.target;
-  const peerId = _peerConnectionMap.getFirstKeyByValue(peerConnection);
-  const transceiver = event.transceiver;
-
-  if (_localMediaStream) {
-    _replyWithSameKindOfTrackIfNeeded(peerId, transceiver);
-  }
-
   const track = event.track;
-  track.onunmute = (event) => {
-    _handleIncomingTrackUnmute(event, peerId);
-  };
-  track.onmute = (event) => {
-    _handleIncomingTrackMute(event, peerId);
-  };
+  const transceiver = event.transceiver;
+  const peerId =
+    _peerConnectionMap.getFirstKeyByValue(peerConnection);
 
-  if (event.track.kind === "video") {
-    _videoTransceiverMap.set(peerId, transceiver);
+  if (!peerId) {
     console.log(
-      `WebRTCGroupChatController: a video transceiver has been set during 'ontrack'`
+      `WebRTCGroupChatController: unexpected peerId ( ${peerId} ) during 'ontrack'`
     );
-    
-  } else if (event.track.kind === "audio") {
-    _audioTransceiverMap.set(peerId, transceiver);
-    console.log(
-      `WebRTCGroupChatController: an audio transceiver has been set during 'ontrack'`
-    );
+    return;
   }
+
+  const incomingTrackKind = event.track.kind;
+
+  _setupTransceiverMap(transceiver, incomingTrackKind, peerId);
+  _setupTrackMuteEventHandlers(track, peerId);
+  _respondToPeerWithEqualKindTrackIfNeeded(peerId, transceiver, incomingTrackKind);
 }
 
-function _closePeerConnectionTo(peerId) {
+function _closePeerConnection(peerId) {
   if (!peerId || peerId.length === 0) {
     console.log(
       `WebRTCGroupChatController: unexpected peerId when stopping peer side connection`
     );
     return;
   }
+
   const peerConnection = _peerConnectionMap.get(peerId);
   if (!peerConnection) return;
+
   peerConnection.close();
-  console.log(
-    `WebRTCGroupChatController: after the close peerConnection for peerId of ${peerId}, the current peerConnection signalingState is ${
-      peerConnection.signalingState
-    }, the localDescription type is ${
-      peerConnection.localDescription
-        ? peerConnection.localDescription.type
-        : "unknown"
-    }, the remoteDescription type is ${
-      peerConnection.remoteDescription
-        ? peerConnection.remoteDescription.type
-        : "unknown"
-    }`
-  );
   _peerConnectionMap.delete(peerId);
 }
 
-function _clearALLPeerConnections() {
+function _closeALLPeerConnections() {
   _peerConnectionMap.forEach((peerConnection, peerId) => {
     if (peerConnection) {
       peerConnection.close();
       console.log(
-        `WebRTCGroupChatController: after the close peerConnection for peerId of ${peerId}, the current peerConnection signalingState is ${
-          peerConnection.signalingState
-        }, the localDescription type is ${
-          peerConnection.localDescription
-            ? peerConnection.localDescription.type
-            : "unknown"
-        }, the remoteDescription type is ${
-          peerConnection.remoteDescription
-            ? peerConnection.remoteDescription.type
-            : "unknown"
-        }`
-      );
-      console.log(
-        `WebRTCGroupChatController: the peerConnection with peerId of ${peerId} is closed`
+        `WebRTCGroupChatController: the peerConnection with peerId of ${peerId} closed`
       );
     }
   });
-
-  _audioTransceiverMap.clear();
-  _videoTransceiverMap.clear();
   _peerConnectionMap.clear();
-  
   console.log(
-    `WebRTCGroupChatController: all peerConnections cleared`
+    `WebRTCGroupChatController: all peer connections cleared`
   );
 }
 
@@ -893,17 +864,12 @@ let _mediaStreamConstraints = {
   audio: true,
 };
 let _localMediaStream;
-
-let _handlePeerMediaStreamMapChanged;
-let _handleLocalMediaStreamChanged;
-
 const _peerMediaStreamMap = {
   map: new Map(), // [[ peerId, { mediaStream } ], ...]
-
   has(key) {
     return this.map.has(key);
   },
-  hasKindOfTrack(peerId, trackKind){
+  hasKindOfTrack(peerId, trackKind) {
     const mediaStream = this.map.get(peerId);
     if (!mediaStream) {
       return false;
@@ -912,7 +878,7 @@ const _peerMediaStreamMap = {
       if (existTrack === trackKind) {
         return true;
       }
-    })
+    });
     return false;
   },
   size() {
@@ -947,10 +913,19 @@ const _peerMediaStreamMap = {
       }
     });
 
-    console.log(`TEST: media tracks count from ${oldMediaStream.getTracks().length} to ${newMediaStream.getTracks().length}`)
+    console.log(
+      `WebRTCGroupChatController: a media stream's tracks count changed from ${
+        oldMediaStream.getTracks().length
+      } to ${newMediaStream.getTracks().length}`
+    );
 
     if (newMediaStream.getTracks().length === 0) {
+      const prevSize = this.map.size;
       this.map.delete(peerId);
+      const curSize = this.map.size;
+      console.log(
+        `WebRTCGroupChatController: _peerMediaStreamMap delete executed, and its size changed from ${prevSize} to ${curSize}`
+      );
     } else {
       this.map.set(peerId, newMediaStream);
     }
@@ -989,9 +964,11 @@ const _peerMediaStreamMap = {
     }
   },
 };
-
 const _audioTransceiverMap = new Map();
 const _videoTransceiverMap = new Map();
+
+let _handlePeerMediaStreamMapChanged;
+let _handleLocalMediaStreamChanged;
 
 async function _createLocalMediaStream() {
   console.log(
@@ -1029,34 +1006,88 @@ function _addLocalMediaStream() {
 }
 
 function _handleIncomingTrackUnmute(event, peerId) {
-  console.log('_handleIncomingTrackUnmute,', ' event:', event, ' track:', event.target, ' kind:', event.target.kind)
+  console.log(
+    `WebRTCGroupChatController: a track from the peer ( ${peerId} ) is available to use, because it's been added by that peer`
+  );
   const track = event.target;
   _peerMediaStreamMap.setTrack(peerId, track);
 }
 
 function _handleIncomingTrackMute(event, peerId) {
-  console.log('_handleIncomingTrackMute,', ' event:', event, ' track:', event.target, ' kind:', event.target.kind)
+  console.log(
+    `WebRTCGroupChatController: a track from the peer ( ${peerId} ) is unavailable to use, because it's been removed by that peer`
+  );
   const track = event.target;
   _peerMediaStreamMap.deleteTrack(peerId, track.kind);
 }
 
-function _replyWithSameKindOfTrackIfNeeded(peerId, transceiver) {
-  if (!peerId || peerId.length === 0 || !transceiver) {
+function _setupTransceiverMap(transceiver, incomingTrackKind, peerId) {
+  if (!transceiver || !incomingTrackKind || incomingTrackKind.length === 0 || !peerId || peerId.length === 0) {
+    console.log(
+      `WebRTCGroupChatController: unexpected transceiver/incomingTrackKind/peerId during transceiver map setup`
+    );
     return;
   }
-  if (!transceiver.receiver || !transceiver.receiver.track) {
-    return;
-  }
-  if (!transceiver.sender) {
-    return;
-  }
-  if (transceiver.sender.track) {
-    return;
-  }
-  
-  const incomingTrackKind = transceiver.receiver.track.kind;
-  const peerConnection = _peerConnectionMap.get(peerId);
 
+  if (incomingTrackKind === "video") {
+    _videoTransceiverMap.set(peerId, transceiver);
+    console.log(
+      `WebRTCGroupChatController: a new video transceiver received and stored`
+    );
+  } else if (incomingTrackKind === "audio") {
+    _audioTransceiverMap.set(peerId, transceiver);
+    console.log(
+      `WebRTCGroupChatController: a new audio transceiver received and stored`
+    );
+  }
+}
+
+function _deletePeerTransceiver(peerId) {
+  if (!peerId || peerId.length === 0) {
+    return;
+  }
+
+  _audioTransceiverMap.delete(peerId);
+  console.log(
+    `WebRTCGroupChatController: an audio transceiver of peer ( ${peerId} ) deleted`
+  );
+
+  _videoTransceiverMap.delete(peerId);
+  console.log(
+    `WebRTCGroupChatController: a video transceiver of peer ( ${peerId} ) deleted`
+  );
+}
+
+function _clearAllPeerTransceivers() {
+  _audioTransceiverMap.clear();
+  _videoTransceiverMap.clear();
+  console.log(
+    `WebRTCGroupChatController: all audio/video transceivers cleared`
+  );
+}
+
+function _respondToPeerWithEqualKindTrackIfNeeded(
+  peerId,
+  transceiver,
+  incomingTrackKind
+) {
+  if (
+    !_localMediaStream ||
+    !peerId ||
+    peerId.length === 0 ||
+    !incomingTrackKind ||
+    !_peerConnectionMap.has(peerId) ||
+    !transceiver
+  ) {
+    return;
+  }
+
+  const isNeeded = transceiver.sender.track === null;
+  if (!isNeeded) {
+    return;
+  }
+
+  const peerConnection = _peerConnectionMap.get(peerId);
   _localMediaStream.getTracks().forEach((localTrack) => {
     if (localTrack.kind === incomingTrackKind) {
       peerConnection.addTrack(localTrack, _localMediaStream);
@@ -1064,9 +1095,25 @@ function _replyWithSameKindOfTrackIfNeeded(peerId, transceiver) {
   });
 }
 
-// 
+function _setupTrackMuteEventHandlers(track, peerId) {
+  if (!track || !peerId || peerId.length === 0) {
+    console.log(
+      `WebRTCGroupChatController: unexpected track / peerId during track Mute/Unmute event handler binding`
+    );
+    return;
+  }
+
+  track.onunmute = (event) => {
+    _handleIncomingTrackUnmute(event, peerId);
+  };
+  track.onmute = (event) => {
+    _handleIncomingTrackMute(event, peerId);
+  };
+}
+
+//
 // TODO: it needs signal server to route the message
-// 
+//
 function _triggerOneRemoteMuteForLocalTracks(peerId) {
   const peerConnection = _peerConnectionMap.get(peerId);
   if (!peerConnection || !peerConnection.getTransceivers()) {
@@ -1078,7 +1125,7 @@ function _triggerOneRemoteMuteForLocalTracks(peerId) {
     if (sender) {
       peerConnection.removeTrack(sender);
     }
-  })
+  });
 }
 
 function _triggerAllRemoteMuteForLocalTracks() {
@@ -1088,8 +1135,8 @@ function _triggerAllRemoteMuteForLocalTracks() {
       if (sender) {
         peerConnection.removeTrack(sender);
       }
-    })
-  })
+    });
+  });
 }
 
 function _stopLocalTracks() {
@@ -1183,7 +1230,7 @@ function _getLocalMediaTrackMuted(trackKind) {
         default:
           break;
       }
-    })
+    });
   }
 
   return isLocalMediaTrackMuted;
@@ -1195,13 +1242,13 @@ function _setLocalMediaTrackMuted(trackKind, muted) {
       if (audioTransceiver) {
         audioTransceiver.direction = muted ? "recvonly" : "sendrecv";
       }
-    })
+    });
   } else if (trackKind === "video") {
     _videoTransceiverMap.forEach((videoTransceiver) => {
       if (videoTransceiver) {
         videoTransceiver.direction = muted ? "recvonly" : "sendrecv";
       }
-    })
+    });
   }
 }
 
@@ -1251,14 +1298,6 @@ function _hangUpCalling() {
   _stopLocalTracks();
 }
 
-function _handleNewPeerLeave(payload) {
-  const peerId = payload.userId;
-  if (!peerId || peerId.length === 0) {
-    return;
-  }
-  _closePeerConnectionTo(peerId);
-}
-
 /**
  * Chat room management
  */
@@ -1292,7 +1331,8 @@ function _leaveRoom() {
     _hangUpCalling();
   }
 
-  _clearALLPeerConnections();
+  _clearAllPeerTransceivers();
+  _closeALLPeerConnections();
 
   SocketService.emitMessageEvent(
     _webSocketUrl,

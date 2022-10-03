@@ -38,7 +38,7 @@ const createSerializedMessage = (selectedType, payload) => {
   return JSON.stringify(createMessage(selectedType, payload));
 };
 
-const type = {
+const typeNumber = {
   LOG_IN_SUCCESS: SignalMessageTypeObject.LOG_IN_SUCCESS,
   LOG_OUT_SUCCESS: SignalMessageTypeObject.LOG_OUT_SUCCESS,
 
@@ -56,7 +56,7 @@ const type = {
   WEBRTC_NEW_PASSTHROUGH: SignalMessageTypeObject.WEBRTC_NEW_PASSTHROUGH,
 };
 
-exports.type = type;
+exports.typeNumber = typeNumber;
 
 exports.sendThroughResponese = (res, selectedType, payload) => {
   if (!res) {
@@ -71,6 +71,10 @@ exports.sendThroughWebsocket = (websocket, selectedType, payload) => {
     console.log(chalk.red`WebSocket msg cannot be sent because 'websocket' param is Null`);
     return;
   }
+
+  console.log(
+    `[WebSocket] ${chalk.green`${selectedType}`} signal msg ${chalk.blue`to`} the user named ${chalk.green`${websocket.username ? websocket.username : 'unknown'}`}`
+  );
   websocket.send(createSerializedMessage(selectedType, payload));
 };
 
