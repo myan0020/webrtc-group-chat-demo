@@ -4,7 +4,7 @@
 // const _socket = new WebSocket(_socketUrl);
 
 // This signal message type list match the same one on server side
-const _EventTypeEnum = {
+const _typeEnum = {
   // Session singals
   // LOG_IN_SUCCESS: 1,
   // LOG_OUT_SUCCESS: 2,
@@ -16,10 +16,9 @@ const _EventTypeEnum = {
   LEAVE_ROOM: 7,
   LEAVE_ROOM_SUCCESS: 8,
   // WebRTC connection singals
-  WEBRTC_NEW_PEER_ARIVAL: 9, 
+  WEBRTC_NEW_PEER_ARIVAL: 9,
   WEBRTC_NEW_PEER_LEAVE: 10,
   WEBRTC_NEW_PASSTHROUGH: 11,
-  
 };
 
 const _socketMap = new Map();
@@ -103,5 +102,5 @@ export default {
     _emitMessageEvent(socketUrl, emitType, emitPayload);
   },
 
-  eventType: _EventTypeEnum,
+  typeEnum: _typeEnum,
 };

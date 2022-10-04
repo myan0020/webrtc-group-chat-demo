@@ -80,3 +80,11 @@
   flex: 1;
   /* margin: 0 auto; */
 }
+
+.fileTransferLabel {
+  font-size: 25px;
+}
+
+.fileTransferInput {
+  font-size: 25px;
+}

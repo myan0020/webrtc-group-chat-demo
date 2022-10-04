@@ -4,9 +4,12 @@ const sessionMap = require("./sessionController").sessionMap;
 const rooms = require("./groupChatRoomController").rooms;
 const userRoomMap = require("./groupChatRoomController").userRoomMap;
 const GroupChatRoom = require("../models/groupChatRoom");
-const signalType = require("../signaling/signaling").typeNumber;
+const signaling = require("../signaling/signaling");
+const signalTypeEnum = signaling.typeEnum;
+const findSignalTypeNameByTypeValue =
+  signaling.findTypeNameByTypeValue;
 const sendSerializedSignalThroughWebsocket =
-  require("../signaling/signaling").sendThroughWebsocket;
+  signaling.sendThroughWebsocket;
 const sessionParser = require("./sessionController").sessionParser;
 const authenticatedUserIds =
   require("./sessionController").authenticatedUserIds;
@@ -84,40 +87,27 @@ const handleWebSocketMessage = (
   const type = parsedMessage.type;
   const payload = parsedMessage.payload;
 
+  const signalTypeName = findSignalTypeNameByTypeValue(type);
+  console.log(
+    `[WebSocket] ${chalk.green`${signalTypeName}`} signal msg ${chalk.blue`from`} the user named ${chalk.green`${
+      sessionUserName ? sessionUserName : "unknown"
+    }`}`
+  );
+
   switch (type) {
-    case signalType.CREATE_ROOM: {
-      console.log(
-        `[WebSocket] ${chalk.green`CREATE_ROOM`} signal msg ${chalk.blue`from`} the user named ${chalk.green`${
-          sessionUserName ? sessionUserName : "unknown"
-        }`}`
-      );
+    case signalTypeEnum.CREATE_ROOM: {
       handleCreateRoom(ws, sessionUserName, sessionUserId, payload);
       break;
     }
-    case signalType.JOIN_ROOM: {
-      console.log(
-        `[WebSocket] ${chalk.green`JOIN_ROOM`} signal msg ${chalk.blue`from`} the user named ${chalk.green`${
-          sessionUserName ? sessionUserName : "unknown"
-        }`}`
-      );
+    case signalTypeEnum.JOIN_ROOM: {
       handleJoinRoom(ws, sessionUserName, sessionUserId, payload);
       break;
     }
-    case signalType.LEAVE_ROOM: {
-      console.log(
-        `[WebSocket] ${chalk.green`LEAVE_ROOM`} signal msg ${chalk.blue`from`} the user named ${chalk.green`${
-          sessionUserName ? sessionUserName : "unknown"
-        }`}`
-      );
+    case signalTypeEnum.LEAVE_ROOM: {
       handleLeaveRoom(ws, sessionUserName, sessionUserId, payload);
       break;
     }
-    case signalType.WEBRTC_NEW_PASSTHROUGH: {
-      console.log(
-        `[WebSocket] ${chalk.green`WEBRTC_NEW_PASSTHROUGH`} signal msg ${chalk.blue`from`} the user named ${chalk.green`${
-          sessionUserName ? sessionUserName : "unknown"
-        }`}`
-      );
+    case signalTypeEnum.WEBRTC_NEW_PASSTHROUGH: {
       handleWebRTCNewPassthrough(
         ws,
         sessionUserName,
@@ -156,7 +146,7 @@ const handleCreateRoom = (
     if (ws.readyState === WebSocket.OPEN) {
       sendSerializedSignalThroughWebsocket(
         ws,
-        signalType.UPDATE_ROOMS,
+        signalTypeEnum.UPDATE_ROOMS,
         {
           rooms: rooms,
         }
@@ -170,7 +160,7 @@ const handleCreateRoom = (
   userRoomMap.set(sessionUserId, roomId);
   sendSerializedSignalThroughWebsocket(
     ws,
-    signalType.JOIN_ROOM_SUCCESS,
+    signalTypeEnum.JOIN_ROOM_SUCCESS,
     {
       roomId: room.id,
       roomName: room.name,
@@ -193,7 +183,7 @@ const handleJoinRoom = (
 
   sendSerializedSignalThroughWebsocket(
     ws,
-    signalType.JOIN_ROOM_SUCCESS,
+    signalTypeEnum.JOIN_ROOM_SUCCESS,
     {
       roomId: joinedRoom.id,
       roomName: joinedRoom.name,
@@ -212,7 +202,7 @@ const handleJoinRoom = (
       const othersWebsocket = sessionMap.get(participantUserId);
       sendSerializedSignalThroughWebsocket(
         othersWebsocket,
-        signalType.WEBRTC_NEW_PEER_ARIVAL,
+        signalTypeEnum.WEBRTC_NEW_PEER_ARIVAL,
         {
           userId: sessionUserId,
           isPolite: false,
@@ -224,7 +214,7 @@ const handleJoinRoom = (
 
   sendSerializedSignalThroughWebsocket(
     ws,
-    signalType.WEBRTC_NEW_PEER_ARIVAL,
+    signalTypeEnum.WEBRTC_NEW_PEER_ARIVAL,
     {
       userIdList: otherParticipantUserIdList,
       isPolite: true,
@@ -249,7 +239,7 @@ const handleLeaveRoom = (
   leftRoom.deleteParticipant(sessionUserId);
   sendSerializedSignalThroughWebsocket(
     ws,
-    signalType.LEAVE_ROOM_SUCCESS,
+    signalTypeEnum.LEAVE_ROOM_SUCCESS,
     {
       roomId: leftRoomId,
       roomName: leftRoom.name,
@@ -262,7 +252,7 @@ const handleLeaveRoom = (
       const otherWebsocket = sessionMap.get(participantUserId);
       sendSerializedSignalThroughWebsocket(
         otherWebsocket,
-        signalType.WEBRTC_NEW_PEER_LEAVE,
+        signalTypeEnum.WEBRTC_NEW_PEER_LEAVE,
         {
           userId: sessionUserId,
         }
@@ -280,7 +270,7 @@ const handleLeaveRoom = (
       if (ws.readyState === WebSocket.OPEN) {
         sendSerializedSignalThroughWebsocket(
           ws,
-          signalType.UPDATE_ROOMS,
+          signalTypeEnum.UPDATE_ROOMS,
           {
             rooms: rooms,
           }
@@ -318,7 +308,7 @@ const handleWebRTCNewPassthrough = (
     );
     sendSerializedSignalThroughWebsocket(
       websocketToPassThrough,
-      signalType.WEBRTC_NEW_PASSTHROUGH,
+      signalTypeEnum.WEBRTC_NEW_PASSTHROUGH,
       {
         sdp,
         iceCandidate,

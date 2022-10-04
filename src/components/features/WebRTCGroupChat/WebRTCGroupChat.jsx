@@ -41,6 +41,9 @@ export default function WebRTCGroupChat() {
   // hook 14
   const [isCameraMuted, setIsCameraMuted] = useState(true);
 
+  // hook 14
+  const [files, setFiles] = useState(null);
+
   /**
    * Side Effects
    */
@@ -84,19 +87,25 @@ export default function WebRTCGroupChat() {
 
   // hook 15: media calling state
   useEffect(() => {
-    WebRTCGroupChatController.onWebRTCCallingStateChanged((isCalling) => {
-      setIsCalling(isCalling);
-    });
+    WebRTCGroupChatController.onWebRTCCallingStateChanged(
+      (isCalling) => {
+        setIsCalling(isCalling);
+      }
+    );
   }, []);
 
   // hook 16: WebRTC media streams
   useEffect(() => {
-    WebRTCGroupChatController.onLocalMediaStreamChanged((mediaStream) => {
-      setLocalMediaStream(mediaStream);
+    WebRTCGroupChatController.onLocalMediaStreamChanged(
+      (mediaStream) => {
+        setLocalMediaStream(mediaStream);
 
-      setIsMicEnabled(WebRTCGroupChatController.localMicEnabled);
-      setIsCameraEnabled(WebRTCGroupChatController.localCameraEnabled);
-    });
+        setIsMicEnabled(WebRTCGroupChatController.localMicEnabled);
+        setIsCameraEnabled(
+          WebRTCGroupChatController.localCameraEnabled
+        );
+      }
+    );
     WebRTCGroupChatController.onPeerMediaStreamMapChanged(
       (peerStreamsMap) => {
         console.log(
@@ -218,6 +227,25 @@ export default function WebRTCGroupChat() {
       const curMuted = WebRTCGroupChatController.localCameraMuted;
       WebRTCGroupChatController.localCameraMuted = !curMuted;
       setIsCameraMuted(!curMuted);
+    }
+  };
+
+  // input files
+  const onInputFilesChange = (e) => {
+    const input = e.target;
+    const files = input.files;
+    setFiles(files);
+  };
+
+  const onSendFileMetaDataClick = (e) => {
+    if (joinedRoomId.length > 0) {
+      WebRTCGroupChatController.sendFileMetaDataToAllPeer(files);
+    }
+  };
+
+  const onSendFileDataClick = (e) => {
+    if (joinedRoomId.length > 0) {
+      WebRTCGroupChatController.sendFileDataToAllPeer(files);
     }
   };
 
@@ -349,7 +377,11 @@ export default function WebRTCGroupChat() {
       <div>Check Local Video</div>
       <div>
         <VideoList
-          mediaStreamsMap={localMediaStream ? new Map([["local", localMediaStream]]) : new Map()}
+          mediaStreamsMap={
+            localMediaStream
+              ? new Map([["local", localMediaStream]])
+              : new Map()
+          }
         />
       </div>
     </>
@@ -407,6 +439,41 @@ export default function WebRTCGroupChat() {
     </div>
   );
 
+  // file transfer rendering
+  const fileInputBlockRendering = (
+    <div>
+      <label
+        htmlFor='fileTransfer'
+        className={style.fileTransferLabel}
+      >
+        Choose a file to transfer:
+      </label>
+      <input
+        type='file'
+        id='fileTransfer'
+        multiple
+        className={style.fileTransferInput}
+        onChange={onInputFilesChange}
+      />
+    </div>
+  );
+  const sendFileMetaDataButtonRendering = (
+    <button
+      className={style.button}
+      onClick={onSendFileMetaDataClick}
+    >
+      Send File Meta Data To All Peers
+    </button>
+  );
+  const sendFileDataButtonRendering = (
+    <button
+      className={style.button}
+      onClick={onSendFileDataClick}
+    >
+      Send File Data To All Peers
+    </button>
+  );
+
   return (
     <div
       id='rtc'
@@ -415,8 +482,12 @@ export default function WebRTCGroupChat() {
       <p>Web Socket + WebRTC Group Chat Client</p>
       {loginoutBlockRendered}
 
-      {localVideo}
-      {peerVideoList}
+      {joinedRoomId.length > 0 && fileInputBlockRendering}
+      {joinedRoomId.length > 0 && sendFileMetaDataButtonRendering}
+      {joinedRoomId.length > 0 && sendFileDataButtonRendering}
+
+      {isCalling && localVideo}
+      {isCalling && peerVideoList}
 
       {isCalling && toggleMicEnablingButtonRendering}
       {isCalling && toggleCameraEnablingButtonRendering}

@@ -9,6 +9,7 @@
 import axios from "axios";
 import SocketService from "./SocketService.js";
 import FileDataStore from "./FileDataStore.js";
+import FileDataUtil from "./FileDataUtil.js";
 
 /**
  * The self id given by server side
@@ -58,7 +59,7 @@ const _webSocketHost = location.hostname;
 const _webSocketPort = "3002"; // websocket port number should same as mock express server port number
 const _webSocketUrl = `ws://${_webSocketHost}:${_webSocketPort}`;
 
-const _SignalType = {
+const _httpSignalTypeEnum = {
   // Session singals
   LOG_IN_SUCCESS: 1,
   LOG_OUT_SUCCESS: 2,
@@ -176,7 +177,7 @@ function _login(username) {
       const passChecking = _checkUserId(userId);
       if (!passChecking) return;
       _selfId = userId;
-      if (type === _SignalType.LOG_IN_SUCCESS) {
+      if (type === _httpSignalTypeEnum.LOG_IN_SUCCESS) {
         SocketService.createSocket(
           _webSocketUrl,
           _handleSocketOpen,
@@ -184,32 +185,32 @@ function _login(username) {
         );
         SocketService.registerMessageEvent(
           _webSocketUrl,
-          SocketService.eventType.UPDATE_ROOMS,
+          SocketService.typeEnum.UPDATE_ROOMS,
           _handleSocketUpdateRooms
         );
         SocketService.registerMessageEvent(
           _webSocketUrl,
-          SocketService.eventType.JOIN_ROOM_SUCCESS,
+          SocketService.typeEnum.JOIN_ROOM_SUCCESS,
           _handleSocketJoinRoomSuccess
         );
         SocketService.registerMessageEvent(
           _webSocketUrl,
-          SocketService.eventType.LEAVE_ROOM_SUCCESS,
+          SocketService.typeEnum.LEAVE_ROOM_SUCCESS,
           _handleSocketLeaveRoomSuccess
         );
         SocketService.registerMessageEvent(
           _webSocketUrl,
-          SocketService.eventType.WEBRTC_NEW_PEER_ARIVAL,
+          SocketService.typeEnum.WEBRTC_NEW_PEER_ARIVAL,
           _handleSocketNewWebRTCPeerArival
         );
         SocketService.registerMessageEvent(
           _webSocketUrl,
-          SocketService.eventType.WEBRTC_NEW_PASSTHROUGH,
+          SocketService.typeEnum.WEBRTC_NEW_PASSTHROUGH,
           _handleSocketNewWebRTCPassthroughArival
         );
         SocketService.registerMessageEvent(
           _webSocketUrl,
-          SocketService.eventType.WEBRTC_NEW_PEER_LEAVE,
+          SocketService.typeEnum.WEBRTC_NEW_PEER_LEAVE,
           _handleSocketNewWebRTCPeerLeave
         );
         // the first time rooms info updating should be transfored through axios
@@ -237,7 +238,7 @@ function _logout() {
   axios(config)
     .then((response) => {
       const type = response.data.type;
-      if (type === _SignalType.LOG_OUT_SUCCESS) {
+      if (type === _httpSignalTypeEnum.LOG_OUT_SUCCESS) {
         console.log(
           "WebRTCGroupChatController: LOG_OUT_SUCCESS signal received"
         );
@@ -512,7 +513,7 @@ function _handleNewPassthroughArival(payload) {
 
       SocketService.emitMessageEvent(
         _webSocketUrl,
-        SocketService.eventType.WEBRTC_NEW_PASSTHROUGH,
+        SocketService.typeEnum.WEBRTC_NEW_PASSTHROUGH,
         {
           sdp: peerConnection.localDescription,
           userId: peerId,
@@ -574,8 +575,8 @@ function _addPeerConnection(peerId) {
   peerConnection.onnegotiationneeded =
     _handlePeerConnectionNegotiationEvent;
   peerConnection.ontrack = _handlePeerConnectionTrackEvent;
-  // peerConnection.ondatachannel =
-  //   _handlePeerConnectionDataChannelEvent;
+  peerConnection.ondatachannel =
+    _handlePeerConnectionDataChannelEvent;
 }
 
 function _handlePeerConnectionICECandidateEvent(event) {
@@ -590,7 +591,7 @@ function _handlePeerConnectionICECandidateEvent(event) {
   if (event.candidate) {
     SocketService.emitMessageEvent(
       _webSocketUrl,
-      SocketService.eventType.WEBRTC_NEW_PASSTHROUGH,
+      SocketService.typeEnum.WEBRTC_NEW_PASSTHROUGH,
       {
         iceCandidate: event.candidate,
         userId: peerId,
@@ -659,7 +660,7 @@ function _handlePeerConnectionNegotiationEvent(event) {
 
       SocketService.emitMessageEvent(
         _webSocketUrl,
-        SocketService.eventType.WEBRTC_NEW_PASSTHROUGH,
+        SocketService.typeEnum.WEBRTC_NEW_PASSTHROUGH,
         {
           sdp: offer,
           userId: peerId,
@@ -677,7 +678,11 @@ function _handlePeerConnectionNegotiationEvent(event) {
 }
 
 function _handlePeerConnectionTrackEvent(event) {
-  if (!(event.target instanceof RTCPeerConnection) || !event.track || !event.transceiver) {
+  if (
+    !(event.target instanceof RTCPeerConnection) ||
+    !event.track ||
+    !event.transceiver
+  ) {
     console.log(
       `WebRTCGroupChatController: unexpected event target / track / transceiver during 'ontrack'`
     );
@@ -701,7 +706,11 @@ function _handlePeerConnectionTrackEvent(event) {
 
   _setupTransceiverMap(transceiver, incomingTrackKind, peerId);
   _setupTrackMuteEventHandlers(track, peerId);
-  _respondToPeerWithEqualKindTrackIfNeeded(peerId, transceiver, incomingTrackKind);
+  _respondToPeerWithEqualKindTrackIfNeeded(
+    peerId,
+    transceiver,
+    incomingTrackKind
+  );
 }
 
 function _closePeerConnection(peerId) {
@@ -738,36 +747,212 @@ function _closeALLPeerConnections() {
  * Peer Connection Data Channel
  */
 
-const _peerConnectionDataChannelMap = new Map();
+function DataChannelMap() {
+  this.peerMap = new Map();
+  this.setChannel = function (peerId, label, channel) {
+    let peerSpecificObject = this.peerMap.get(peerId);
+    if (!peerSpecificObject) {
+      peerSpecificObject = {};
+    }
+    peerSpecificObject[label] = channel;
 
-function _sendFilesMetaData(fileHashToFileObject) {
-  const metadata = Object.keys(fileHashToFileObject).reduce(
+    this.peerMap.set(peerId, peerSpecificObject);
+
+    console.log(
+      "TEST new channel: ",
+      channel,
+      "of label: ",
+      label,
+      "is set to map: ",
+      this.peerMap
+    );
+  };
+  this.getChannel = function (peerId, label) {
+    if (!this.peerMap.has(peerId)) {
+      return null;
+    }
+    return this.peerMap.get(peerId)[label];
+  };
+  this.hasChannel = function (peerId, label) {
+    let peerSpecificObject = this.peerMap.get(peerId);
+    if (!peerSpecificObject) {
+      return false;
+    }
+    if (!peerSpecificObject[label]) {
+      return false;
+    }
+    return true;
+  };
+}
+
+const _peerFileMetaDataChannelMap = new DataChannelMap();
+const _peerFileDataChannelMap = new DataChannelMap();
+const _peerSendFileCallbackQueueMap = {
+  peerMap: new Map(),
+  shiftSendFileCallbackFromPeer(peerId) {
+    let sendFileCallbackQueue = this.peerMap.get(peerId);
+    if (!sendFileCallbackQueue) {
+      sendFileCallbackQueue = [];
+    }
+    return sendFileCallbackQueue.shift();
+  },
+  pushSendFileCallbackToPeer(peerId, sendFileCallback) {
+    let sendFileCallbackQueue = this.peerMap.get(peerId);
+    if (!sendFileCallbackQueue) {
+      sendFileCallbackQueue = [];
+    }
+    sendFileCallbackQueue.push(sendFileCallback);
+    this.peerMap.set(peerId, sendFileCallbackQueue);
+  },
+};
+
+const MAXIMUM_MESSAGE_SIZE = 16384;
+const META_DATA_CHANNEL_LABEL = "META_DATA_CHANNEL_LABEL";
+
+const START_OF_FILE_MESSAGE = "START_OF_FILE_MESSAGE";
+const CANCEL_MESSAGE = "CANCEL_MESSAGE";
+
+function _sendFileMetaDataToAllPeer(files) {
+  _peerConnectionMap.forEach((_, peerId) => {
+    _sendFileMetaDataToPeer(files, peerId);
+  });
+}
+
+function _sendFileDataToAllPeer(files) {
+  _peerConnectionMap.forEach((_, peerId) => {
+    _sendFileDataToPeer(files, peerId);
+  });
+}
+
+async function _sendFileMetaDataToPeer(files, peerId) {
+  if (!files) {
+    console.log(
+      `WebRTCGroupChatController: unexpected files ( ${files} ) during file meta data sending`
+    );
+    return;
+  }
+
+  const fileHashToFileObject = await FileDataUtil.getUniqueFiles(
+    files
+  );
+
+  console.log("TEST fileHashToFileObject: ", fileHashToFileObject);
+
+  const metaData = Object.keys(fileHashToFileObject).reduce(
     (accumulator, fileHash) => {
       const { name, type, size } = fileHashToFileObject[fileHash];
-
       accumulator[fileHash] = { name, type, size };
-
       return accumulator;
     },
     {}
   );
 
-  const metaDataChannel = _peerConnectionDataChannelMap.get(
-    "META_DATA_CHANNEL_LABEL"
+  let fileMetaDataChannel = _peerFileMetaDataChannelMap.getChannel(
+    peerId,
+    META_DATA_CHANNEL_LABEL
   );
-  if (!metaDataChannel) {
+
+  if (!fileMetaDataChannel) {
     console.log(
-      `WebRTCGroupChatController: unfound meta data channel with ( 'META_DATA_CHANNEL_LABEL' ) label`
+      `WebRTCGroupChatController: unfound meta data 'channel' with peer( ${peerId} ), will create a new one`
+    );
+
+    fileMetaDataChannel = _createAndStoreDataChannel(
+      peerId,
+      META_DATA_CHANNEL_LABEL,
+      (event) => {
+        if (fileMetaDataChannel.readyState === "open") {
+          fileMetaDataChannel.send(JSON.stringify(metaData));
+          fileMetaDataChannel.close();
+        }
+      }
+    );
+  }
+}
+
+async function _sendFileDataToPeer(files, peerId) {
+  if (!files) {
+    console.log(
+      `WebRTCGroupChatController: unexpected files ( ${files} ) during file data sending`
     );
     return;
   }
 
-  metaDataChannel.send(JSON.stringify(metadata));
+  const fileHashToFileObject = await FileDataUtil.getUniqueFiles(
+    files
+  );
+
+  Object.keys(fileHashToFileObject).forEach((fileHash) => {
+    if (
+      !FileDataStore.getFileSendingProgressFromPeer(peerId, fileHash)
+    ) {
+      const sendFileCallback = () => {
+        if (
+          FileDataStore.getFileCancelledFromPeer(peerId, fileHash)
+        ) {
+          _handleSenderChannelClose(peerId);
+          return;
+        }
+        const label = `file-${fileHash}`;
+        const file = fileHashToFileObject[fileHash];
+
+        FileDataStore.setFileSendingProgressToPeer(
+          peerId,
+          fileHash,
+          0
+        );
+
+        let fileDataChannel = _peerFileDataChannelMap.getChannel(
+          peerId,
+          label
+        );
+
+        if (!fileDataChannel) {
+          fileDataChannel = _createAndStoreDataChannel(
+            peerId,
+            label,
+            (event) => {
+              _handleSenderChannelOpen(event, fileDataChannel);
+            },
+            null,
+            (event) => {
+              _handleSenderChannelBufferedAmountLow(
+                event,
+                peerId,
+                fileDataChannel,
+                fileHash,
+                file
+              );
+            },
+            () => {
+              _handleSenderChannelClose(peerId);
+            }
+          );
+        }
+
+        // dataChannel.bufferedAmountLowThreshold = BUFFERED_AMOUNT_LOW_THRESHOLD;
+        fileDataChannel.binaryType = "arraybuffer";
+      };
+
+      _peerSendFileCallbackQueueMap.pushSendFileCallbackToPeer(
+        peerId,
+        sendFileCallback
+      );
+    }
+  });
+
+  const sendFileCallback =
+    _peerSendFileCallbackQueueMap.shiftSendFileCallbackFromPeer(
+      peerId
+    );
+  if (sendFileCallback) {
+    FileDataStore.setSendingStatusToPeer(peerId, true);
+    sendFileCallback();
+  }
 }
 
-function _sendFilesData(fileHashToFileObject) {}
-
-function _createDataChannel(
+// ( sender )
+function _createAndStoreDataChannel(
   peerId,
   label,
   onOpenHandler,
@@ -775,35 +960,187 @@ function _createDataChannel(
   onBufferedAmountLowHandler,
   onCloseHandler
 ) {
+  if (
+    !peerId ||
+    peerId.length === 0 ||
+    !label ||
+    label.length === 0
+  ) {
+    console.log(
+      `WebRTCGroupChatController: unexpected peerId( ${peerId} ) / label( ${label} ) during data channel creating`
+    );
+    return;
+  }
   const peerConnection = _peerConnectionMap.get(peerId);
+  if (!peerConnection) {
+    console.log(
+      `WebRTCGroupChatController: unfound peer connection of peer( ${peerId} ) during data channel creating`
+    );
+    return;
+  }
+
+  const dataChannel = peerConnection.createDataChannel(label);
+
+  if (onOpenHandler) {
+    dataChannel.onopen = onOpenHandler;
+  }
+  if (onMessageHandler) {
+    dataChannel.onmessage = onMessageHandler;
+  }
+  if (onBufferedAmountLowHandler) {
+    dataChannel.onbufferedamountlow = onBufferedAmountLowHandler;
+  }
+  if (onCloseHandler) {
+    dataChannel.onclose = onCloseHandler;
+  }
+
+  if (label === META_DATA_CHANNEL_LABEL) {
+    _peerFileMetaDataChannelMap.setChannel(
+      peerId,
+      label,
+      dataChannel
+    );
+  } else {
+    _peerFileDataChannelMap.setChannel(peerId, label, dataChannel);
+  }
+
+  return dataChannel;
 }
 
+// ( sender )
+function _handleSenderChannelOpen(event, dataChannel) {
+  dataChannel.send(START_OF_FILE_MESSAGE);
+}
+
+// ( sender )
+async function _handleSenderChannelBufferedAmountLow(
+  event,
+  peerId,
+  dataChannel,
+  fileHash,
+  file
+) {
+  const offset = FileDataStore.getFileSendingProgressFromPeer(
+    peerId,
+    fileHash
+  );
+  if (offset >= file.size) {
+    return;
+  }
+
+  const newOffset = await _sendChunk(file, offset, dataChannel);
+  FileDataStore.setFileSendingProgressToPeer(
+    peerId,
+    fileHash,
+    newOffset
+  );
+
+  if (newOffset >= file.size) {
+    dataChannel.close();
+  }
+}
+
+// ( sender )
+async function _sendChunk(file, offset, dataChannel) {
+  const chunk = file.slice(offset, offset + MAXIMUM_MESSAGE_SIZE);
+  const buffer = await chunk.arrayBuffer();
+
+  if (dataChannel.readyState !== "open") {
+    return offset;
+  }
+
+  dataChannel.send(buffer);
+  return offset + chunk.size;
+}
+
+// ( sender )
+function _handleSenderChannelClose(peerId) {
+  const sendFileCallback =
+    _peerSendFileCallbackQueueMap.shiftSendFileCallbackFromPeer(
+      peerId
+    );
+
+  if (!sendFileCallback) {
+    FileDataStore.setSendingStatusToPeer(peerId, false);
+    return;
+  }
+
+  sendFileCallback();
+}
+
+// ( sender )
+function _cancelSenderSendingOperationToAllPeer(fileHash) {
+  _peerConnectionMap.forEach((_, peerId) => {
+    _cancelSenderSendingOperation(peerId, fileHash);
+  });
+}
+
+// ( sender )
+function _cancelSenderSendingOperation(peerId, fileHash) {
+  const dataChannelLabel = `file-${fileHash}`;
+  const dataChannel = _peerFileDataChannelMap.getChannel(
+    peerId,
+    dataChannelLabel
+  );
+  FileDataStore.setFileSendingProgressToPeer(peerId, fileHash, 0);
+
+  FileDataStore.setFileCancelledToPeer(peerId, fileHash, true);
+  if (dataChannel && dataChannel.readyState === "open") {
+    dataChannel.send(CANCEL_MESSAGE);
+    dataChannel.close();
+  }
+}
+
+// ( receiver )
 function _handlePeerConnectionDataChannelEvent(event) {
   const {
     channel,
     channel: { label },
+    target,
   } = event;
 
-  if (label === "META_DATA_CHANNEL_LABEL") {
-    channel.onmessage = _handleDataChannelFileMetaData;
+  console.log("TEST ondatachannel is fired: ", event);
+
+  const peerId = _peerConnectionMap.getFirstKeyByValue(target);
+  let peerChannelMap;
+
+  if (label === META_DATA_CHANNEL_LABEL) {
+    channel.onmessage = (event) => {
+      _handleReceiverChannelFileMetaDataMessage(event, peerId);
+    };
+    peerChannelMap = _peerFileMetaDataChannelMap;
   } else {
-    channel.onmessage = _handleDataChannelFileDataReceived;
+    channel.onmessage = (event) => {
+      _handleReceiverChannelFileDataMessage(event, peerId);
+    };
+    peerChannelMap = _peerFileDataChannelMap;
   }
 
-  _peerConnectionDataChannelMap.set(label, channel);
+  peerChannelMap.setChannel(peerId, label, channel);
+  channel.onclose = _handleReceiverChannelClose;
 }
 
-function _handleDataChannelFileMetaData(event) {
-  const data = JSON.parse(event.data);
-  if (typeof data !== "object") {
+// ( receiver )
+function _handleReceiverChannelFileMetaDataMessage(event, peerId) {
+  const { data } = event;
+
+  if (typeof data !== "string") {
+    console.log(
+      `WebRTCGroupChatController: unexpected 'data' type, it is not type of 'string'`
+    );
     return;
   }
-  FileDataStore.fileHashToMetadataMap = new Map(Object.entries(data));
+
+  const parsedData = JSON.parse(event.data);
+  FileDataStore.setMetaDataToPeer(peerId, parsedData);
+  console.log(
+    'WebRTCGroupChatController: received ', parsedData, ' from file meta data channel'
+  );
 }
 
-async function _handleDataChannelFileDataReceived(event) {
-  const { data } = event;
-  const dataChannel = event.target;
+// ( receiver )
+async function _handleReceiverChannelFileDataMessage(event, peerId) {
+  const { data, target: dataChannel } = event;
 
   if (!(dataChannel instanceof RTCDataChannel)) {
     console.log(
@@ -815,44 +1152,63 @@ async function _handleDataChannelFileDataReceived(event) {
   const label = dataChannel.label;
   const fileHash = label.split("-")?.[1];
 
-  if (data === "END_OF_FILE_MESSAGE") {
-    dataChannel.close();
-  } else if (data === "START_OF_FILE_MESSAGE") {
-    FileDataStore.deleteFileData(fileHash);
-    FileDataStore.setFileReceiveProgress(fileHash, 0);
-  } else if (data === "CANCEL_MESSAGE") {
-    _cancelReceiverSendOperation(fileHash);
+  if (data === START_OF_FILE_MESSAGE) {
+    FileDataStore.deleteFileFromPeer(peerId, fileHash);
+    FileDataStore.setFileReceivingProgressToPeer(peerId, fileHash, 0);
+  } else if (data === CANCEL_MESSAGE) {
+    _cancelReceiverReceivingOperation(peerId, fileHash);
   } else {
     if (data instanceof ArrayBuffer) {
-      FileDataStore.addFileData(fileHash, data);
+      FileDataStore.addFileBufferToPeer(peerId, fileHash, data);
     } else if (data instanceof Blob) {
-      FileDataStore.addFileData(fileHash, await data.arrayBuffer());
+      FileDataStore.addFileBufferToPeer(
+        peerId,
+        fileHash,
+        await data.arrayBuffer()
+      );
     }
 
-    const fileReceiveSize =
-      FileDataStore.fileHashToDataMap.get(fileHash).length *
-      FileDataStore.fileHashToDataMap.get(fileHash)?.[0].byteLength;
+    //
+    // TODO: computated total received bytes is not acurrate
+    //
+    const receivedFileDataArray =
+      FileDataStore.getFileDataArrayFromPeer(peerId, fileHash);
+    const receivedFileDataArrayLength = receivedFileDataArray
+      ? receivedFileDataArray.length
+      : 0;
+    const receivedByteLength = receivedFileDataArray
+      ? receivedFileDataArray.length > 0
+        ? receivedFileDataArray[0].byteLength
+        : 0
+      : 0;
+    const fileReceivedFileDataSize =
+      receivedFileDataArrayLength * receivedByteLength;
 
-    FileDataStore.setFileReceiveProgress(fileHash, fileReceiveSize);
+    FileDataStore.setFileReceivingProgressToPeer(
+      peerId,
+      fileHash,
+      fileReceivedFileDataSize
+    );
   }
 }
 
-function _cancelReceiverSendOperation(fileHash) {
-  FileDataStore.setFileReceiveProgress(fileHash, 0);
-  FileDataStore.deleteFileData(fileHash);
+function _handleReceiverChannelClose(event) {
+  const { target: dataChannel } = event;
+
+  if (!(dataChannel instanceof RTCDataChannel)) {
+    console.log(
+      `WebRTCGroupChatController: unexpected event target type, it is not 'RTCDataChannel' typed`
+    );
+    return;
+  }
+
+  dataChannel.close();
 }
 
-function _cancelSenderSendOperation(fileHash) {
-  const dataChannelLabel = `file-${fileHash}`;
-  const dataChannel =
-    _peerConnectionDataChannelMap.get(dataChannelLabel);
-  FileDataStore.setFileSendProgress(fileHash, 0);
-
-  FileDataStore.setCancelledFile(fileHash, true);
-  if (dataChannel && dataChannel.readyState === "open") {
-    dataChannel.send("CANCEL_MESSAGE");
-    dataChannel.close();
-  }
+// ( receiver )
+function _cancelReceiverReceivingOperation(peerId, fileHash) {
+  FileDataStore.setFileReceivingProgressToPeer(peerId, fileHash, 0);
+  FileDataStore.deleteFileFromPeer(peerId, fileHash);
 }
 
 /**
@@ -1021,8 +1377,18 @@ function _handleIncomingTrackMute(event, peerId) {
   _peerMediaStreamMap.deleteTrack(peerId, track.kind);
 }
 
-function _setupTransceiverMap(transceiver, incomingTrackKind, peerId) {
-  if (!transceiver || !incomingTrackKind || incomingTrackKind.length === 0 || !peerId || peerId.length === 0) {
+function _setupTransceiverMap(
+  transceiver,
+  incomingTrackKind,
+  peerId
+) {
+  if (
+    !transceiver ||
+    !incomingTrackKind ||
+    incomingTrackKind.length === 0 ||
+    !peerId ||
+    peerId.length === 0
+  ) {
     console.log(
       `WebRTCGroupChatController: unexpected transceiver/incomingTrackKind/peerId during transceiver map setup`
     );
@@ -1306,7 +1672,7 @@ function _createNewRoom(roomName) {
   if (roomName.length > 0) {
     SocketService.emitMessageEvent(
       _webSocketUrl,
-      SocketService.eventType.CREATE_ROOM,
+      SocketService.typeEnum.CREATE_ROOM,
       {
         roomName: roomName,
       }
@@ -1318,7 +1684,7 @@ function _joinRoom(roomId) {
   if (roomId.length > 0) {
     SocketService.emitMessageEvent(
       _webSocketUrl,
-      SocketService.eventType.JOIN_ROOM,
+      SocketService.typeEnum.JOIN_ROOM,
       {
         roomId: roomId,
       }
@@ -1336,7 +1702,7 @@ function _leaveRoom() {
 
   SocketService.emitMessageEvent(
     _webSocketUrl,
-    SocketService.eventType.LEAVE_ROOM,
+    SocketService.typeEnum.LEAVE_ROOM,
     {}
   );
 }
@@ -1465,6 +1831,25 @@ export default {
     if (!passChecking) return;
     _peerConnectionConfig = config;
   },
+
+  //
+  // File Transferring
+  //
+
+  // send file meta data to all peers
+  sendFileMetaDataToAllPeer(files) {
+    _sendFileMetaDataToAllPeer(files);
+  },
+
+  // send file data to all peers
+  sendFileDataToAllPeer(files) {
+    _sendFileDataToAllPeer(files);
+  },
+
+  // cancel sending
+  // cancelSendingOperation(fileHash) {
+  //   _cancelSenderSendingOperationToAllPeer(fileHash);
+  // },
 
   //
   // Internal states accessing feature

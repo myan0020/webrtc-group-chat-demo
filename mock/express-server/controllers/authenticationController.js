@@ -4,8 +4,8 @@ const sessionController = require("./sessionController");
 const sessionMap = sessionController.sessionMap;
 const authenticatedUserIds = sessionController.authenticatedUserIds;
 const signaling = require("../signaling/signaling");
-const sendSignalThroughResponese = signaling.sendThroughResponese;
-const signalType = signaling.typeNumber;
+const sendSignalThroughResponse = signaling.sendThroughResponse;
+const signalTypeEnum = signaling.typeEnum;
 const groupChatRoomController = require("./groupChatRoomController");
 const rooms = groupChatRoomController.rooms;
 const userRoomMap = groupChatRoomController.userRoomMap;
@@ -17,7 +17,7 @@ exports.handleLogin = (req, res, next) => {
   req.session.username = username;
   authenticatedUserIds.add(userId);
 
-  sendSignalThroughResponese(res, signalType.LOG_IN_SUCCESS, {
+  sendSignalThroughResponse(res, signalTypeEnum.LOG_IN_SUCCESS, {
     username: username,
     userId: userId,
     rooms: rooms,
@@ -69,7 +69,7 @@ exports.handleLogout = (req, res, next) => {
       sessionMap.delete(userId);
     }
 
-    sendSignalThroughResponese(res, signalType.LOG_OUT_SUCCESS);
+    sendSignalThroughResponse(res, signalTypeEnum.LOG_OUT_SUCCESS);
   });
 
 };

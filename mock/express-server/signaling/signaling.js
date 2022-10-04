@@ -1,6 +1,6 @@
 const chalk = require("chalk");
 
-const SignalMessageTypeObject = {
+const typeEnum = {
   // Session singals
   LOG_IN_SUCCESS: 1,
   LOG_OUT_SUCCESS: 2,
@@ -12,69 +12,91 @@ const SignalMessageTypeObject = {
   LEAVE_ROOM: 7,
   LEAVE_ROOM_SUCCESS: 8,
   // WebRTC connection singals
-  WEBRTC_NEW_PEER_ARIVAL: 9, 
+  WEBRTC_NEW_PEER_ARIVAL: 9,
   WEBRTC_NEW_PEER_LEAVE: 10,
   WEBRTC_NEW_PASSTHROUGH: 11,
 };
-const SignalMessageTypeSet = new Set(Object.values(SignalMessageTypeObject));
-
-const SignalMessage = function (selectedType, payload) {
-  if (!SignalMessageTypeSet.has(selectedType)) {
-    throw Error(
-      "'SignalMessage' constructor has received a wrong value for 'selectedType'"
-    );
-  }
-  this.type = selectedType;
-  this.payload = payload;
-};
-
-
 
 const createMessage = (selectedType, payload) => {
-  return new SignalMessage(selectedType, payload);
+  const typeValueSet = new Set(Object.values(typeEnum));
+  if (!typeValueSet.has(selectedType)) {
+    console.log(
+      chalk.red`'createMessage' has received a wrong 'selectedType'( ${selectedType} )`
+    );
+    return null;
+  }
+
+  const message = {};
+  message.type = selectedType;
+  message.payload = payload;
+
+  return message;
 };
 
 const createSerializedMessage = (selectedType, payload) => {
   return JSON.stringify(createMessage(selectedType, payload));
 };
 
-const typeNumber = {
-  LOG_IN_SUCCESS: SignalMessageTypeObject.LOG_IN_SUCCESS,
-  LOG_OUT_SUCCESS: SignalMessageTypeObject.LOG_OUT_SUCCESS,
-
-  // Chat room singals
-  CREATE_ROOM: SignalMessageTypeObject.CREATE_ROOM,
-  UPDATE_ROOMS: SignalMessageTypeObject.UPDATE_ROOMS,
-  JOIN_ROOM: SignalMessageTypeObject.JOIN_ROOM,
-  JOIN_ROOM_SUCCESS: SignalMessageTypeObject.JOIN_ROOM_SUCCESS,
-  LEAVE_ROOM: SignalMessageTypeObject.LEAVE_ROOM,
-  LEAVE_ROOM_SUCCESS: SignalMessageTypeObject.LEAVE_ROOM_SUCCESS,
-
-  // WebRTC connection singals
-  WEBRTC_NEW_PEER_ARIVAL: SignalMessageTypeObject.WEBRTC_NEW_PEER_ARIVAL,
-  WEBRTC_NEW_PEER_LEAVE: SignalMessageTypeObject.WEBRTC_NEW_PEER_LEAVE,
-  WEBRTC_NEW_PASSTHROUGH: SignalMessageTypeObject.WEBRTC_NEW_PASSTHROUGH,
+const findTypeNameByTypeValue = (typeValue) => {
+  for (let typeName in typeEnum)
+    if (typeEnum[typeName] === typeValue) return typeName;
+  return undefined;
 };
 
-exports.typeNumber = typeNumber;
+exports.typeEnum = typeEnum;
 
-exports.sendThroughResponese = (res, selectedType, payload) => {
+exports.findTypeNameByTypeValue = findTypeNameByTypeValue;
+
+exports.sendThroughResponse = (res, selectedType, payload) => {
   if (!res) {
-    console.log(chalk.red`Response cannot be sent because 'res' param is Null`);
+    console.log(
+      chalk.red`Response cannot be sent because 'res' param is Null`
+    );
     return;
   }
-  res.send(createMessage(selectedType, payload));
+
+  const message = createMessage(selectedType, payload);
+  if (!message) {
+    console.log(
+      chalk.red`Response cannot be sent because the outgoing message is Null`
+    );
+    return;
+  }
+
+  const selectedTypeName = findTypeNameByTypeValue(selectedType);
+  if (!selectedTypeName || selectedTypeName.length === 0) {
+    console.log(
+      chalk.red`[HTTP] the log to show signal type name cannot be printed because 'selectedType'( pointing to ${selectedTypeName} ) param is invalid`
+    );
+  } else {
+    console.log(
+      `[HTTP] ${chalk.green`${selectedTypeName}`} signal msg respond ${chalk.blue`to`} a user`
+    );
+  }
+
+  res.send(message);
 };
 
 exports.sendThroughWebsocket = (websocket, selectedType, payload) => {
   if (!websocket) {
-    console.log(chalk.red`WebSocket msg cannot be sent because 'websocket' param is Null`);
+    console.log(
+      chalk.red`[WebSocket] msg cannot be sent because 'websocket' param is Null`
+    );
     return;
   }
 
-  console.log(
-    `[WebSocket] ${chalk.green`${selectedType}`} signal msg ${chalk.blue`to`} the user named ${chalk.green`${websocket.username ? websocket.username : 'unknown'}`}`
-  );
+  const selectedTypeName = findTypeNameByTypeValue(selectedType);
+  if (!selectedTypeName || selectedTypeName.length === 0) {
+    console.log(
+      chalk.red`[WebSocket] the log to show signal type name cannot be printed because 'selectedType'( pointing to ${selectedTypeName} ) param is invalid`
+    );
+  } else {
+    console.log(
+      `[WebSocket] ${chalk.green`${selectedTypeName}`} signal msg ${chalk.blue`to`} the user named ${chalk.green`${
+        websocket.username ? websocket.username : "unknown"
+      }`}`
+    );
+  }
+
   websocket.send(createSerializedMessage(selectedType, payload));
 };
-
