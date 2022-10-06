@@ -277,47 +277,47 @@ let _peerConnectionConfig = {
 };
 const _peerConnectionMap = {
   // data structure: [[ peerId, peerConnectionInstance ], ...]
-  map: new Map(),
+  peerMap: new Map(),
   has(key) {
-    return this.map.has(key);
+    return this.peerMap.has(key);
   },
   size() {
-    return this.map.size;
+    return this.peerMap.size;
   },
   set(key, value) {
-    const prevSize = this.map.size;
-    this.map.set(key, value);
-    const curSize = this.map.size;
+    const prevSize = this.peerMap.size;
+    this.peerMap.set(key, value);
+    const curSize = this.peerMap.size;
     console.log(
       `WebRTCGroupChatController: _peerConnectionMap set executed, and its size changed from ${prevSize} to ${curSize}`
     );
   },
   get(key) {
-    return this.map.get(key);
+    return this.peerMap.get(key);
   },
   getFirstKeyByValue: function (searchValue) {
-    for (let [key, value] of this.map.entries()) {
+    for (let [key, value] of this.peerMap.entries()) {
       if (value === searchValue) return key;
     }
   },
   delete(key) {
-    const prevSize = this.map.size;
-    this.map.delete(key);
-    const curSize = this.map.size;
+    const prevSize = this.peerMap.size;
+    this.peerMap.delete(key);
+    const curSize = this.peerMap.size;
     console.log(
       `WebRTCGroupChatController: _peerConnectionMap delete executed, and its size changed from ${prevSize} to ${curSize}`
     );
   },
   clear() {
-    const prevSize = this.map.size;
-    this.map.clear();
-    const curSize = this.map.size;
+    const prevSize = this.peerMap.size;
+    this.peerMap.clear();
+    const curSize = this.peerMap.size;
     console.log(
       `WebRTCGroupChatController: _peerConnectionMap clear executed, and its size changed from ${prevSize} to ${curSize}`
     );
   },
   forEach(func) {
-    this.map.forEach(func);
+    this.peerMap.forEach(func);
   },
 };
 
@@ -747,16 +747,22 @@ function _closeALLPeerConnections() {
  * Peer Connection Data Channel
  */
 
-function DataChannelMap() {
-  this.peerMap = new Map();
-  this.setChannel = function (peerId, label, channel) {
-    let peerSpecificObject = this.peerMap.get(peerId);
+let _handleFileHashToFileObjectObtained;
+const _peerFileMetaDataChannelMap = createDataChannelMap();
+const _peerFileDataChannelMap = createDataChannelMap();
+function createDataChannelMap() {
+  const dataChannelMap = {};
+
+  dataChannelMap.peerMap = new Map();
+
+  dataChannelMap.setChannel = function (peerId, label, channel) {
+    let peerSpecificObject = dataChannelMap.peerMap.get(peerId);
     if (!peerSpecificObject) {
       peerSpecificObject = {};
     }
     peerSpecificObject[label] = channel;
 
-    this.peerMap.set(peerId, peerSpecificObject);
+    dataChannelMap.peerMap.set(peerId, peerSpecificObject);
 
     console.log(
       "TEST new channel: ",
@@ -764,17 +770,19 @@ function DataChannelMap() {
       "of label: ",
       label,
       "is set to map: ",
-      this.peerMap
+      dataChannelMap.peerMap
     );
   };
-  this.getChannel = function (peerId, label) {
-    if (!this.peerMap.has(peerId)) {
+
+  dataChannelMap.getChannel = function (peerId, label) {
+    if (!dataChannelMap.peerMap.has(peerId)) {
       return null;
     }
-    return this.peerMap.get(peerId)[label];
+    return dataChannelMap.peerMap.get(peerId)[label];
   };
-  this.hasChannel = function (peerId, label) {
-    let peerSpecificObject = this.peerMap.get(peerId);
+
+  dataChannelMap.hasChannel = function (peerId, label) {
+    let peerSpecificObject = dataChannelMap.peerMap.get(peerId);
     if (!peerSpecificObject) {
       return false;
     }
@@ -783,10 +791,10 @@ function DataChannelMap() {
     }
     return true;
   };
+
+  return dataChannelMap;
 }
 
-const _peerFileMetaDataChannelMap = new DataChannelMap();
-const _peerFileDataChannelMap = new DataChannelMap();
 const _peerSendFileCallbackQueueMap = {
   peerMap: new Map(),
   shiftSendFileCallbackFromPeer(peerId) {
@@ -808,22 +816,24 @@ const _peerSendFileCallbackQueueMap = {
 
 const MAXIMUM_MESSAGE_SIZE = 16384;
 const META_DATA_CHANNEL_LABEL = "META_DATA_CHANNEL_LABEL";
-
 const START_OF_FILE_MESSAGE = "START_OF_FILE_MESSAGE";
 const CANCEL_MESSAGE = "CANCEL_MESSAGE";
 
+// ( sender )
 function _sendFileMetaDataToAllPeer(files) {
   _peerConnectionMap.forEach((_, peerId) => {
     _sendFileMetaDataToPeer(files, peerId);
   });
 }
 
+// ( sender )
 function _sendFileDataToAllPeer(files) {
   _peerConnectionMap.forEach((_, peerId) => {
     _sendFileDataToPeer(files, peerId);
   });
 }
 
+// ( sender )
 async function _sendFileMetaDataToPeer(files, peerId) {
   if (!files) {
     console.log(
@@ -835,6 +845,14 @@ async function _sendFileMetaDataToPeer(files, peerId) {
   const fileHashToFileObject = await FileDataUtil.getUniqueFiles(
     files
   );
+  FileDataStore.setSendingFileHashToFile(fileHashToFileObject);
+  console.log(
+    "TEST:_handleFileHashToFileObjectObtained ",
+    fileHashToFileObject
+  );
+  if (_handleFileHashToFileObjectObtained) {
+    _handleFileHashToFileObjectObtained(fileHashToFileObject);
+  }
 
   console.log("TEST fileHashToFileObject: ", fileHashToFileObject);
 
@@ -846,30 +864,24 @@ async function _sendFileMetaDataToPeer(files, peerId) {
     },
     {}
   );
-
-  let fileMetaDataChannel = _peerFileMetaDataChannelMap.getChannel(
+  const fileMetaDataChannel = _createAndStoreDataChannel(
     peerId,
-    META_DATA_CHANNEL_LABEL
-  );
-
-  if (!fileMetaDataChannel) {
-    console.log(
-      `WebRTCGroupChatController: unfound meta data 'channel' with peer( ${peerId} ), will create a new one`
-    );
-
-    fileMetaDataChannel = _createAndStoreDataChannel(
-      peerId,
-      META_DATA_CHANNEL_LABEL,
-      (event) => {
-        if (fileMetaDataChannel.readyState === "open") {
-          fileMetaDataChannel.send(JSON.stringify(metaData));
-          fileMetaDataChannel.close();
-        }
+    META_DATA_CHANNEL_LABEL,
+    (event) => {
+      _handleChannelOpen(event, fileMetaDataChannel);
+    },
+    null,
+    (event) => {
+      if (fileMetaDataChannel.readyState === "open") {
+        fileMetaDataChannel.send(JSON.stringify(metaData));
+        fileMetaDataChannel.close();
       }
-    );
-  }
+    },
+    _handleChannelClose
+  );
 }
 
+// ( sender )
 async function _sendFileDataToPeer(files, peerId) {
   if (!files) {
     console.log(
@@ -895,41 +907,31 @@ async function _sendFileDataToPeer(files, peerId) {
         }
         const label = `file-${fileHash}`;
         const file = fileHashToFileObject[fileHash];
-
         FileDataStore.setFileSendingProgressToPeer(
           peerId,
           fileHash,
           0
         );
-
-        let fileDataChannel = _peerFileDataChannelMap.getChannel(
+        const fileDataChannel = _createAndStoreDataChannel(
           peerId,
-          label
+          label,
+          (event) => {
+            _handleChannelOpen(event, fileDataChannel);
+          },
+          null,
+          (event) => {
+            _handleSenderChannelBufferedAmountLow(
+              event,
+              peerId,
+              fileDataChannel,
+              fileHash,
+              file
+            );
+          },
+          () => {
+            _handleSenderChannelClose(peerId);
+          }
         );
-
-        if (!fileDataChannel) {
-          fileDataChannel = _createAndStoreDataChannel(
-            peerId,
-            label,
-            (event) => {
-              _handleSenderChannelOpen(event, fileDataChannel);
-            },
-            null,
-            (event) => {
-              _handleSenderChannelBufferedAmountLow(
-                event,
-                peerId,
-                fileDataChannel,
-                fileHash,
-                file
-              );
-            },
-            () => {
-              _handleSenderChannelClose(peerId);
-            }
-          );
-        }
-
         // dataChannel.bufferedAmountLowThreshold = BUFFERED_AMOUNT_LOW_THRESHOLD;
         fileDataChannel.binaryType = "arraybuffer";
       };
@@ -1005,11 +1007,6 @@ function _createAndStoreDataChannel(
   }
 
   return dataChannel;
-}
-
-// ( sender )
-function _handleSenderChannelOpen(event, dataChannel) {
-  dataChannel.send(START_OF_FILE_MESSAGE);
 }
 
 // ( sender )
@@ -1091,6 +1088,25 @@ function _cancelSenderSendingOperation(peerId, fileHash) {
   }
 }
 
+// ( sender + receiver )
+function _handleChannelOpen(event, dataChannel) {
+  dataChannel.send(START_OF_FILE_MESSAGE);
+}
+
+// ( sender + receiver )
+function _handleChannelClose(event) {
+  const { target: dataChannel } = event;
+
+  if (!(dataChannel instanceof RTCDataChannel)) {
+    console.log(
+      `WebRTCGroupChatController: unexpected event target type, it is not 'RTCDataChannel' typed`
+    );
+    return;
+  }
+
+  dataChannel.close();
+}
+
 // ( receiver )
 function _handlePeerConnectionDataChannelEvent(event) {
   const {
@@ -1117,7 +1133,7 @@ function _handlePeerConnectionDataChannelEvent(event) {
   }
 
   peerChannelMap.setChannel(peerId, label, channel);
-  channel.onclose = _handleReceiverChannelClose;
+  channel.onclose = _handleChannelClose;
 }
 
 // ( receiver )
@@ -1131,17 +1147,18 @@ function _handleReceiverChannelFileMetaDataMessage(event, peerId) {
     return;
   }
 
+  if (data === START_OF_FILE_MESSAGE) {
+    FileDataStore.deleteMetaDataFromPeer(peerId);
+    return;
+  }
+
   const parsedData = JSON.parse(event.data);
   FileDataStore.setMetaDataToPeer(peerId, parsedData);
-  console.log(
-    'WebRTCGroupChatController: received ', parsedData, ' from file meta data channel'
-  );
 }
 
 // ( receiver )
 async function _handleReceiverChannelFileDataMessage(event, peerId) {
   const { data, target: dataChannel } = event;
-
   if (!(dataChannel instanceof RTCDataChannel)) {
     console.log(
       `WebRTCGroupChatController: unexpected event target type, it is not 'RTCDataChannel' typed`
@@ -1154,7 +1171,10 @@ async function _handleReceiverChannelFileDataMessage(event, peerId) {
 
   if (data === START_OF_FILE_MESSAGE) {
     FileDataStore.deleteFileFromPeer(peerId, fileHash);
-    FileDataStore.setFileReceivingProgressToPeer(peerId, fileHash, 0);
+    FileDataStore.clearFileReceivingProgressFromPeer(
+      peerId,
+      fileHash
+    );
   } else if (data === CANCEL_MESSAGE) {
     _cancelReceiverReceivingOperation(peerId, fileHash);
   } else {
@@ -1167,47 +1187,12 @@ async function _handleReceiverChannelFileDataMessage(event, peerId) {
         await data.arrayBuffer()
       );
     }
-
-    //
-    // TODO: computated total received bytes is not acurrate
-    //
-    const receivedFileDataArray =
-      FileDataStore.getFileDataArrayFromPeer(peerId, fileHash);
-    const receivedFileDataArrayLength = receivedFileDataArray
-      ? receivedFileDataArray.length
-      : 0;
-    const receivedByteLength = receivedFileDataArray
-      ? receivedFileDataArray.length > 0
-        ? receivedFileDataArray[0].byteLength
-        : 0
-      : 0;
-    const fileReceivedFileDataSize =
-      receivedFileDataArrayLength * receivedByteLength;
-
-    FileDataStore.setFileReceivingProgressToPeer(
-      peerId,
-      fileHash,
-      fileReceivedFileDataSize
-    );
   }
-}
-
-function _handleReceiverChannelClose(event) {
-  const { target: dataChannel } = event;
-
-  if (!(dataChannel instanceof RTCDataChannel)) {
-    console.log(
-      `WebRTCGroupChatController: unexpected event target type, it is not 'RTCDataChannel' typed`
-    );
-    return;
-  }
-
-  dataChannel.close();
 }
 
 // ( receiver )
 function _cancelReceiverReceivingOperation(peerId, fileHash) {
-  FileDataStore.setFileReceivingProgressToPeer(peerId, fileHash, 0);
+  FileDataStore.clearFileReceivingProgressFromPeer(peerId, fileHash);
   FileDataStore.deleteFileFromPeer(peerId, fileHash);
 }
 
@@ -1221,12 +1206,12 @@ let _mediaStreamConstraints = {
 };
 let _localMediaStream;
 const _peerMediaStreamMap = {
-  map: new Map(), // [[ peerId, { mediaStream } ], ...]
+  peerMap: new Map(), // [[ peerId, { mediaStream } ], ...]
   has(key) {
-    return this.map.has(key);
+    return this.peerMap.has(key);
   },
   hasKindOfTrack(peerId, trackKind) {
-    const mediaStream = this.map.get(peerId);
+    const mediaStream = this.peerMap.get(peerId);
     if (!mediaStream) {
       return false;
     }
@@ -1238,29 +1223,29 @@ const _peerMediaStreamMap = {
     return false;
   },
   size() {
-    return this.map.size;
+    return this.peerMap.size;
   },
   get(key) {
-    return this.map.get(key);
+    return this.peerMap.get(key);
   },
   clear() {
-    const prevSize = this.map.size;
-    this.map.clear();
-    const curSize = this.map.size;
+    const prevSize = this.peerMap.size;
+    this.peerMap.clear();
+    const curSize = this.peerMap.size;
     console.log(
       `WebRTCGroupChatController: _peerMediaStreamMap clear executed, and its size changed from ${prevSize} to ${curSize}`
     );
 
     if (_handlePeerMediaStreamMapChanged) {
-      _handlePeerMediaStreamMapChanged(this.map);
+      _handlePeerMediaStreamMapChanged(this);
     }
   },
 
   deleteTrack(peerId, kind) {
-    if (!this.map.get(peerId)) {
+    if (!this.peerMap.get(peerId)) {
       return;
     }
-    const oldMediaStream = this.map.get(peerId);
+    const oldMediaStream = this.peerMap.get(peerId);
     const newMediaStream = new MediaStream();
 
     oldMediaStream.getTracks().forEach((existTrack) => {
@@ -1276,31 +1261,31 @@ const _peerMediaStreamMap = {
     );
 
     if (newMediaStream.getTracks().length === 0) {
-      const prevSize = this.map.size;
-      this.map.delete(peerId);
-      const curSize = this.map.size;
+      const prevSize = this.peerMap.size;
+      this.peerMap.delete(peerId);
+      const curSize = this.peerMap.size;
       console.log(
         `WebRTCGroupChatController: _peerMediaStreamMap delete executed, and its size changed from ${prevSize} to ${curSize}`
       );
     } else {
-      this.map.set(peerId, newMediaStream);
+      this.peerMap.set(peerId, newMediaStream);
     }
 
     if (_handlePeerMediaStreamMapChanged) {
-      _handlePeerMediaStreamMapChanged(this.map);
+      _handlePeerMediaStreamMapChanged(this);
     }
   },
 
   setTrack(peerId, track) {
     if (!(track instanceof MediaStreamTrack)) return;
 
-    const prevSize = this.map.size;
+    const prevSize = this.peerMap.size;
 
-    if (!this.map.get(peerId)) {
-      this.map.set(peerId, new MediaStream());
+    if (!this.peerMap.get(peerId)) {
+      this.peerMap.set(peerId, new MediaStream());
     }
 
-    const oldMediaStream = this.map.get(peerId);
+    const oldMediaStream = this.peerMap.get(peerId);
 
     const newMediaStream = new MediaStream();
     oldMediaStream.getTracks().forEach((existTrack) => {
@@ -1309,14 +1294,14 @@ const _peerMediaStreamMap = {
       }
     });
     newMediaStream.addTrack(track);
-    this.map.set(peerId, newMediaStream);
+    this.peerMap.set(peerId, newMediaStream);
 
     console.log(
-      `WebRTCGroupChatController: _peerMediaStreamMap size changed from ${prevSize} to ${this.map.size}`
+      `WebRTCGroupChatController: _peerMediaStreamMap size changed from ${prevSize} to ${this.peerMap.size}`
     );
 
     if (_handlePeerMediaStreamMapChanged) {
-      _handlePeerMediaStreamMapChanged(this.map);
+      _handlePeerMediaStreamMapChanged(this);
     }
   },
 };
@@ -1836,6 +1821,13 @@ export default {
   // File Transferring
   //
 
+  async createFileHashToFileObject(files) {
+    const fileHashToFileObject = await FileDataUtil.getUniqueFiles(
+      files
+    );
+    return fileHashToFileObject;
+  },
+
   // send file meta data to all peers
   sendFileMetaDataToAllPeer(files) {
     _sendFileMetaDataToAllPeer(files);
@@ -1847,9 +1839,29 @@ export default {
   },
 
   // cancel sending
-  // cancelSendingOperation(fileHash) {
-  //   _cancelSenderSendingOperationToAllPeer(fileHash);
-  // },
+  cancelSendingOperationToAllPeer(fileHash) {
+    _cancelSenderSendingOperationToAllPeer(fileHash);
+  },
+
+  // listeners
+  onFileHashToFileObjectObtained: function (handler) {
+    _handleFileHashToFileObjectObtained = handler;
+  },
+  onFileSendingProgressChanged: function (handler) {
+    FileDataStore.onSendingProgressChanged(handler);
+  },
+  onFileReceivingProgressChanged: function (handler) {
+    FileDataStore.onReceivingProgressChanged(handler);
+  },
+  onFileMetaDataChanged: function (handler) {
+    FileDataStore.onFileMetaDataChanged(handler);
+  },
+  onFileDataChanged: function (handler) {
+    FileDataStore.onFileDataChanged(handler);
+  },
+  onFileSendingStatusChanged: function (handler) {
+    FileDataStore.onSendingStatusChanged(handler);
+  },
 
   //
   // Internal states accessing feature
