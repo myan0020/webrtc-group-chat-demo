@@ -53,10 +53,13 @@ export default function WebRTCGroupChat() {
   // hook 15
   const [files, setFiles] = useState(null);
   // hook 16
-  const [fileSendingProgressMap, setFileSendingProgressMap] =
+  // const [fileSendingProgressMap, setFileSendingProgressMap] =
+    // useState(null);
+  // hook 16
+  const [sendingFileHashToFileObj, setSendingFileHashToFileObj] =
     useState(null);
   // hook 17
-  const [sendingFileHashToFileObj, setSendingFileHashToFileObj] =
+  const [fileSendingHashToMinProgressObj, setFileSendingHashToMinProgressObj] =
     useState(null);
 
   // file receiving
@@ -65,6 +68,7 @@ export default function WebRTCGroupChat() {
   const [fileReceivingProgressMap, setFileReceivingProgressMap] =
     useState(null);
   // hook 19
+  // TODO: this receiving meta data map is null even after data has been received
   const [
     receivingFileHashToMetaDataMap,
     setReceivingFileHashToMetaDataMap,
@@ -144,7 +148,6 @@ export default function WebRTCGroupChat() {
               : "unknown"
           }`
         );
-        // const map = new Map(peerStreamsMap);
         setPeerMediaStreamsMap(cloneDeep(peerStreamsMap));
 
         // TODO: it is the temperary location where the code below is called
@@ -161,9 +164,14 @@ export default function WebRTCGroupChat() {
         setSendingFileHashToFileObj(cloneDeep(fileHashToFileObject));
       }
     );
-    WebRTCGroupChatController.onFileSendingProgressChanged(
-      (fileSendingProgressMap) => {
-        setFileSendingProgressMap(cloneDeep(fileSendingProgressMap));
+    // WebRTCGroupChatController.onFileSendingProgressChanged(
+    //   (fileSendingProgressMap) => {
+    //     setFileSendingProgressMap(cloneDeep(fileSendingProgressMap));
+    //   }
+    // );
+    WebRTCGroupChatController.onFileSendingHashToMinProgressChanged(
+      (fileSendingHashToMinProgressObj) => {
+        setFileSendingHashToMinProgressObj(cloneDeep(fileSendingHashToMinProgressObj));
       }
     );
     WebRTCGroupChatController.onFileReceivingProgressChanged(
@@ -257,14 +265,14 @@ export default function WebRTCGroupChat() {
     }
   };
 
-  // click to start calling
+  // click to hang up calling
   const onHangUpMediaCallingClick = (e) => {
     if (joinedRoomId.length > 0) {
       WebRTCGroupChatController.hangUpCalling();
     }
   };
 
-  // click to toggle enabling
+  // click to toggle microphone enabling
   const onToggleMicEnablingClick = (e) => {
     if (joinedRoomId.length > 0 && isCalling) {
       const curEnabled = WebRTCGroupChatController.localMicEnabled;
@@ -273,7 +281,7 @@ export default function WebRTCGroupChat() {
     }
   };
 
-  // click to toggle enabling
+  // click to toggle camera enabling
   const onToggleCameraEnablingClick = (e) => {
     if (joinedRoomId.length > 0 && isCalling) {
       const curEnabled = WebRTCGroupChatController.localCameraEnabled;
@@ -282,7 +290,7 @@ export default function WebRTCGroupChat() {
     }
   };
 
-  // click to toggle muting
+  // click to toggle microphone muting
   const onToggleMicMutingClick = (e) => {
     if (joinedRoomId.length > 0 && isCalling) {
       const curMuted = WebRTCGroupChatController.localMicMuted;
@@ -291,7 +299,7 @@ export default function WebRTCGroupChat() {
     }
   };
 
-  // click to toggle muting
+  // click to toggle camera muting
   const onToggleCameraMutingClick = (e) => {
     if (joinedRoomId.length > 0 && isCalling) {
       const curMuted = WebRTCGroupChatController.localCameraMuted;
@@ -546,18 +554,13 @@ export default function WebRTCGroupChat() {
   );
 
   // file sending
-  const fileSendingListRendering = [];
-  if (fileSendingProgressMap) {
-    fileSendingProgressMap.peerMap.forEach(
-      (fileHashToSendingProgressObj, peerId) => {
-        fileSendingListRendering.push(
-          <FileTransceiverList
-            key={peerId}
-            fileHashToFileObj={sendingFileHashToFileObj}
-            fileTransceivingProgressObj={fileHashToSendingProgressObj}
-          />
-        );
-      }
+  let fileSendingListRendering = <></>;
+  if (fileSendingHashToMinProgressObj && sendingFileHashToFileObj) {
+    fileSendingListRendering = (
+      <FileTransceiverList
+        fileHashToFileObj={sendingFileHashToFileObj}
+        fileTransceivingProgressObj={fileSendingHashToMinProgressObj}
+      />
     );
   }
 

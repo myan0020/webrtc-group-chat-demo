@@ -845,7 +845,7 @@ async function _sendFileMetaDataToPeer(files, peerId) {
   const fileHashToFileObject = await FileDataUtil.getUniqueFiles(
     files
   );
-  FileDataStore.setSendingFileHashToFile(fileHashToFileObject);
+  FileDataStore.sendingHashToFile = fileHashToFileObject;
   console.log(
     "TEST:_handleFileHashToFileObjectObtained ",
     fileHashToFileObject
@@ -856,7 +856,7 @@ async function _sendFileMetaDataToPeer(files, peerId) {
 
   console.log("TEST fileHashToFileObject: ", fileHashToFileObject);
 
-  const metaData = Object.keys(fileHashToFileObject).reduce(
+  const fileHashToMetaData = Object.keys(fileHashToFileObject).reduce(
     (accumulator, fileHash) => {
       const { name, type, size } = fileHashToFileObject[fileHash];
       accumulator[fileHash] = { name, type, size };
@@ -864,16 +864,17 @@ async function _sendFileMetaDataToPeer(files, peerId) {
     },
     {}
   );
+
+  // TODO: it is worth thinking twice about the channel label
+
   const fileMetaDataChannel = _createAndStoreDataChannel(
     peerId,
     META_DATA_CHANNEL_LABEL,
-    (event) => {
-      _handleChannelOpen(event, fileMetaDataChannel);
-    },
+    null,
     null,
     (event) => {
       if (fileMetaDataChannel.readyState === "open") {
-        fileMetaDataChannel.send(JSON.stringify(metaData));
+        fileMetaDataChannel.send(JSON.stringify(fileHashToMetaData));
         fileMetaDataChannel.close();
       }
     },
@@ -896,18 +897,18 @@ async function _sendFileDataToPeer(files, peerId) {
 
   Object.keys(fileHashToFileObject).forEach((fileHash) => {
     if (
-      !FileDataStore.getFileSendingProgressFromPeer(peerId, fileHash)
+      !FileDataStore.getSendingProgress(peerId, fileHash)
     ) {
       const sendFileCallback = () => {
         if (
-          FileDataStore.getFileCancelledFromPeer(peerId, fileHash)
+          FileDataStore.getSendingCancelled(peerId, fileHash)
         ) {
           _handleSenderChannelClose(peerId);
           return;
         }
         const label = `file-${fileHash}`;
         const file = fileHashToFileObject[fileHash];
-        FileDataStore.setFileSendingProgressToPeer(
+        FileDataStore.setSendingProgress(
           peerId,
           fileHash,
           0
@@ -948,7 +949,7 @@ async function _sendFileDataToPeer(files, peerId) {
       peerId
     );
   if (sendFileCallback) {
-    FileDataStore.setSendingStatusToPeer(peerId, true);
+    FileDataStore.setSendingStatus(peerId, true);
     sendFileCallback();
   }
 }
@@ -1017,7 +1018,7 @@ async function _handleSenderChannelBufferedAmountLow(
   fileHash,
   file
 ) {
-  const offset = FileDataStore.getFileSendingProgressFromPeer(
+  const offset = FileDataStore.getSendingProgress(
     peerId,
     fileHash
   );
@@ -1026,7 +1027,7 @@ async function _handleSenderChannelBufferedAmountLow(
   }
 
   const newOffset = await _sendChunk(file, offset, dataChannel);
-  FileDataStore.setFileSendingProgressToPeer(
+  FileDataStore.setSendingProgress(
     peerId,
     fileHash,
     newOffset
@@ -1058,7 +1059,7 @@ function _handleSenderChannelClose(peerId) {
     );
 
   if (!sendFileCallback) {
-    FileDataStore.setSendingStatusToPeer(peerId, false);
+    FileDataStore.setSendingStatus(peerId, false);
     return;
   }
 
@@ -1079,9 +1080,9 @@ function _cancelSenderSendingOperation(peerId, fileHash) {
     peerId,
     dataChannelLabel
   );
-  FileDataStore.setFileSendingProgressToPeer(peerId, fileHash, 0);
+  FileDataStore.setSendingProgress(peerId, fileHash, 0);
 
-  FileDataStore.setFileCancelledToPeer(peerId, fileHash, true);
+  FileDataStore.setSendingCancelled(peerId, fileHash, true);
   if (dataChannel && dataChannel.readyState === "open") {
     dataChannel.send(CANCEL_MESSAGE);
     dataChannel.close();
@@ -1146,14 +1147,9 @@ function _handleReceiverChannelFileMetaDataMessage(event, peerId) {
     );
     return;
   }
-
-  if (data === START_OF_FILE_MESSAGE) {
-    FileDataStore.deleteMetaDataFromPeer(peerId);
-    return;
-  }
-
-  const parsedData = JSON.parse(event.data);
-  FileDataStore.setMetaDataToPeer(peerId, parsedData);
+  
+  const fileHashToMetaData = JSON.parse(data);
+  FileDataStore.mergeReceivingHashToMetaData(peerId, fileHashToMetaData);
 }
 
 // ( receiver )
@@ -1170,8 +1166,8 @@ async function _handleReceiverChannelFileDataMessage(event, peerId) {
   const fileHash = label.split("-")?.[1];
 
   if (data === START_OF_FILE_MESSAGE) {
-    FileDataStore.deleteFileFromPeer(peerId, fileHash);
-    FileDataStore.clearFileReceivingProgressFromPeer(
+    FileDataStore.clearReceivingBufferList(peerId, fileHash);
+    FileDataStore.resetReceivingProgress(
       peerId,
       fileHash
     );
@@ -1179,9 +1175,9 @@ async function _handleReceiverChannelFileDataMessage(event, peerId) {
     _cancelReceiverReceivingOperation(peerId, fileHash);
   } else {
     if (data instanceof ArrayBuffer) {
-      FileDataStore.addFileBufferToPeer(peerId, fileHash, data);
+      FileDataStore.addReceivingBuffer(peerId, fileHash, data);
     } else if (data instanceof Blob) {
-      FileDataStore.addFileBufferToPeer(
+      FileDataStore.addReceivingBuffer(
         peerId,
         fileHash,
         await data.arrayBuffer()
@@ -1192,8 +1188,8 @@ async function _handleReceiverChannelFileDataMessage(event, peerId) {
 
 // ( receiver )
 function _cancelReceiverReceivingOperation(peerId, fileHash) {
-  FileDataStore.clearFileReceivingProgressFromPeer(peerId, fileHash);
-  FileDataStore.deleteFileFromPeer(peerId, fileHash);
+  FileDataStore.resetReceivingProgress(peerId, fileHash);
+  FileDataStore.clearReceivingBufferList(peerId, fileHash);
 }
 
 /**
@@ -1850,6 +1846,11 @@ export default {
   onFileSendingProgressChanged: function (handler) {
     FileDataStore.onSendingProgressChanged(handler);
   },
+
+  onFileSendingHashToMinProgressChanged: function (handler) {
+    FileDataStore.onSendingHashToMinProgressChanged(handler);
+  },
+
   onFileReceivingProgressChanged: function (handler) {
     FileDataStore.onReceivingProgressChanged(handler);
   },
