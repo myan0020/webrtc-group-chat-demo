@@ -250,7 +250,7 @@ export default function WebRTCGroupChat() {
     setFiles(files);
   };
 
-  // click to send file meta data
+  // click to send file
   const onSendFileClick = (e) => {
     if (joinedRoomId.length > 0) {
       WebRTCGroupChatController.sendFileToAllPeer(files);

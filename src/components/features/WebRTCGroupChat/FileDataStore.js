@@ -468,10 +468,10 @@ export default {
     _sendingRelatedData.updateSlice(_sendingHashToMetaData, _sendingMetaDataSliceKey);
   },
   checkIfSendingMetaDataPrepared(hashToFile) {
-    let passChecking = true;
+    let checkingPassed = true;
     for (const fileHash of Object.keys(hashToFile)) {
       if (!_sendingHashToMetaData[fileHash]) {
-        passChecking = false;
+        checkingPassed = false;
         break;
       }
     }
@@ -482,7 +482,7 @@ export default {
       `is not prepared for file buffer sending`
     );
 
-    return passChecking;
+    return checkingPassed;
   },
 
   //
@@ -505,7 +505,6 @@ export default {
   },
   setSendingCancelled(peerId, fileHash, cancelled) {
     _sendingCancelledFileMap.setCancelled(peerId, fileHash, cancelled);
-    console.log("setSendingCancelled: ", peerId, fileHash, cancelled);
   },
 
   //
