@@ -1,23 +1,99 @@
 /**
+ * For UI modeling
+ */
+
+const _sendingSliceContainerKey = "hashToConcatData";
+const _sendingMetaDataSliceKey = "SENDING_META_DATA_SLICE_KEY";
+const _sendingMinProgressSliceKey = "SENDING_MIN_PROGRESS_SLICE_KEY";
+
+const _receivingSliceContainerKey = "peerMap";
+const _receivingMetaDataSliceKey = "RECEIVING_META_DATA_SLICE_KEY";
+const _receivingBufferSliceKey = "RECEIVING_BUFFER_SLICE_KEY";
+const _receivingProgressSliceKey = "RECEIVING_PROGRESS_SLICE_KEY";
+
+let _handleSendingRelatedDataChange;
+let _handleReceivingRelatedDataChange;
+
+const _sendingRelatedData = {
+  hashToConcatData: {},
+  updateSlice(hashToSlice, sliceKey) {
+    Object.keys(hashToSlice).forEach((fileHash) => {
+      let concatData = this.hashToConcatData[fileHash];
+      if (!concatData) {
+        concatData = {};
+      }
+      concatData[sliceKey] = hashToSlice[fileHash];
+      this.hashToConcatData[fileHash] = concatData;
+    });
+
+    // unified log
+    console.log(
+      `FileDataStore: the sending related data is updated to`,
+      this,
+      `with`,
+      `a slice key ('${sliceKey}') and`,
+      `a file hash to slice object of`,
+      hashToSlice
+    );
+
+    // listener
+    if (_handleSendingRelatedDataChange) {
+      _handleSendingRelatedDataChange(this);
+    }
+  },
+};
+
+const _receivingRelatedData = {
+  peerMap: new Map(),
+  updateSlice(slicePeerMap, sliceKey) {
+    slicePeerMap.forEach((hashToSlice, peerId) => {
+      let hashToConcatData = this.peerMap.get(peerId);
+      if (!hashToConcatData) {
+        hashToConcatData = {};
+      }
+      Object.entries(hashToSlice).forEach(([fileHash, slice]) => {
+        let concatData = hashToConcatData[fileHash];
+        if (!concatData) {
+          concatData = {};
+        }
+        concatData[sliceKey] = slice;
+        hashToConcatData[fileHash] = concatData;
+      });
+
+      this.peerMap.set(peerId, hashToConcatData);
+    });
+
+    // unified log
+    console.log(
+      `FileDataStore: the receiving related data updated to`,
+      this,
+      `with`,
+      `a slice key ('${sliceKey}') and`,
+      `a slice peer map of`,
+      slicePeerMap
+    );
+
+    // listener
+    if (_handleReceivingRelatedDataChange) {
+      _handleReceivingRelatedDataChange(this);
+    }
+  },
+};
+
+/**
  * Sending file hash to file
  */
 
-let _sendingHashToFile;
+let _sendingHashToMetaData = {};
 
 /**
  * Sending status
  */
 
-let _handleSendingStatusChange;
-
 const _sendingStatusMap = {
   peerMap: new Map(),
   setStatus(peerId, isSending) {
     this.peerMap.set(peerId, isSending);
-
-    if (_handleSendingStatusChange) {
-      _handleSendingStatusChange(this);
-    }
   },
   getStatus(peerId) {
     return this.peerMap.get(peerId);
@@ -38,19 +114,18 @@ const _sendingCancelledFileMap = {
     return hashToCancelled[fileHash];
   },
   setCancelled(peerId, fileHash, cancelled) {
-    if (
-      !peerId ||
-      peerId.length === 0 ||
-      !fileHash ||
-      fileHash.length === 0 ||
-      typeof cancelled !== "boolean"
-    ) {
+    if (!isStringValid(peerId) || !isStringValid(fileHash)) {
       return;
     }
+    if (typeof cancelled !== "boolean") {
+      return;
+    }
+
     let hashToCancelled = this.peerMap.get(peerId);
     if (!hashToCancelled) {
       hashToCancelled = {};
     }
+
     hashToCancelled[fileHash] = cancelled;
     this.peerMap.set(peerId, hashToCancelled);
   },
@@ -60,64 +135,31 @@ const _sendingCancelledFileMap = {
  * Progress
  */
 
-let _handleFileSendingProgressChange;
-let _handleFileReceivingProgressChange;
+const _sendingProgressMap = createFileProgressMap(true);
+const _receivingProgressMap = createFileProgressMap(false);
 
 function createFileProgressMap(isSending) {
   const progressMap = {
+    // the progress data container
     peerMap: new Map(),
-    getProgress: function (peerId, fileHash) {
-      if (
-        !peerId ||
-        peerId.length === 0 ||
-        !fileHash ||
-        fileHash.length === 0
-      ) {
-        return 0;
-      }
-      if (
-        !this.peerMap.has(peerId) ||
-        !this.peerMap.get(peerId)[fileHash]
-      ) {
-        return 0;
-      }
 
+    // get the transceiving progress of a file for a specific peer
+    getProgress: function (peerId, fileHash) {
+      if (!isStringValid(peerId) || !isStringValid(fileHash)) {
+        return 0;
+      }
+      if (!this.peerMap.has(peerId) || !this.peerMap.get(peerId)[fileHash]) {
+        return 0;
+      }
       return this.peerMap.get(peerId)[fileHash];
     },
-    calculateMinProgress(fileHash) {
-      if (
-        !fileHash ||
-        fileHash.length === 0 ||
-        this.peerMap.size === 0
-      ) {
-        return 0;
-      }
-      let minProgress = Number.POSITIVE_INFINITY;
 
-      this.peerMap.forEach((hashToProgress) => {
-        if (hashToProgress[fileHash]) {
-          minProgress = Math.min(
-            minProgress,
-            hashToProgress[fileHash]
-          );
-        }
-      });
-
-      if (minProgress === Number.POSITIVE_INFINITY) {
-        return 0;
-      }
-
-      return minProgress;
-    },
+    // set the transceiving progress of a file for a specific peer
     setProgress: function (peerId, fileHash, progress) {
-      if (
-        !peerId ||
-        peerId.length === 0 ||
-        !fileHash ||
-        fileHash.length === 0 ||
-        typeof progress !== "number" ||
-        progress < 0
-      ) {
+      if (!isStringValid(peerId) || !isStringValid(fileHash)) {
+        return;
+      }
+      if (typeof progress !== "number" || progress < 0) {
         return;
       }
 
@@ -128,88 +170,104 @@ function createFileProgressMap(isSending) {
       hashToProgress[fileHash] = progress;
       this.peerMap.set(peerId, hashToProgress);
 
-      if (isSending && _handleFileSendingProgressChange) {
-        _handleFileSendingProgressChange(this);
-      }
-      if (isSending && _handleFileSendingHashToMinProgressChange) {
-        _handleFileSendingHashToMinProgressChange(
-          _getSendingHashToMinProgress()
-        );
-      }
-      if (!isSending && _handleFileReceivingProgressChange) {
-        _handleFileReceivingProgressChange(this);
-      }
-    },
-    addProgress: function (peerId, fileHash, addedProgress) {
       console.log(
-        "add Progress ToPeer: ",
-        peerId,
-        fileHash,
-        addedProgress
+        `FileDataStore: setting progress (${progress}) of a file (${fileHash}) for a peer (${peerId}) completed`
       );
 
-      const curProgress =
-        this.getProgress(peerId, fileHash) + addedProgress;
-      this.setProgress(peerId, fileHash, curProgress);
+      if (isSending) {
+        const hashToSendingMinProgress = _computedHashToSendingMinProgress(
+          _sendingHashToMetaData,
+          this
+        );
+        _sendingRelatedData.updateSlice(hashToSendingMinProgress, _sendingMinProgressSliceKey);
+      } else {
+        _receivingRelatedData.updateSlice(this.peerMap, _receivingProgressSliceKey);
+      }
     },
 
+    // add the transceiving progress of a file for a specific peer with the additional progress
+    addProgress: function (peerId, fileHash, additionalProgress) {
+      const curProgress = this.getProgress(peerId, fileHash) + additionalProgress;
+      this.setProgress(peerId, fileHash, curProgress);
+      console.log(
+        `FileDataStore: adding the additional progress ( ${additionalProgress} ) for a given file hash ( ${fileHash} ) to a given peer ( ${peerId} ) completed`
+      );
+    },
+
+    // reset the transceiving progress of a file for a specific peer to '0'
     resetProgress: function (peerId, fileHash) {
       this.setProgress(peerId, fileHash, 0);
+      console.log(
+        `FileDataStore: resetting progress for a given file hash (${fileHash}) to a given peer (${peerId}) completed`
+      );
+    },
+
+    // calculate the minimum progress(only for sending) of the given file being sent to every peer
+    calculateMinProgress(fileHash) {
+      if (!isStringValid(fileHash) || this.peerMap.size === 0) {
+        return 0;
+      }
+
+      let minProgress = Number.POSITIVE_INFINITY;
+      this.peerMap.forEach((hashToProgress) => {
+        if (typeof hashToProgress[fileHash] === "number" && hashToProgress[fileHash] >= 0) {
+          minProgress = Math.min(minProgress, hashToProgress[fileHash]);
+        }
+      });
+      if (minProgress === Number.POSITIVE_INFINITY) {
+        return 0;
+      }
+
+      return minProgress;
     },
   };
 
   return progressMap;
 }
-const _sendingProgressMap = createFileProgressMap(true);
-const _receivingProgressMap = createFileProgressMap(false);
 
 /**
  * Sending min progress
  */
 
-let _handleFileSendingHashToMinProgressChange;
-
-const _getSendingHashToMinProgress = function () {
-  if (!_sendingHashToFile) {
-    console.log("_getSendingHashToMinProgress", null);
+// compute and output a file hash to sending minimum progress
+const _computedHashToSendingMinProgress = function (sendingHashToMetaData, sendingProgressMap) {
+  if (!sendingHashToMetaData) {
+    console.log(`FileDataStore: sendingHashToMetaData not exist`);
     return null;
   }
-  const sendingFileHashToMinProgress = {};
-  Object.keys(_sendingHashToFile).forEach((fileHash) => {
-    const minProgress =
-      _sendingProgressMap.calculateMinProgress(fileHash);
 
-    console.log(
-      "_getSendingHashToMinProgress >> minProgress",
-      fileHash,
-      minProgress
-    );
-    sendingFileHashToMinProgress[fileHash] = minProgress;
+  const fileHashToSendingMinProgress = {};
+  Object.keys(sendingHashToMetaData).forEach((fileHash) => {
+    const minProgress = sendingProgressMap.calculateMinProgress(fileHash);
+    fileHashToSendingMinProgress[fileHash] = minProgress;
   });
-
   console.log(
-    "_getSendingHashToMinProgress",
-    sendingFileHashToMinProgress
+    `FileDataStore: when computing completed, the entire sending hash to sending min progress is`,
+    fileHashToSendingMinProgress
   );
-  return sendingFileHashToMinProgress;
+
+  return fileHashToSendingMinProgress;
 };
 
 /**
  * Receiving meta data
  */
 
-let _handleFileMetaDataChange;
-
 const _receivingHashToMetaDataMap = {
+  // the receiving and peer-related file hash to meta data container
   peerMap: new Map(),
+
+  // get the file hash to meta data object for a given peer
   getHashToMetaData(peerId) {
-    if (!peerId || peerId.length === 0) {
+    if (!isStringValid(peerId)) {
       return null;
     }
     return this.peerMap.get(peerId);
   },
+
+  // get the meta data of a given file hash for a given peer
   getMetaData(peerId, fileHash) {
-    if (!fileHash || fileHash.length === 0) {
+    if (!isStringValid(fileHash)) {
       return null;
     }
 
@@ -220,30 +278,42 @@ const _receivingHashToMetaDataMap = {
 
     return hashToMetaData[fileHash];
   },
-  setHashToMetaData(peerId, hashToMetaData) {
-    if (!peerId || peerId.length === 0) {
+
+  // overwrite a file hash to meta data object for a specific peer
+  overwriteHashToMetaData(peerId, hashToMetaData) {
+    if (!isStringValid(peerId)) {
       return;
     }
+
     this.peerMap.set(peerId, hashToMetaData);
 
-    if (_handleFileMetaDataChange) {
-      _handleFileMetaDataChange(this);
-    }
+    console.log(
+      `FileDataStore: overwritting with a receiving file hash to meta data object of`,
+      hashToMetaData,
+      `for a peer (${peerId}) completed`
+    );
+
+    _receivingRelatedData.updateSlice(this.peerMap, _receivingMetaDataSliceKey);
   },
+
+  // merge a file hash to meta data object into the current one (if it exsits) for a given peer
   mergeHashToMetaData(peerId, hashToMetaData) {
     const merged = {
       ...this.getHashToMetaData(peerId),
       ...hashToMetaData,
     };
-    this.setHashToMetaData(peerId, merged);
+    this.overwriteHashToMetaData(peerId, merged);
+
+    console.log(
+      `FileDataStore: merging a file hash to meta data object`,
+      hashToMetaData,
+      `into the current one(if exist) for a peer (${peerId}) has been completed`
+    );
   },
+
+  // set a meta data of a given file hash for a given peer
   setMetaData(peerId, fileHash, metaData) {
-    if (
-      !peerId ||
-      peerId.length === 0 ||
-      !fileHash ||
-      fileHash.length === 0
-    ) {
+    if (!isStringValid(peerId) || !isStringValid(fileHash)) {
       return;
     }
     this.mergeHashToMetaData(peerId, { [fileHash]: metaData });
@@ -254,17 +324,13 @@ const _receivingHashToMetaDataMap = {
  * Receiving data (Buffer)
  */
 
-let _handleFileDataChange;
-
 const _receivingHashToBufferListMap = {
+  // the receiving and peer-related file hash to buffer list data container
   peerMap: new Map(),
+
+  // get the receiving buffer list of a file for a specific peer
   getBufferList(peerId, fileHash) {
-    if (
-      !peerId ||
-      peerId.length === 0 ||
-      !fileHash ||
-      fileHash.length === 0
-    ) {
+    if (!isStringValid(peerId) || !isStringValid(fileHash)) {
       return null;
     }
 
@@ -272,82 +338,151 @@ const _receivingHashToBufferListMap = {
     if (!hashToBufferList) {
       return null;
     }
-
     return hashToBufferList[fileHash];
   },
-  setBufferList(peerId, fileHash, bufferList) {
-    if (
-      !peerId ||
-      peerId.length === 0 ||
-      !fileHash ||
-      fileHash.length === 0
-    ) {
+
+  // overwrite a receiving buffer list of a file for a specific peer
+  overwriteBufferList(peerId, fileHash, bufferList) {
+    if (!isStringValid(peerId) || !isStringValid(fileHash)) {
       return;
     }
+
     let hashToBufferList = this.peerMap.get(peerId);
     if (!hashToBufferList) {
       hashToBufferList = { [fileHash]: [] };
     }
     hashToBufferList[fileHash] = bufferList;
+
     this.peerMap.set(peerId, hashToBufferList);
 
-    if (_handleFileDataChange) {
-      _handleFileDataChange(this);
-    }
-  },
-  addBuffer(peerId, fileHash, buffer) {
-    if (!this.getBufferList(peerId, fileHash)) {
-      this.setBufferList(peerId, { [fileHash]: [] });
-    }
-
-    const bufferList = this.getBufferList(peerId, fileHash);
-    bufferList.push(buffer);
-    this.setBufferList(peerId, fileHash, bufferList);
-
-    // set progress
-    const addedByteLength = buffer.byteLength;
-    _receivingProgressMap.addProgress(
-      peerId,
-      fileHash,
-      addedByteLength
+    console.log(
+      `FileDataStore: overwritting with a receiving buffer list`,
+      hashToBufferList,
+      `of a file (${fileHash}) for a peer (${peerId}) completed`
     );
+
+    _receivingRelatedData.updateSlice(this.peerMap, _receivingBufferSliceKey);
   },
-  clearBufferList(peerId, fileHash) {
-    this.setBufferList(peerId, fileHash, []);
+
+  // add additional receiving buffer of a file for a specific peer
+  addBuffer(peerId, fileHash, buffer) {
+    // adding additional receiving buffer
+    console.log(
+      `FileDataStore: starting to add a buffer to a receiving buffer list of a given file hash (${fileHash}) for a given peer(${peerId}) ...`
+    );
+
+    let bufferList = this.getBufferList(peerId, fileHash);
+    if (!bufferList) {
+      bufferList = [];
+    }
+    bufferList.push(buffer);
+    this.overwriteBufferList(peerId, fileHash, bufferList);
+
+    console.log(
+      `FileDataStore: adding a buffer to a receiving buffer list of a given file hash (${fileHash}) for a given peer(${peerId}) completed`
+    );
+
+    // as well as adding additional receiving progress
+    _receivingProgressMap.addProgress(peerId, fileHash, buffer.byteLength);
   },
-  clearHashToBufferList(peerId) {
+
+  // reset buffer list to an empty list of a file for a specific peer
+  resetBufferList(peerId, fileHash) {
+    console.log(
+      `FileDataStore: starting to reset a receiving buffer list of a file hash (${fileHash}) to an empty list for a peer(${peerId}) ...`
+    );
+
+    this.overwriteBufferList(peerId, fileHash, []);
+
+    console.log(
+      `FileDataStore: resetting a receiving buffer list of a file hash (${fileHash}) to an empty list for a peer(${peerId}) has been completed`
+    );
+
+    // as well as resetting receiving progress
+    _receivingProgressMap.resetProgress(peerId, fileHash);
+  },
+
+  // delete the file hash to buffer list object for a specific peer
+  deleteHashToBufferList(peerId) {
     this.peerMap.delete(peerId);
-
-    if (_handleFileDataChange) {
-      _handleFileDataChange(this);
-    }
+    _receivingRelatedData.updateSlice(this.peerMap, _receivingBufferSliceKey);
   },
-  clearAll() {
+
+  // clear all
+  clear() {
     this.peerMap.clear();
-
-    if (_handleFileDataChange) {
-      _handleFileDataChange(this);
-    }
+    _receivingRelatedData.updateSlice(this.peerMap, _receivingBufferSliceKey);
   },
+};
+
+/**
+ * Util
+ */
+
+const isStringValid = (string) => {
+  return string && string.length > 0;
 };
 
 export default {
   //
+  // slice keys
+  //
+
+  get sendingSliceContainerKey() {
+    return _sendingSliceContainerKey;
+  },
+  get sendingMetaDataSliceKey() {
+    return _sendingMetaDataSliceKey;
+  },
+  get sendingMinProgressSliceKey() {
+    return _sendingMinProgressSliceKey;
+  },
+  get receivingSliceContainerKey() {
+    return _receivingSliceContainerKey;
+  },
+  get receivingMetaDataSliceKey() {
+    return _receivingMetaDataSliceKey;
+  },
+  get receivingBufferSliceKey() {
+    return _receivingBufferSliceKey;
+  },
+  get receivingProgressSliceKey() {
+    return _receivingProgressSliceKey;
+  },
+
+  //
   // Sending file hash to file
   //
 
-  set sendingHashToFile(hashToFile) {
-    _sendingHashToFile = {
-      ...hashToFile,
-    };
-    if (_handleFileSendingHashToMinProgressChange) {
-      _handleFileSendingHashToMinProgressChange(
-        _getSendingHashToMinProgress()
-      );
+  prepareSendingMetaData(hashToFile) {
+    for (const [fileHash, file] of Object.entries(hashToFile)) {
+      _sendingHashToMetaData[fileHash] = { name: file.name, type: file.type, size: file.size };
     }
+
+    console.log(
+      `FileDataStore: new sending file hash to file meta data object of`,
+      _sendingHashToMetaData,
+      `prepared`
+    );
+
+    _sendingRelatedData.updateSlice(_sendingHashToMetaData, _sendingMetaDataSliceKey);
   },
-  get sendingHashToFile() {
-    return _sendingHashToFile;
+  checkIfSendingMetaDataPrepared(hashToFile) {
+    let passChecking = true;
+    for (const fileHash of Object.keys(hashToFile)) {
+      if (!_sendingHashToMetaData[fileHash]) {
+        passChecking = false;
+        break;
+      }
+    }
+
+    console.log(
+      `FileDataStore: the current sending file hash to file meta data object of`,
+      _sendingHashToMetaData,
+      `is not prepared for file buffer sending`
+    );
+
+    return passChecking;
   },
 
   //
@@ -369,16 +504,14 @@ export default {
     return _sendingCancelledFileMap.getCancelled(peerId, filehash);
   },
   setSendingCancelled(peerId, fileHash, cancelled) {
-    _sendingCancelledFileMap.setCancelled(
-      peerId,
-      fileHash,
-      cancelled
-    );
+    _sendingCancelledFileMap.setCancelled(peerId, fileHash, cancelled);
     console.log("setSendingCancelled: ", peerId, fileHash, cancelled);
   },
 
   //
-  // Progress
+  // Sending Progress
+  //
+  // attention: only sender can directly update progress-related data
   //
 
   getSendingProgress(peerId, fileHash) {
@@ -386,13 +519,9 @@ export default {
   },
   setSendingProgress(peerId, fileHash, progress) {
     _sendingProgressMap.setProgress(peerId, fileHash, progress);
-
-    console.log("setSendingProgress: ", peerId, fileHash, progress);
   },
-  resetReceivingProgress(peerId, fileHash) {
-    _receivingProgressMap.resetProgress(peerId, fileHash);
-
-    console.log("resetReceivingProgress: ", peerId, fileHash);
+  resetSendingProgress(peerId, fileHash) {
+    _sendingProgressMap.resetProgress(peerId, fileHash);
   },
 
   //
@@ -400,52 +529,36 @@ export default {
   //
 
   mergeReceivingHashToMetaData(peerId, hashToMetaData) {
-    _receivingHashToMetaDataMap.mergeHashToMetaData(
-      peerId,
-      hashToMetaData
-    );
-    console.log("mergeHashToMetaData: ", peerId, hashToMetaData);
+    _receivingHashToMetaDataMap.mergeHashToMetaData(peerId, hashToMetaData);
   },
 
   //
   // Receiving data (Buffer)
   //
+  // attention: progress-related data is updated internally
+  //
 
   addReceivingBuffer(peerId, fileHash, buffer) {
     _receivingHashToBufferListMap.addBuffer(peerId, fileHash, buffer);
   },
-  clearReceivingBufferList(peerId, fileHash) {
-    _receivingHashToBufferListMap.clearBufferList(peerId, fileHash);
-    console.log("clearReceivingBufferList: ", peerId, fileHash);
+  resetReceivingBufferList(peerId, fileHash) {
+    _receivingHashToBufferListMap.resetBufferList(peerId, fileHash);
   },
-  clearReceivingHashToBufferList(peerId) {
-    _receivingHashToBufferListMap.clearHashToBufferList(peerId);
-    console.log("clearReceivingHashToBufferList: ", peerId);
+  deleteReceivingHashToBufferList(peerId) {
+    _receivingHashToBufferListMap.deleteHashToBufferList(peerId);
   },
-  clearAll() {
-    _receivingHashToBufferListMap.clearAll();
+  clearReceivingHashToBufferList() {
+    _receivingHashToBufferListMap.clear();
   },
 
   //
   // Listeners
   //
 
-  onSendingProgressChanged: function (handler) {
-    _handleFileSendingProgressChange = handler;
+  onSendingRelatedDataChanged: function (handler) {
+    _handleSendingRelatedDataChange = handler;
   },
-  onSendingHashToMinProgressChanged: function (handler) {
-    _handleFileSendingHashToMinProgressChange = handler;
-  },
-  onReceivingProgressChanged: function (handler) {
-    _handleFileReceivingProgressChange = handler;
-  },
-  onFileMetaDataChanged: function (handler) {
-    _handleFileMetaDataChange = handler;
-  },
-  onFileDataChanged: function (handler) {
-    _handleFileDataChange = handler;
-  },
-  onSendingStatusChanged: function (handler) {
-    _handleSendingStatusChange = handler;
+  onReceivingRelatedDataChanged: function (handler) {
+    _handleReceivingRelatedDataChange = handler;
   },
 };

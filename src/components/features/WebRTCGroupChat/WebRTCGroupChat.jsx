@@ -24,8 +24,7 @@ export default function WebRTCGroupChat() {
   // hook 5
   const [rooms, setRooms] = useState({});
   // hook 6
-  const [authenticatedUsername, setAuthenticatedUsername] =
-    useState("");
+  const [authenticatedUsername, setAuthenticatedUsername] = useState("");
   // hook 7
   const [joinedRoomId, setJoinedRoomId] = useState("");
 
@@ -34,9 +33,7 @@ export default function WebRTCGroupChat() {
   // hook 8
   const [localMediaStream, setLocalMediaStream] = useState();
   // hook 9
-  const [peerMediaStreamsMap, setPeerMediaStreamsMap] = useState(
-    new Map()
-  );
+  const [peerMediaStreamsMap, setPeerMediaStreamsMap] = useState(new Map());
   // hook 10
   const [isCalling, setIsCalling] = useState(false);
   // hook 11
@@ -48,40 +45,20 @@ export default function WebRTCGroupChat() {
   // hook 14
   const [isCameraMuted, setIsCameraMuted] = useState(true);
 
-  // file sending
+  // file transceiving
   //
   // hook 15
   const [files, setFiles] = useState(null);
   // hook 16
-  // const [fileSendingProgressMap, setFileSendingProgressMap] =
-    // useState(null);
-  // hook 16
-  const [sendingFileHashToFileObj, setSendingFileHashToFileObj] =
-    useState(null);
+  const [fileSendingRelatedData, setFileSendingRelatedData] = useState(null);
   // hook 17
-  const [fileSendingHashToMinProgressObj, setFileSendingHashToMinProgressObj] =
-    useState(null);
-
-  // file receiving
-  //
-  // hook 18
-  const [fileReceivingProgressMap, setFileReceivingProgressMap] =
-    useState(null);
-  // hook 19
-  // TODO: this receiving meta data map is null even after data has been received
-  const [
-    receivingFileHashToMetaDataMap,
-    setReceivingFileHashToMetaDataMap,
-  ] = useState(null);
-  // hook 20
-  const [receivingFileHashToDataMap, setReceivingFileHashToDataMap] =
-    useState(null);
+  const [fileReceivingRelatedData, setFileReceivingRelatedData] = useState(null);
 
   /**
    * Side Effects
    */
 
-  // hook 21: authentication
+  // hook 18: authentication
   useEffect(() => {
     WebRTCGroupChatController.onLoginInSuccess((payload) => {
       const authenticatedUsername = payload.username;
@@ -98,7 +75,7 @@ export default function WebRTCGroupChat() {
     });
   }, []);
 
-  // hook 22: chat room actions
+  // hook 19: chat room actions
   useEffect(() => {
     WebRTCGroupChatController.onRoomsInfoUpdated((payload) => {
       const rooms = payload.rooms;
@@ -118,85 +95,43 @@ export default function WebRTCGroupChat() {
     });
   }, []);
 
-  // hook 23: media calling state
+  // hook 20: media calling state
   useEffect(() => {
-    WebRTCGroupChatController.onWebRTCCallingStateChanged(
-      (isCalling) => {
-        setIsCalling(isCalling);
-      }
-    );
+    WebRTCGroupChatController.onWebRTCCallingStateChanged((isCalling) => {
+      setIsCalling(isCalling);
+    });
   }, []);
 
-  // hook 24: WebRTC media streams
+  // hook 21: WebRTC media streams
   useEffect(() => {
-    WebRTCGroupChatController.onLocalMediaStreamChanged(
-      (mediaStream) => {
-        setLocalMediaStream(mediaStream);
+    WebRTCGroupChatController.onLocalMediaStreamChanged((mediaStream) => {
+      setLocalMediaStream(mediaStream);
 
-        setIsMicEnabled(WebRTCGroupChatController.localMicEnabled);
-        setIsCameraEnabled(
-          WebRTCGroupChatController.localCameraEnabled
-        );
-      }
-    );
-    WebRTCGroupChatController.onPeerMediaStreamMapChanged(
-      (peerStreamsMap) => {
-        console.log(
-          `onPeerMediaStreamMapChanged called with peer stream map size ${
-            peerStreamsMap && peerStreamsMap.peerMap
-              ? peerStreamsMap.peerMap.size
-              : "unknown"
-          }`
-        );
-        setPeerMediaStreamsMap(cloneDeep(peerStreamsMap));
+      setIsMicEnabled(WebRTCGroupChatController.localMicEnabled);
+      setIsCameraEnabled(WebRTCGroupChatController.localCameraEnabled);
+    });
+    WebRTCGroupChatController.onPeerMediaStreamMapChanged((peerStreamsMap) => {
+      console.log(
+        `onPeerMediaStreamMapChanged called with peer stream map size ${
+          peerStreamsMap && peerStreamsMap.peerMap ? peerStreamsMap.peerMap.size : "unknown"
+        }`
+      );
+      setPeerMediaStreamsMap(cloneDeep(peerStreamsMap));
 
-        // TODO: it is the temperary location where the code below is called
-        setIsMicMuted(WebRTCGroupChatController.localMicMuted);
-        setIsCameraMuted(WebRTCGroupChatController.localCameraMuted);
-      }
-    );
+      // TODO: it is the temperary location where the code below is called
+      setIsMicMuted(WebRTCGroupChatController.localMicMuted);
+      setIsCameraMuted(WebRTCGroupChatController.localCameraMuted);
+    });
   }, []);
 
-  // hook 25: file transceiving
+  // hook 22: file transceiving
   useEffect(() => {
-    WebRTCGroupChatController.onFileHashToFileObjectObtained(
-      (fileHashToFileObject) => {
-        setSendingFileHashToFileObj(cloneDeep(fileHashToFileObject));
-      }
-    );
-    // WebRTCGroupChatController.onFileSendingProgressChanged(
-    //   (fileSendingProgressMap) => {
-    //     setFileSendingProgressMap(cloneDeep(fileSendingProgressMap));
-    //   }
-    // );
-    WebRTCGroupChatController.onFileSendingHashToMinProgressChanged(
-      (fileSendingHashToMinProgressObj) => {
-        setFileSendingHashToMinProgressObj(cloneDeep(fileSendingHashToMinProgressObj));
-      }
-    );
-    WebRTCGroupChatController.onFileReceivingProgressChanged(
-      (fileReceivingProgressMap) => {
-        console.log(
-          "TEST: onFileReceivingProgressChanged",
-          fileReceivingProgressMap
-        );
-        setFileReceivingProgressMap(
-          cloneDeep(fileReceivingProgressMap)
-        );
-      }
-    );
-    WebRTCGroupChatController.onFileMetaDataChanged(
-      (receivingFileHashToFileMetaDataMap) => {
-        setReceivingFileHashToMetaDataMap(
-          cloneDeep(receivingFileHashToFileMetaDataMap)
-        );
-      }
-    );
-    WebRTCGroupChatController.onFileDataChanged(
-      (receivingFileHashToFileDataMap) => {
-        setReceivingFileHashToDataMap(receivingFileHashToFileDataMap);
-      }
-    );
+    WebRTCGroupChatController.onFileSendingRelatedDataChanged((fileSendingRelatedData) => {
+      setFileSendingRelatedData(cloneDeep(fileSendingRelatedData));
+    });
+    WebRTCGroupChatController.onFileReceivingRelatedDataChanged((fileReceivingRelatedData) => {
+      setFileReceivingRelatedData(cloneDeep(fileReceivingRelatedData));
+    });
   }, []);
 
   /**
@@ -308,22 +243,17 @@ export default function WebRTCGroupChat() {
     }
   };
 
-  // input files
+  // click to input files
   const onInputFilesChange = (e) => {
     const input = e.target;
     const files = input.files;
     setFiles(files);
   };
 
-  const onSendFileMetaDataClick = (e) => {
+  // click to send file meta data
+  const onSendFileClick = (e) => {
     if (joinedRoomId.length > 0) {
-      WebRTCGroupChatController.sendFileMetaDataToAllPeer(files);
-    }
-  };
-
-  const onSendFileDataClick = (e) => {
-    if (joinedRoomId.length > 0) {
-      WebRTCGroupChatController.sendFileDataToAllPeer(files);
+      WebRTCGroupChatController.sendFileToAllPeer(files);
     }
   };
 
@@ -427,9 +357,7 @@ export default function WebRTCGroupChat() {
         <button
           type='button'
           onClick={onCreateNewRoomClick}
-          disabled={
-            inputRoomName.length === 0 || joinedRoomId.length > 0
-          }
+          disabled={inputRoomName.length === 0 || joinedRoomId.length > 0}
           className={style.button}
         >
           Create Room
@@ -454,9 +382,7 @@ export default function WebRTCGroupChat() {
     <>
       <div>Check Local Video</div>
       <div>
-        <VideoList
-          mediaStreamsMap={new Map([["local", localMediaStream]])}
-        />
+        <VideoList mediaStreamsMap={new Map([["local", localMediaStream]])} />
       </div>
     </>
   ) : (
@@ -518,7 +444,7 @@ export default function WebRTCGroupChat() {
     </div>
   );
 
-  // file transfer rendering
+  // file transceiving
   const fileInputBlockRendering = (
     <div>
       <label
@@ -530,63 +456,29 @@ export default function WebRTCGroupChat() {
       <input
         type='file'
         id='fileTransfer'
-        multiple
+        onInput={onInputFilesChange}
         className={style.fileTransferInput}
-        onChange={onInputFilesChange}
+        multiple
       />
     </div>
   );
-  const sendFileMetaDataButtonRendering = (
+  const sendFileButtonRendering = (
     <button
       className={style.button}
-      onClick={onSendFileMetaDataClick}
+      onClick={onSendFileClick}
     >
-      Send File Meta Data To All Peers
-    </button>
-  );
-  const sendFileDataButtonRendering = (
-    <button
-      className={style.button}
-      onClick={onSendFileDataClick}
-    >
-      Send File Data To All Peers
+      Send File To All Peers
     </button>
   );
 
-  // file sending
-  let fileSendingListRendering = <></>;
-  if (fileSendingHashToMinProgressObj && sendingFileHashToFileObj) {
-    fileSendingListRendering = (
-      <FileTransceiverList
-        fileHashToFileObj={sendingFileHashToFileObj}
-        fileTransceivingProgressObj={fileSendingHashToMinProgressObj}
-      />
-    );
+  let fileSendingRendering;
+  if (fileSendingRelatedData) {
+    fileSendingRendering = <FileTransceiverList sendingRelatedData={fileSendingRelatedData} />;
   }
-
-  // file receiving
-  const fileReceivingListRendering = [];
-  if (
-    receivingFileHashToMetaDataMap &&
-    receivingFileHashToDataMap &&
-    fileReceivingProgressMap
-  ) {
-    fileReceivingProgressMap.peerMap.forEach(
-      (fileReceivingProgressObj, peerId) => {
-        const fileHashToMetaDataObj =
-          receivingFileHashToMetaDataMap.peerMap.get(peerId);
-        const fileHashToDataObj =
-          receivingFileHashToDataMap.peerMap.get(peerId);
-
-        fileReceivingListRendering.push(
-          <FileTransceiverList
-            key={peerId}
-            fileHashToMetaDataObj={fileHashToMetaDataObj}
-            fileHashToDataObj={fileHashToDataObj}
-            fileTransceivingProgressObj={fileReceivingProgressObj}
-          />
-        );
-      }
+  let fileReceivingRendering;
+  if (fileReceivingRelatedData) {
+    fileReceivingRendering = (
+      <FileTransceiverList receivingRelatedData={fileReceivingRelatedData} />
     );
   }
 
@@ -599,10 +491,9 @@ export default function WebRTCGroupChat() {
       {loginoutBlockRendered}
 
       {joinedRoomId.length > 0 && fileInputBlockRendering}
-      {joinedRoomId.length > 0 && sendFileMetaDataButtonRendering}
-      {joinedRoomId.length > 0 && sendFileDataButtonRendering}
-      {joinedRoomId.length > 0 && fileSendingListRendering}
-      {joinedRoomId.length > 0 && fileReceivingListRendering}
+      {joinedRoomId.length > 0 && sendFileButtonRendering}
+      {joinedRoomId.length > 0 && fileSendingRendering}
+      {joinedRoomId.length > 0 && fileReceivingRendering}
 
       {isCalling && localVideo}
       {isCalling && peerVideoList}

@@ -1,56 +1,62 @@
 import React from "react";
 
 import FileDataUtil from "./FileDataUtil.js";
-import style from "./WebRTCGroupChat.module.css";
+import WebRTCGroupChatController from "./WebRTCGroupChatController.js";
 
-function FileTransceiverItem(props) {
-  const {
-    fileMetaData,
-    fileHash,
-    transceivingProgress,
-    enableDownload,
-    onDownload,
-  } = props;
+function FileTransceiver(props) {
+  const { transceivingMetaData, transceivingProgress, receivingDownloadable, receivingBufferList } =
+    props;
 
+  // validating
   if (
-    !fileHash ||
-    fileHash.length === 0 ||
-    !fileMetaData ||
+    !transceivingMetaData ||
     !(typeof transceivingProgress === "number") ||
     transceivingProgress < 0
   ) {
     return <></>;
   }
 
-  const curProgress = transceivingProgress;
-  const maxProgress =
-    fileMetaData.size >= 0
-      ? Math.max(curProgress, fileMetaData.size)
-      : curProgress;
+  // transceiving progress
+  const curTransProgress = transceivingProgress;
+  let maxTransProgress = curTransProgress;
+  if (transceivingMetaData.size >= 0) {
+    maxTransProgress = Math.max(curTransProgress, transceivingMetaData.size);
+  }
+
+  // transceiving file name
+  let transFileName = "Unknown File Name";
+  if (transceivingMetaData.name && transceivingMetaData.name.length > 0) {
+    transFileName = transceivingMetaData.name;
+  }
+
+  // downloading
+  let handleReceivingDownload;
+  if (receivingDownloadable && receivingBufferList && receivingBufferList.length > 0) {
+    handleReceivingDownload = () => {
+      const a = document.createElement("a");
+      const blob = new Blob(receivingBufferList);
+      a.href = window.URL.createObjectURL(blob);
+      a.download = transceivingMetaData.name;
+      a.click();
+      a.remove();
+    };
+  }
 
   return (
     <div>
-      <div>
-        {fileMetaData.name ? fileMetaData.name : "Unknown File Name"}
-      </div>
+      <div>{transFileName}</div>
       <div>
         <progress
-          value={curProgress}
-          max={maxProgress}
+          value={curTransProgress}
+          max={maxTransProgress}
         />
-        <span>{FileDataUtil.formatBytes(curProgress)}</span>
+        <span>{FileDataUtil.formatBytes(curTransProgress)}</span>
         {" / "}
-        <span>{FileDataUtil.formatBytes(maxProgress)}</span>
+        <span>{FileDataUtil.formatBytes(maxTransProgress)}</span>
       </div>
-      {onDownload && enableDownload && (
+      {receivingDownloadable && handleReceivingDownload && (
         <div>
-          <button
-            onClick={() => {
-              return onDownload(fileHash);
-            }}
-          >
-            Download This File
-          </button>
+          <button onClick={handleReceivingDownload}>Download</button>
         </div>
       )}
     </div>
@@ -58,78 +64,62 @@ function FileTransceiverItem(props) {
 }
 
 export default function FileTransceiverList(props) {
-  const {
-    fileHashToFileObj,
-    fileHashToMetaDataObj,
-    fileHashToDataObj,
-    fileTransceivingProgressObj,
-  } = props;
+  const { sendingRelatedData, receivingRelatedData } = props;
+  let transceivingList = [];
 
-  let transceiverList;
-
-  if (fileHashToFileObj && fileTransceivingProgressObj) {
+  if (
+    sendingRelatedData &&
+    sendingRelatedData[WebRTCGroupChatController.fileSendingSliceContainerKey]
+  ) {
     // sending
-    transceiverList = Object.entries(fileTransceivingProgressObj).map(
-      ([fileHash, sendingProgress]) => {
-        const file = fileHashToFileObj[fileHash];
-        return (
-          <FileTransceiverItem
-            key={fileHash}
-            fileMetaData={file}
-            transceivingProgress={sendingProgress}
-            fileHash={fileHash}
-          />
-        );
-      }
-    );
+    const sendingFileHashToConcatData =
+      sendingRelatedData[WebRTCGroupChatController.fileSendingSliceContainerKey];
+    Object.entries(sendingFileHashToConcatData).forEach(([fileHash, sendingConcatData]) => {
+      transceivingList.push(
+        <FileTransceiver
+          key={fileHash}
+          transceivingMetaData={
+            sendingConcatData[WebRTCGroupChatController.fileSendingMetaDataSliceKey]
+          }
+          transceivingProgress={
+            sendingConcatData[WebRTCGroupChatController.fileSendingMinProgressSliceKey]
+          }
+        />
+      );
+    });
   } else if (
-    fileHashToMetaDataObj &&
-    fileHashToDataObj &&
-    fileTransceivingProgressObj
+    receivingRelatedData &&
+    receivingRelatedData[WebRTCGroupChatController.fileReceivingSliceContainerKey]
   ) {
     // receiving
-    const handleDownload = (fileHash) => {
-      const a = document.createElement("a");
-      const blob = new Blob(fileHashToDataObj[fileHash]);
-      a.href = window.URL.createObjectURL(blob);
-      a.download = fileHashToMetaDataObj[fileHash].name;
-      a.click();
-      a.remove();
-    };
-    const filteredFileHashList = Object.keys(
-      fileTransceivingProgressObj
-    ).filter((fileHash) => {
-      if (
-        !fileHashToMetaDataObj[fileHash] ||
-        !fileHashToDataObj[fileHash]
-      ) {
-        return false;
-      }
-      return true;
-    });
-
-    if (filteredFileHashList.length > 0) {
-      transceiverList = filteredFileHashList.map((fileHash) => {
-        const fileMetaData = fileHashToMetaDataObj[fileHash];
+    const receivingPeerMap =
+      receivingRelatedData[WebRTCGroupChatController.fileReceivingSliceContainerKey];
+    receivingPeerMap.forEach((hashToConcatData, peerId) => {
+      Object.entries(hashToConcatData).forEach(([fileHash, receivingConcatData]) => {
         const receivingProgress =
-          fileTransceivingProgressObj[fileHash];
-        const enableDownload = receivingProgress >= fileMetaData.size;
+          receivingConcatData[WebRTCGroupChatController.fileReceivingProgressSliceKey];
+        const receivingMetaData =
+          receivingConcatData[WebRTCGroupChatController.fileReceivingMetaDataSliceKey];
+        const receivingBufferList =
+          receivingConcatData[WebRTCGroupChatController.fileReceivingBufferSliceKey];
+        const receivingDownloadable =
+          receivingBufferList &&
+          receivingBufferList.length > 0 &&
+          receivingMetaData &&
+          receivingProgress >= receivingMetaData.size;
 
-        return (
-          <FileTransceiverItem
-            key={fileHash}
-            fileMetaData={fileMetaData}
+        transceivingList.push(
+          <FileTransceiver
+            key={`${peerId}-${fileHash}`}
+            transceivingMetaData={receivingMetaData}
             transceivingProgress={receivingProgress}
-            fileHash={fileHash}
-            enableDownload={enableDownload}
-            onDownload={() => {
-              handleDownload(fileHash);
-            }}
+            receivingBufferList={receivingBufferList}
+            receivingDownloadable={receivingDownloadable}
           />
         );
       });
-    }
+    });
   }
 
-  return transceiverList;
+  return transceivingList;
 }
