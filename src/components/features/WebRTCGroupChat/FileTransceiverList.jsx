@@ -4,8 +4,15 @@ import FileDataUtil from "./FileDataUtil.js";
 import WebRTCGroupChatController from "./WebRTCGroupChatController.js";
 
 function FileTransceiver(props) {
-  const { transceivingMetaData, transceivingProgress, receivingDownloadable, receivingBufferList } =
-    props;
+  const {
+    isSender,
+
+    transceivingFileHash,
+    transceivingMetaData,
+    transceivingProgress,
+
+    receivingBufferList,
+  } = props;
 
   // validating
   if (
@@ -29,9 +36,28 @@ function FileTransceiver(props) {
     transFileName = transceivingMetaData.name;
   }
 
-  // downloading
+  // sending cancellation
+  const sendingCancellable =
+    isSender &&
+    transceivingProgress > 0 &&
+    transceivingProgress < transceivingMetaData.size &&
+    transceivingFileHash &&
+    transceivingFileHash.length > 0;
+  const onCancelSendingClick = (e) => {
+    if (sendingCancellable) {
+      WebRTCGroupChatController.cancelFileSendingToAllPeer(transceivingFileHash);
+    }
+  };
+
+  // receiving downloading
+  const receivingDownloadable =
+    !isSender &&
+    receivingBufferList &&
+    receivingBufferList.length > 0 &&
+    transceivingMetaData &&
+    transceivingProgress >= transceivingMetaData.size;
   let handleReceivingDownload;
-  if (receivingDownloadable && receivingBufferList && receivingBufferList.length > 0) {
+  if (receivingDownloadable) {
     handleReceivingDownload = () => {
       const a = document.createElement("a");
       const blob = new Blob(receivingBufferList);
@@ -54,7 +80,12 @@ function FileTransceiver(props) {
         {" / "}
         <span>{FileDataUtil.formatBytes(maxTransProgress)}</span>
       </div>
-      {receivingDownloadable && handleReceivingDownload && (
+      {sendingCancellable && (
+        <div>
+          <button onClick={onCancelSendingClick}>Cancel</button>
+        </div>
+      )}
+      {receivingDownloadable && (
         <div>
           <button onClick={handleReceivingDownload}>Download</button>
         </div>
@@ -78,6 +109,8 @@ export default function FileTransceiverList(props) {
       transceivingList.push(
         <FileTransceiver
           key={fileHash}
+          isSender={true}
+          transceivingFileHash={fileHash}
           transceivingMetaData={
             sendingConcatData[WebRTCGroupChatController.fileSendingMetaDataSliceKey]
           }
@@ -96,25 +129,19 @@ export default function FileTransceiverList(props) {
       receivingRelatedData[WebRTCGroupChatController.fileReceivingSliceContainerKey];
     receivingPeerMap.forEach((hashToConcatData, peerId) => {
       Object.entries(hashToConcatData).forEach(([fileHash, receivingConcatData]) => {
-        const receivingProgress =
-          receivingConcatData[WebRTCGroupChatController.fileReceivingProgressSliceKey];
-        const receivingMetaData =
-          receivingConcatData[WebRTCGroupChatController.fileReceivingMetaDataSliceKey];
-        const receivingBufferList =
-          receivingConcatData[WebRTCGroupChatController.fileReceivingBufferSliceKey];
-        const receivingDownloadable =
-          receivingBufferList &&
-          receivingBufferList.length > 0 &&
-          receivingMetaData &&
-          receivingProgress >= receivingMetaData.size;
-
         transceivingList.push(
           <FileTransceiver
             key={`${peerId}-${fileHash}`}
-            transceivingMetaData={receivingMetaData}
-            transceivingProgress={receivingProgress}
-            receivingBufferList={receivingBufferList}
-            receivingDownloadable={receivingDownloadable}
+            isSender={false}
+            transceivingMetaData={
+              receivingConcatData[WebRTCGroupChatController.fileReceivingMetaDataSliceKey]
+            }
+            transceivingProgress={
+              receivingConcatData[WebRTCGroupChatController.fileReceivingProgressSliceKey]
+            }
+            receivingBufferList={
+              receivingConcatData[WebRTCGroupChatController.fileReceivingBufferSliceKey]
+            }
           />
         );
       });

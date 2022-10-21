@@ -256,6 +256,12 @@ export default function WebRTCGroupChat() {
       WebRTCGroupChatController.sendFileToAllPeer(files);
     }
   };
+  // click to cancel sending all files
+  const onCancelAllFileSendingClick = (e) => {
+    if (joinedRoomId.length > 0) {
+      WebRTCGroupChatController.cancelAllFileSending();
+    }
+  };
 
   /**
    * Stateful Rendering
@@ -470,6 +476,14 @@ export default function WebRTCGroupChat() {
       Send File To All Peers
     </button>
   );
+  const cancelSendingAllFileButtonRendering = (
+    <button
+      className={style.button}
+      onClick={onCancelAllFileSendingClick}
+    >
+      Cancel Sending All Files To All Peers
+    </button>
+  );
 
   let fileSendingRendering;
   if (fileSendingRelatedData) {
@@ -492,6 +506,8 @@ export default function WebRTCGroupChat() {
 
       {joinedRoomId.length > 0 && fileInputBlockRendering}
       {joinedRoomId.length > 0 && sendFileButtonRendering}
+      {joinedRoomId.length > 0 && cancelSendingAllFileButtonRendering}
+
       {joinedRoomId.length > 0 && fileSendingRendering}
       {joinedRoomId.length > 0 && fileReceivingRendering}
 

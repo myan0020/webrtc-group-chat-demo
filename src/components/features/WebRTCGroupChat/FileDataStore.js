@@ -4,6 +4,7 @@
 
 const _sendingSliceContainerKey = "hashToConcatData";
 const _sendingMetaDataSliceKey = "SENDING_META_DATA_SLICE_KEY";
+const _sendingStatusSliceKey = "SENDING_STATUS_SLICE_KEY";
 const _sendingMinProgressSliceKey = "SENDING_MIN_PROGRESS_SLICE_KEY";
 
 const _receivingSliceContainerKey = "peerMap";
@@ -129,6 +130,9 @@ const _sendingCancelledFileMap = {
     hashToCancelled[fileHash] = cancelled;
     this.peerMap.set(peerId, hashToCancelled);
   },
+  clear() {
+    this.peerMap = new Map();
+  }
 };
 
 /**
@@ -454,6 +458,9 @@ export default {
   // Sending file hash to file
   //
 
+  get sendingHashToMetaData() {
+    return _sendingHashToMetaData;
+  },
   prepareSendingMetaData(hashToFile) {
     for (const [fileHash, file] of Object.entries(hashToFile)) {
       _sendingHashToMetaData[fileHash] = { name: file.name, type: file.type, size: file.size };
@@ -479,7 +486,7 @@ export default {
     console.log(
       `FileDataStore: the current sending file hash to file meta data object of`,
       _sendingHashToMetaData,
-      `is not prepared for file buffer sending`
+      `is ${checkingPassed ? '' : 'not'} prepared for file buffer sending`
     );
 
     return checkingPassed;
@@ -505,6 +512,9 @@ export default {
   },
   setSendingCancelled(peerId, fileHash, cancelled) {
     _sendingCancelledFileMap.setCancelled(peerId, fileHash, cancelled);
+  },
+  clearSendingCancelled() {
+    _sendingCancelledFileMap.clear();
   },
 
   //

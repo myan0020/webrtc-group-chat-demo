@@ -655,16 +655,16 @@ function _closeALLPeerConnections() {
  * Peer Connection Data Channel
  */
 
-const MAXIMUM_MESSAGE_SIZE = 16384;
-const META_DATA_CHANNEL_LABEL = "META_DATA_CHANNEL_LABEL";
-const META_DATA_ACKNOWLEDGE = "META_DATA_ACKNOWLEDGE";
-const START_OF_FILE_MESSAGE = "START_OF_FILE_MESSAGE";
-const CANCEL_MESSAGE = "CANCEL_MESSAGE";
+const MAXIMUM_FILE_CHUNK_SIZE = 16384;
+const FILE_META_DATA_CHANNEL_LABEL = "FILE_META_DATA_CHANNEL_LABEL";
+const ACK_OF_FILE_META_DATA_MESSAGE = "ACK_OF_FILE_META_DATA_MESSAGE";
+const START_OF_FILE_BUFFER_MESSAGE = "START_OF_FILE_BUFFER_MESSAGE";
+const CANCEL_OF_FILE_BUFFER_MESSAGE = "CANCEL_OF_FILE_BUFFER_MESSAGE";
 
-// ( sender: meta data, receiver: meta data )
+// ( sender: file meta data, receiver: file meta data )
 const _peerFileMetaDataChannelMap = createDataChannelMap();
 
-// ( sender: buffer, receiver: buffer )
+// ( sender: file buffer, receiver: file buffer )
 const _peerFileBufferChannelMap = createDataChannelMap();
 function createDataChannelMap() {
   const dataChannelMap = {};
@@ -707,10 +707,14 @@ function createDataChannelMap() {
     return true;
   };
 
+  dataChannelMap.forEach = function (func) {
+    dataChannelMap.peerMap.forEach(func);
+  };
+
   return dataChannelMap;
 }
 
-// ( sender: buffer )
+// ( sender: file buffer )
 const _peerSendFileCallbackQueueMap = {
   peerMap: new Map(),
   shiftSendFileCallbackFromPeer(peerId) {
@@ -730,14 +734,17 @@ const _peerSendFileCallbackQueueMap = {
   },
 };
 
-// ( sender: meta data && buffer )
+// ( sender: file meta data && file buffer )
 function _sendFileToAllPeer(files) {
+  // to avoid re-sending being blocked
+  FileDataStore.clearSendingCancelled();
+
   _peerConnectionMap.forEach((_, peerId) => {
     _sendFileToPeer(files, peerId);
   });
 }
 
-// ( sender: meta data && buffer )
+// ( sender: file meta data && file buffer )
 async function _sendFileToPeer(files, peerId) {
   if (!files) {
     console.log(
@@ -768,7 +775,7 @@ async function _sendFileToPeer(files, peerId) {
   // create and store a data channel to transfer the prepared file hash to file meta data object
   const fileMetaDataChannel = _createAndStoreDataChannel({
     peerId: peerId,
-    label: META_DATA_CHANNEL_LABEL,
+    label: FILE_META_DATA_CHANNEL_LABEL,
     onOpenHandler: () => {
       _handleSenderFileMetaDataChannelOpen(peerId, fileMetaDataChannel, fileHashToMetaData);
     },
@@ -781,7 +788,7 @@ async function _sendFileToPeer(files, peerId) {
   });
 }
 
-// ( sender: meta data )
+// ( sender: file meta data )
 function _handleSenderFileMetaDataChannelOpen(peerId, fileMetaDataChannel, fileHashToMetaData) {
   if (fileMetaDataChannel.readyState === "open") {
     fileMetaDataChannel.send(JSON.stringify(fileHashToMetaData));
@@ -794,18 +801,20 @@ function _handleSenderFileMetaDataChannelOpen(peerId, fileMetaDataChannel, fileH
   }
 }
 
-// ( sender: meta data )
+// ( sender: file meta data )
 function _handleSenderFileMetaDataChannelMessage(event, peerId, fileHashToFile) {
   const { data } = event;
-  if (data === META_DATA_ACKNOWLEDGE) {
+  if (data === ACK_OF_FILE_META_DATA_MESSAGE) {
     _sendFileBufferToPeer(fileHashToFile, peerId);
   }
 }
 
-// ( sender: buffer )
+// ( sender: file buffer )
 async function _sendFileBufferToPeer(fileHashToFile, peerId) {
   if (!fileHashToFile) {
-    console.log(`WebRTCGroupChatController: unfound file hash to file object during file buffer sending`);
+    console.log(
+      `WebRTCGroupChatController: unfound file hash to file object during file buffer sending`
+    );
     return;
   }
 
@@ -827,6 +836,7 @@ async function _sendFileBufferToPeer(fileHashToFile, peerId) {
           _handleSenderFileBufferChannelClose(peerId);
           return;
         }
+
         const label = `file-${fileHash}`;
         const file = fileHashToFile[fileHash];
         FileDataStore.resetSendingProgress(peerId, fileHash);
@@ -859,12 +869,17 @@ async function _sendFileBufferToPeer(fileHashToFile, peerId) {
 
   const sendFileCallback = _peerSendFileCallbackQueueMap.shiftSendFileCallbackFromPeer(peerId);
   if (sendFileCallback) {
+
+    //
+    // TODO: to make sending status meaningful for file sending related buttons
+    //
+
     FileDataStore.setSendingStatus(peerId, true);
     sendFileCallback();
   }
 }
 
-// ( sender: meta data && buffer)
+// ( sender: file meta data && file buffer)
 function _createAndStoreDataChannel({
   peerId,
   label,
@@ -902,7 +917,7 @@ function _createAndStoreDataChannel({
     dataChannel.onclose = onCloseHandler;
   }
 
-  if (label === META_DATA_CHANNEL_LABEL) {
+  if (label === FILE_META_DATA_CHANNEL_LABEL) {
     _peerFileMetaDataChannelMap.setChannel(peerId, label, dataChannel);
   } else {
     _peerFileBufferChannelMap.setChannel(peerId, label, dataChannel);
@@ -911,7 +926,7 @@ function _createAndStoreDataChannel({
   return dataChannel;
 }
 
-// ( sender: buffer )
+// ( sender: file buffer )
 async function _handleSenderFileBufferChannelBufferedAmountLow(
   event,
   peerId,
@@ -932,9 +947,9 @@ async function _handleSenderFileBufferChannelBufferedAmountLow(
   }
 }
 
-// ( sender: buffer )
+// ( sender: file buffer )
 async function _sendChunk(file, offset, dataChannel) {
-  const chunk = file.slice(offset, offset + MAXIMUM_MESSAGE_SIZE);
+  const chunk = file.slice(offset, offset + MAXIMUM_FILE_CHUNK_SIZE);
   const buffer = await chunk.arrayBuffer();
 
   if (dataChannel.readyState !== "open") {
@@ -945,7 +960,7 @@ async function _sendChunk(file, offset, dataChannel) {
   return offset + chunk.size;
 }
 
-// ( sender: buffer )
+// ( sender: file buffer )
 function _handleSenderFileBufferChannelClose(peerId) {
   const sendFileCallback = _peerSendFileCallbackQueueMap.shiftSendFileCallbackFromPeer(peerId);
 
@@ -957,32 +972,39 @@ function _handleSenderFileBufferChannelClose(peerId) {
   sendFileCallback();
 }
 
-// ( sender: buffer )
-function _cancelSenderSendingOperationToAllPeer(fileHash) {
-  _peerConnectionMap.forEach((_, peerId) => {
-    _cancelSenderSendingOperation(peerId, fileHash);
+function _cancelSenderAllFileSending() {
+  Object.keys(FileDataStore.sendingHashToMetaData).forEach((fileHash) => {
+    _cancelSenderFileSendingToAllPeer(fileHash);
   });
 }
 
-// ( sender: buffer )
-function _cancelSenderSendingOperation(peerId, fileHash) {
-  const dataChannelLabel = `file-${fileHash}`;
-  const dataChannel = _peerFileBufferChannelMap.getChannel(peerId, dataChannelLabel);
-  FileDataStore.resetSendingProgress(peerId, fileHash);
+// ( sender: file buffer )
+function _cancelSenderFileSendingToAllPeer(fileHash) {
+  _peerConnectionMap.forEach((_, peerId) => {
+    _cancelSenderFileSendingToPeer(peerId, fileHash);
+  });
+}
 
+// ( sender: file buffer )
+function _cancelSenderFileSendingToPeer(peerId, fileHash) {
+  const label = `file-${fileHash}`;
+  const channel = _peerFileBufferChannelMap.getChannel(peerId, label);
+
+  FileDataStore.resetSendingProgress(peerId, fileHash);
   FileDataStore.setSendingCancelled(peerId, fileHash, true);
-  if (dataChannel && dataChannel.readyState === "open") {
-    dataChannel.send(CANCEL_MESSAGE);
-    dataChannel.close();
+
+  if (channel && channel.readyState === "open") {
+    channel.send(CANCEL_OF_FILE_BUFFER_MESSAGE);
+    channel.close();
   }
 }
 
-// ( sender: buffer)
+// ( sender: file buffer)
 function _handleSenderFileBufferChannelOpen(event, dataChannel) {
-  dataChannel.send(START_OF_FILE_MESSAGE);
+  dataChannel.send(START_OF_FILE_BUFFER_MESSAGE);
 }
 
-// ( sender: meta data, receiver: meta data && buffer)
+// ( sender: file meta data, receiver: file meta data && file buffer)
 function _handleChannelClose(event, peerId) {
   const { target: dataChannel } = event;
 
@@ -1002,7 +1024,7 @@ function _handleChannelClose(event, peerId) {
   );
 }
 
-// ( receiver: meta data && buffer )
+// ( receiver: file meta data && file buffer )
 function _handlePeerConnectionDataChannelEvent(event) {
   const {
     channel,
@@ -1014,7 +1036,7 @@ function _handlePeerConnectionDataChannelEvent(event) {
 
   const peerId = _peerConnectionMap.getFirstKeyByValue(peerConnection);
 
-  if (label === META_DATA_CHANNEL_LABEL) {
+  if (label === FILE_META_DATA_CHANNEL_LABEL) {
     _peerFileMetaDataChannelMap.setChannel(peerId, label, channel);
     channel.onmessage = (event) => {
       _handleReceiverChannelFileMetaDataMessage(event, peerId, label);
@@ -1030,7 +1052,7 @@ function _handlePeerConnectionDataChannelEvent(event) {
   };
 }
 
-// ( receiver: meta data )
+// ( receiver: file meta data )
 function _handleReceiverChannelFileMetaDataMessage(event, peerId, label) {
   const { data } = event;
 
@@ -1050,17 +1072,17 @@ function _handleReceiverChannelFileMetaDataMessage(event, peerId, label) {
 
   FileDataStore.mergeReceivingHashToMetaData(peerId, fileHashToMetaData);
 
-  // meta data acknowledge
+  // file meta data acknowledge
   if (_peerFileMetaDataChannelMap.hasChannel(peerId, label)) {
     const senderChannel = _peerFileMetaDataChannelMap.getChannel(peerId, label);
     if (senderChannel.readyState === "open") {
-      senderChannel.send(META_DATA_ACKNOWLEDGE);
+      senderChannel.send(ACK_OF_FILE_META_DATA_MESSAGE);
       senderChannel.close();
     }
   }
 }
 
-// ( receiver: buffer )
+// ( receiver: file buffer )
 async function _handleReceiverChannelFileBufferMessage(event, peerId) {
   const { data, target: dataChannel } = event;
   if (!(dataChannel instanceof RTCDataChannel)) {
@@ -1073,11 +1095,16 @@ async function _handleReceiverChannelFileBufferMessage(event, peerId) {
   const label = dataChannel.label;
   const fileHash = label.split("-")?.[1];
 
-  if (data === START_OF_FILE_MESSAGE) {
+  if (data === START_OF_FILE_BUFFER_MESSAGE) {
     FileDataStore.resetReceivingBufferList(peerId, fileHash);
-  } else if (data === CANCEL_MESSAGE) {
+  } else if (data === CANCEL_OF_FILE_BUFFER_MESSAGE) {
+    console.log(
+      `WebRTCGroupChatController: a file (${fileHash}) buffer receiving process has been cancelled`
+    );
     _cancelReceiverReceivingOperation(peerId, fileHash);
   } else {
+    console.log(`WebRTCGroupChatController: a new file (${fileHash}) buffer of`, data, `received`);
+
     if (data instanceof ArrayBuffer) {
       FileDataStore.addReceivingBuffer(peerId, fileHash, data);
     } else if (data instanceof Blob) {
@@ -1086,7 +1113,7 @@ async function _handleReceiverChannelFileBufferMessage(event, peerId) {
   }
 }
 
-// ( receiver: buffer )
+// ( receiver: file buffer )
 function _cancelReceiverReceivingOperation(peerId, fileHash) {
   FileDataStore.resetReceivingBufferList(peerId, fileHash);
 }
@@ -1549,41 +1576,29 @@ function _leaveRoom() {
 
 export default {
   //
-  // Events listening feature
+  // Configurations customization feature
   //
 
-  onLoginInSuccess: function (handler) {
-    _handleLoginSuccess = handler;
+  changeMediaStreamConstraints: function (constraints) {
+    const passChecking = _checkMediaStreamConstraints(constraints);
+    if (!passChecking) return;
+    _mediaStreamConstraints = constraints;
   },
-  onLogoutInSuccess: function (handler) {
-    _handleLogoutSuccess = handler;
+  changePeerConnectionConfig: function (config) {
+    const passChecking = _checkPeerConnectionConfig(config);
+    if (!passChecking) return;
+    _peerConnectionConfig = config;
   },
+
+  //
+  // Websocket feature
+  //
+
   onWebSocketOpen: function (handler) {
     _handleWebSocketOpened = handler;
   },
   onWebSocketClose: function (handler) {
     _handleWebSocketClosed = handler;
-  },
-  onRoomsInfoUpdated: function (handler) {
-    _handleRoomsUpdated = handler;
-  },
-  onJoinRoomInSuccess: function (handler) {
-    _handleJoinRoomSuccess = handler;
-  },
-  onLeaveRoomInSuccess: function (handler) {
-    _handleLeaveRoomSuccess = handler;
-  },
-  onWebRTCCallingStateChanged: function (handler) {
-    _handleCallingStateChanged = handler;
-  },
-  onWebRTCNewPeerArived: function (handler) {
-    _handleNewPeerArivalExternally = handler;
-  },
-  onPeerMediaStreamMapChanged: function (handler) {
-    _handlePeerMediaStreamMapChanged = handler;
-  },
-  onLocalMediaStreamChanged: function (handler) {
-    _handleLocalMediaStreamChanged = handler;
   },
 
   //
@@ -1599,6 +1614,13 @@ export default {
     _logout();
   },
 
+  onLoginInSuccess: function (handler) {
+    _handleLoginSuccess = handler;
+  },
+  onLogoutInSuccess: function (handler) {
+    _handleLogoutSuccess = handler;
+  },
+
   //
   // Chat room feature
   //
@@ -1611,6 +1633,19 @@ export default {
   },
   leaveRoom: function () {
     _leaveRoom();
+  },
+
+  onRoomsInfoUpdated: function (handler) {
+    _handleRoomsUpdated = handler;
+  },
+  onJoinRoomInSuccess: function (handler) {
+    _handleJoinRoomSuccess = handler;
+  },
+  onLeaveRoomInSuccess: function (handler) {
+    _handleLeaveRoomSuccess = handler;
+  },
+  onWebRTCNewPeerArived: function (handler) {
+    _handleNewPeerArivalExternally = handler;
   },
 
   //
@@ -1653,19 +1688,15 @@ export default {
     _setLocalMediaTrackMuted("video", muted);
   },
 
-  //
-  // Configurations customization feature
-  //
-
-  changeMediaStreamConstraints: function (constraints) {
-    const passChecking = _checkMediaStreamConstraints(constraints);
-    if (!passChecking) return;
-    _mediaStreamConstraints = constraints;
+  // listeners
+  onWebRTCCallingStateChanged: function (handler) {
+    _handleCallingStateChanged = handler;
   },
-  changePeerConnectionConfig: function (config) {
-    const passChecking = _checkPeerConnectionConfig(config);
-    if (!passChecking) return;
-    _peerConnectionConfig = config;
+  onLocalMediaStreamChanged: function (handler) {
+    _handleLocalMediaStreamChanged = handler;
+  },
+  onPeerMediaStreamMapChanged: function (handler) {
+    _handlePeerMediaStreamMapChanged = handler;
   },
 
   //
@@ -1686,13 +1717,12 @@ export default {
     _sendFileToAllPeer(files);
   },
 
-  //
-  // TODO: to make transceiving cancellation works 
-  //
-
   // cancel sending
-  cancelSendingOperationToAllPeer(fileHash) {
-    _cancelSenderSendingOperationToAllPeer(fileHash);
+  cancelAllFileSending() {
+    _cancelSenderAllFileSending();
+  },
+  cancelFileSendingToAllPeer(fileHash) {
+    _cancelSenderFileSendingToAllPeer(fileHash);
   },
 
   // slice keys to referring data for UI modeling
@@ -1726,17 +1756,17 @@ export default {
     FileDataStore.onReceivingRelatedDataChanged(handler);
   },
 
-  //
-  // Internal states accessing feature
-  //
+  // //
+  // // Internal states accessing feature
+  // //
 
-  get getSelfId() {
-    return _selfId;
-  },
-  get localMediaStream() {
-    return _localMediaStream;
-  },
-  get peerMediaStreamMap() {
-    return _peerMediaStreamMap;
-  },
+  // get getSelfId() {
+  //   return _selfId;
+  // },
+  // get localMediaStream() {
+  //   return _localMediaStream;
+  // },
+  // get peerMediaStreamMap() {
+  //   return _peerMediaStreamMap;
+  // },
 };
