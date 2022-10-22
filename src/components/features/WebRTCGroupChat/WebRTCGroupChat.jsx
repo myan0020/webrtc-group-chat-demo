@@ -50,15 +50,17 @@ export default function WebRTCGroupChat() {
   // hook 15
   const [files, setFiles] = useState(null);
   // hook 16
-  const [fileSendingRelatedData, setFileSendingRelatedData] = useState(null);
+  const [isFileSendingStatusSending, setIsFileSendingStatusSending] = useState(false);
   // hook 17
+  const [fileSendingRelatedData, setFileSendingRelatedData] = useState(null);
+  // hook 18
   const [fileReceivingRelatedData, setFileReceivingRelatedData] = useState(null);
 
   /**
    * Side Effects
    */
 
-  // hook 18: authentication
+  // hook 19: authentication
   useEffect(() => {
     WebRTCGroupChatController.onLoginInSuccess((payload) => {
       const authenticatedUsername = payload.username;
@@ -75,7 +77,7 @@ export default function WebRTCGroupChat() {
     });
   }, []);
 
-  // hook 19: chat room actions
+  // hook 20: chat room actions
   useEffect(() => {
     WebRTCGroupChatController.onRoomsInfoUpdated((payload) => {
       const rooms = payload.rooms;
@@ -95,14 +97,14 @@ export default function WebRTCGroupChat() {
     });
   }, []);
 
-  // hook 20: media calling state
+  // hook 21: media calling state
   useEffect(() => {
     WebRTCGroupChatController.onWebRTCCallingStateChanged((isCalling) => {
       setIsCalling(isCalling);
     });
   }, []);
 
-  // hook 21: WebRTC media streams
+  // hook 22: WebRTC media streams
   useEffect(() => {
     WebRTCGroupChatController.onLocalMediaStreamChanged((mediaStream) => {
       setLocalMediaStream(mediaStream);
@@ -124,9 +126,12 @@ export default function WebRTCGroupChat() {
     });
   }, []);
 
-  // hook 22: file transceiving
+  // hook 23: file transceiving
   useEffect(() => {
-    WebRTCGroupChatController.onFileSendingRelatedDataChanged((fileSendingRelatedData) => {
+    WebRTCGroupChatController.onFileSendingRelatedDataChanged((fileSendingRelatedData, isFileSendingStatusSending) => {
+      if (isFileSendingStatusSending !== undefined) {
+        setIsFileSendingStatusSending(isFileSendingStatusSending);
+      }
       setFileSendingRelatedData(cloneDeep(fileSendingRelatedData));
     });
     WebRTCGroupChatController.onFileReceivingRelatedDataChanged((fileReceivingRelatedData) => {
@@ -472,6 +477,7 @@ export default function WebRTCGroupChat() {
     <button
       className={style.button}
       onClick={onSendFileClick}
+      disabled={isFileSendingStatusSending}
     >
       Send File To All Peers
     </button>
@@ -480,6 +486,7 @@ export default function WebRTCGroupChat() {
     <button
       className={style.button}
       onClick={onCancelAllFileSendingClick}
+      disabled={!isFileSendingStatusSending}
     >
       Cancel Sending All Files To All Peers
     </button>

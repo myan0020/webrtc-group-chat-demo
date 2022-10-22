@@ -4,7 +4,6 @@
 
 const _sendingSliceContainerKey = "hashToConcatData";
 const _sendingMetaDataSliceKey = "SENDING_META_DATA_SLICE_KEY";
-const _sendingStatusSliceKey = "SENDING_STATUS_SLICE_KEY";
 const _sendingMinProgressSliceKey = "SENDING_MIN_PROGRESS_SLICE_KEY";
 
 const _receivingSliceContainerKey = "peerMap";
@@ -17,6 +16,18 @@ let _handleReceivingRelatedDataChange;
 
 const _sendingRelatedData = {
   hashToConcatData: {},
+  updateSendingStatus(isSendingStatusSending) {
+    console.log(
+      `FileDataStore: the sending related data is updated to`,
+      this,
+      `by sending status of ${isSendingStatusSending}`
+    );
+
+    // listener
+    if (_handleSendingRelatedDataChange) {
+      _handleSendingRelatedDataChange(this, isSendingStatusSending);
+    }
+  },
   updateSlice(hashToSlice, sliceKey) {
     Object.keys(hashToSlice).forEach((fileHash) => {
       let concatData = this.hashToConcatData[fileHash];
@@ -88,20 +99,6 @@ const _receivingRelatedData = {
 let _sendingHashToMetaData = {};
 
 /**
- * Sending status
- */
-
-const _sendingStatusMap = {
-  peerMap: new Map(),
-  setStatus(peerId, isSending) {
-    this.peerMap.set(peerId, isSending);
-  },
-  getStatus(peerId) {
-    return this.peerMap.get(peerId);
-  },
-};
-
-/**
  * Sending cancelled
  */
 
@@ -132,7 +129,7 @@ const _sendingCancelledFileMap = {
   },
   clear() {
     this.peerMap = new Map();
-  }
+  },
 };
 
 /**
@@ -179,11 +176,18 @@ function createFileProgressMap(isSending) {
       );
 
       if (isSending) {
-        const hashToSendingMinProgress = _computedHashToSendingMinProgress(
+        const sendingHashToMinProgress = _computedSendingHashToMinProgress(
           _sendingHashToMetaData,
           this
         );
-        _sendingRelatedData.updateSlice(hashToSendingMinProgress, _sendingMinProgressSliceKey);
+        _sendingRelatedData.updateSlice(sendingHashToMinProgress, _sendingMinProgressSliceKey);
+
+        // sending status is dependent on sending minimum porgress
+        const isSendingStatusSending = _isSendingStatusSending(
+          sendingHashToMinProgress,
+          _sendingHashToMetaData
+        );
+        _sendingRelatedData.updateSendingStatus(isSendingStatusSending);
       } else {
         _receivingRelatedData.updateSlice(this.peerMap, _receivingProgressSliceKey);
       }
@@ -230,27 +234,60 @@ function createFileProgressMap(isSending) {
 }
 
 /**
- * Sending min progress
+ * Sending file hash to min progress
  */
 
 // compute and output a file hash to sending minimum progress
-const _computedHashToSendingMinProgress = function (sendingHashToMetaData, sendingProgressMap) {
+const _computedSendingHashToMinProgress = function (sendingHashToMetaData, sendingProgressMap) {
   if (!sendingHashToMetaData) {
     console.log(`FileDataStore: sendingHashToMetaData not exist`);
     return null;
   }
 
-  const fileHashToSendingMinProgress = {};
+  const sendingHashToMinProgress = {};
   Object.keys(sendingHashToMetaData).forEach((fileHash) => {
     const minProgress = sendingProgressMap.calculateMinProgress(fileHash);
-    fileHashToSendingMinProgress[fileHash] = minProgress;
+    sendingHashToMinProgress[fileHash] = minProgress;
   });
   console.log(
     `FileDataStore: when computing completed, the entire sending hash to sending min progress is`,
-    fileHashToSendingMinProgress
+    sendingHashToMinProgress
   );
 
-  return fileHashToSendingMinProgress;
+  return sendingHashToMinProgress;
+};
+
+const _isSendingStatusSending = function (sendingHashToMinProgress, sendingHashToMetaData) {
+  let isSending = false;
+
+  if (!sendingHashToMinProgress || !sendingHashToMetaData) {
+    console.log(
+      `FileDataStore _isSendingStatusSending: unexpected sending file hash to meta data or sending file hash to meta data`
+    );
+    return isSending;
+  }
+
+  let sumSize = 0;
+  let sumMinProgress = 0;
+
+  for (const [fileHash, metaData] of Object.entries(sendingHashToMetaData)) {
+    const minProgress = sendingHashToMinProgress[fileHash];
+    if (!metaData || (typeof metaData.size !== 'number') || (typeof minProgress !== 'number')) {
+      console.log(
+        `FileDataStore: unexpected sending meta data for a file hash (${fileHash}) in a sending file hash to meta data of`,
+        sendingHashToMetaData
+      );
+      return isSending;
+    }
+
+    sumSize += metaData.size;
+    sumMinProgress += minProgress
+  }
+
+  if (sumMinProgress > 0 && sumMinProgress < sumSize) {
+    isSending = true;
+  }
+  return isSending;
 };
 
 /**
@@ -486,21 +523,10 @@ export default {
     console.log(
       `FileDataStore: the current sending file hash to file meta data object of`,
       _sendingHashToMetaData,
-      `is ${checkingPassed ? '' : 'not'} prepared for file buffer sending`
+      `is ${checkingPassed ? "" : "not"} prepared for file buffer sending`
     );
 
     return checkingPassed;
-  },
-
-  //
-  // Sending status
-  //
-
-  setSendingStatus(peerId, isSending) {
-    _sendingStatusMap.setStatus(peerId, isSending);
-  },
-  getSendingStatus(peerId) {
-    return _sendingStatusMap.getStatus(peerId);
   },
 
   //

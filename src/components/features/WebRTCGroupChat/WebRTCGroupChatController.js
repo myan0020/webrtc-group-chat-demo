@@ -818,7 +818,6 @@ async function _sendFileBufferToPeer(fileHashToFile, peerId) {
     return;
   }
 
-  // const fileHashToFile = await FileDataUtil.getUniqueFiles(files);
   const checkingPassed = FileDataStore.checkIfSendingMetaDataPrepared(fileHashToFile);
   if (!checkingPassed) {
     console.log(
@@ -869,12 +868,6 @@ async function _sendFileBufferToPeer(fileHashToFile, peerId) {
 
   const sendFileCallback = _peerSendFileCallbackQueueMap.shiftSendFileCallbackFromPeer(peerId);
   if (sendFileCallback) {
-
-    //
-    // TODO: to make sending status meaningful for file sending related buttons
-    //
-
-    FileDataStore.setSendingStatus(peerId, true);
     sendFileCallback();
   }
 }
@@ -940,7 +933,11 @@ async function _handleSenderFileBufferChannelBufferedAmountLow(
   }
 
   const newOffset = await _sendChunk(file, offset, dataChannel);
-  FileDataStore.setSendingProgress(peerId, fileHash, newOffset);
+
+  // to avoid setting progress after file sending is cancelled
+  if (!FileDataStore.getSendingCancelled(peerId, fileHash)) {
+    FileDataStore.setSendingProgress(peerId, fileHash, newOffset);
+  }
 
   if (newOffset >= file.size) {
     dataChannel.close();
@@ -963,15 +960,13 @@ async function _sendChunk(file, offset, dataChannel) {
 // ( sender: file buffer )
 function _handleSenderFileBufferChannelClose(peerId) {
   const sendFileCallback = _peerSendFileCallbackQueueMap.shiftSendFileCallbackFromPeer(peerId);
-
   if (!sendFileCallback) {
-    FileDataStore.setSendingStatus(peerId, false);
     return;
   }
-
   sendFileCallback();
 }
 
+// ( sender: file buffer )
 function _cancelSenderAllFileSending() {
   Object.keys(FileDataStore.sendingHashToMetaData).forEach((fileHash) => {
     _cancelSenderFileSendingToAllPeer(fileHash);
@@ -980,7 +975,7 @@ function _cancelSenderAllFileSending() {
 
 // ( sender: file buffer )
 function _cancelSenderFileSendingToAllPeer(fileHash) {
-  _peerConnectionMap.forEach((_, peerId) => {
+  _peerFileBufferChannelMap.forEach((_, peerId) => {
     _cancelSenderFileSendingToPeer(peerId, fileHash);
   });
 }
@@ -1101,7 +1096,8 @@ async function _handleReceiverChannelFileBufferMessage(event, peerId) {
     console.log(
       `WebRTCGroupChatController: a file (${fileHash}) buffer receiving process has been cancelled`
     );
-    _cancelReceiverReceivingOperation(peerId, fileHash);
+
+    FileDataStore.resetReceivingBufferList(peerId, fileHash);
   } else {
     console.log(`WebRTCGroupChatController: a new file (${fileHash}) buffer of`, data, `received`);
 
@@ -1111,11 +1107,6 @@ async function _handleReceiverChannelFileBufferMessage(event, peerId) {
       FileDataStore.addReceivingBuffer(peerId, fileHash, await data.arrayBuffer());
     }
   }
-}
-
-// ( receiver: file buffer )
-function _cancelReceiverReceivingOperation(peerId, fileHash) {
-  FileDataStore.resetReceivingBufferList(peerId, fileHash);
 }
 
 /**
@@ -1756,17 +1747,4 @@ export default {
     FileDataStore.onReceivingRelatedDataChanged(handler);
   },
 
-  // //
-  // // Internal states accessing feature
-  // //
-
-  // get getSelfId() {
-  //   return _selfId;
-  // },
-  // get localMediaStream() {
-  //   return _localMediaStream;
-  // },
-  // get peerMediaStreamMap() {
-  //   return _peerMediaStreamMap;
-  // },
 };
