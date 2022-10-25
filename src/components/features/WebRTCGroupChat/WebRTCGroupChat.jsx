@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { cloneDeep } from "lodash";
 
 import WebRTCGroupChatController from "./WebRTCGroupChatController.js";
 import VideoList from "./VideoList.jsx";
@@ -118,7 +117,7 @@ export default function WebRTCGroupChat() {
           peerStreamsMap && peerStreamsMap.peerMap ? peerStreamsMap.peerMap.size : "unknown"
         }`
       );
-      setPeerMediaStreamsMap(cloneDeep(peerStreamsMap));
+      setPeerMediaStreamsMap(peerStreamsMap);
 
       // TODO: it is the temperary location where the code below is called
       setIsMicMuted(WebRTCGroupChatController.localMicMuted);
@@ -132,10 +131,10 @@ export default function WebRTCGroupChat() {
       if (isFileSendingStatusSending !== undefined) {
         setIsFileSendingStatusSending(isFileSendingStatusSending);
       }
-      setFileSendingRelatedData(cloneDeep(fileSendingRelatedData));
+      setFileSendingRelatedData(fileSendingRelatedData);
     });
     WebRTCGroupChatController.onFileReceivingRelatedDataChanged((fileReceivingRelatedData) => {
-      setFileReceivingRelatedData(cloneDeep(fileReceivingRelatedData));
+      setFileReceivingRelatedData(fileReceivingRelatedData);
     });
   }, []);
 
@@ -518,8 +517,10 @@ export default function WebRTCGroupChat() {
       {joinedRoomId.length > 0 && fileSendingRendering}
       {joinedRoomId.length > 0 && fileReceivingRendering}
 
-      {isCalling && localVideo}
-      {isCalling && peerVideoList}
+      {/* {isCalling && localVideo}
+      {isCalling && peerVideoList} */}
+      {localVideo}
+      {peerVideoList}
 
       {isCalling && toggleMicEnablingButtonRendering}
       {isCalling && toggleCameraEnablingButtonRendering}

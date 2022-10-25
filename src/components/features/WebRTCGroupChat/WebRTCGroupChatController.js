@@ -18,8 +18,16 @@ import FileDataUtil from "./FileDataUtil.js";
 let _selfId = "";
 
 /**
- * Internal paramters checking
+ * Util
  */
+
+function shadowCopy(obj) {
+  const copied = {};
+  Object.keys(obj).forEach((property) => {
+    copied[property] = obj[property];
+  });
+  return copied;
+}
 
 function _checkUserName(username) {
   if (typeof username !== "string") {
@@ -624,6 +632,7 @@ function _handlePeerConnectionTrackEvent(event) {
 
   _setupTransceiverMap(transceiver, incomingTrackKind, peerId);
   _setupTrackMuteEventHandlers(track, peerId);
+
   _respondToPeerWithEqualKindTrackIfNeeded(peerId, transceiver, incomingTrackKind);
 }
 
@@ -1150,7 +1159,7 @@ const _peerMediaStreamMap = {
     );
 
     if (_handlePeerMediaStreamMapChanged) {
-      _handlePeerMediaStreamMapChanged(this);
+      _handlePeerMediaStreamMapChanged(shadowCopy(this));
     }
   },
 
@@ -1185,13 +1194,15 @@ const _peerMediaStreamMap = {
     }
 
     if (_handlePeerMediaStreamMapChanged) {
-      _handlePeerMediaStreamMapChanged(this);
+      _handlePeerMediaStreamMapChanged(shadowCopy(this));
     }
   },
 
   setTrack(peerId, track) {
     if (!(track instanceof MediaStreamTrack)) return;
 
+    console.log(`TEST: start to set track of kind (${track.kind})`)
+    
     const prevSize = this.peerMap.size;
 
     if (!this.peerMap.get(peerId)) {
@@ -1214,7 +1225,7 @@ const _peerMediaStreamMap = {
     );
 
     if (_handlePeerMediaStreamMapChanged) {
-      _handlePeerMediaStreamMapChanged(this);
+      _handlePeerMediaStreamMapChanged(shadowCopy(this));
     }
   },
 };
@@ -1250,6 +1261,35 @@ function _addLocalMediaStream() {
       );
       peerConnection.addTrack(track, _localMediaStream);
     });
+
+
+
+    // const senders = peerConnection.getSenders();
+    // let addTrackNeeded = senders.length === 0;
+    // let replaceTrackNeeded = senders.length === 2 && !(senders[0].track) && !(senders[1].track)
+    
+    // if (addTrackNeeded) {
+    //   _localMediaStream.getTracks().forEach((track, index) => {
+    //     console.log(
+    //       `WebRTCGroupChatController: add (trackId: ${track.id}) (kind: ${track.kind}) track of local media stream to a peer connection to ${peerId}`
+    //     );
+    //     peerConnection.addTrack(track, _localMediaStream);
+    //   });
+    // } else if (replaceTrackNeeded) {
+    //   _localMediaStream.getTracks().forEach((track, index) => {
+    //     console.log(
+    //       `WebRTCGroupChatController: replace (trackId: ${track.id}) (kind: ${track.kind}) track of local media stream to a peer connection to ${peerId}`
+    //     );
+
+    //     let transceiver;
+    //     if (track.kind === 'audio') {
+    //       transceiver = _audioTransceiverMap.get(peerId);
+    //     } else if (track.kind === 'video') {
+    //       transceiver = _videoTransceiverMap.get(peerId);
+    //     }
+    //     transceiver.sender.replaceTrack(track);
+    //   });
+    // }
   });
 }
 
@@ -1322,15 +1362,36 @@ function _respondToPeerWithEqualKindTrackIfNeeded(peerId, transceiver, incomingT
     return;
   }
 
-  const isNeeded = transceiver.sender.track === null;
-  if (!isNeeded) {
-    return;
-  }
+  const sender = transceiver.sender;
+  let addTrackNeeded = sender.track === null && transceiver.currentDirection === null && transceiver.direction === 'recvonly';
+  let replaceTrackNeeded = sender.track !== null;
+  
+  // const isNeeded = transceiver.sender.track === null;
+  // if (!isNeeded) {
+  //   return;
+  // }
+
+  
 
   const peerConnection = _peerConnectionMap.get(peerId);
   _localMediaStream.getTracks().forEach((localTrack) => {
     if (localTrack.kind === incomingTrackKind) {
-      peerConnection.addTrack(localTrack, _localMediaStream);
+
+      if (addTrackNeeded) {
+        console.log(`TEST: _respondToPeerWithEqualKindTrackIfNeeded will addtrack`);
+        peerConnection.addTrack(localTrack, _localMediaStream);
+      } else if (replaceTrackNeeded) {
+        let senderTrackMuted = sender.track.muted;
+        if (senderTrackMuted) {
+          sender.replaceTrack(localTrack);
+        }
+        
+      }
+
+      // sender.replaceTrack(localTrack);
+
+
+      // peerConnection.addTrack(localTrack, _localMediaStream);
     }
   });
 }
@@ -1371,20 +1432,25 @@ function _triggerOneRemoteMuteForLocalTracks(peerId) {
 function _triggerAllRemoteMuteForLocalTracks() {
   _peerConnectionMap.forEach((peerConnection) => {
     peerConnection.getTransceivers().forEach((transceiver) => {
-      const sender = transceiver.sender;
-      if (sender) {
-        peerConnection.removeTrack(sender);
-      }
+      // const sender = transceiver.sender;
+      // if (sender) {
+      //   peerConnection.removeTrack(sender);
+      // }
+
+      transceiver.stop()
     });
   });
 }
 
 function _stopLocalTracks() {
   if (_localMediaStream) {
+
+
+
     _localMediaStream.getTracks().forEach(function (track) {
       track.stop();
     });
-    _localMediaStream = null;
+    // _localMediaStream = null;
     if (_handleLocalMediaStreamChanged) {
       _handleLocalMediaStreamChanged(_localMediaStream);
     }
@@ -1492,11 +1558,11 @@ function _setLocalMediaTrackMuted(trackKind, muted) {
 
 let _isCalling = false;
 
-function _changeCallingState(toCalling) {
-  console.log(`WebRTCGroupChatController: change calling state to toCalling of ${toCalling}`);
+function _changeCallingState(changeToCalling) {
+  console.log(`WebRTCGroupChatController: change calling state to toCalling of ${changeToCalling}`);
 
   // change state to no calling
-  if (!toCalling) {
+  if (!changeToCalling) {
     if (!_isCalling) return;
 
     _isCalling = false;
@@ -1644,6 +1710,11 @@ export default {
   //
 
   // calling actions
+  openLocalMediaStreamIfNeeded() {
+
+  },
+
+
   startCalling: function () {
     _startCalling();
   },
@@ -1746,5 +1817,4 @@ export default {
   onFileReceivingRelatedDataChanged: function (handler) {
     FileDataStore.onReceivingRelatedDataChanged(handler);
   },
-
 };

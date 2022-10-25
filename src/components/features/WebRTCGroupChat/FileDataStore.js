@@ -25,7 +25,7 @@ const _sendingRelatedData = {
 
     // listener
     if (_handleSendingRelatedDataChange) {
-      _handleSendingRelatedDataChange(this, isSendingStatusSending);
+      _handleSendingRelatedDataChange(shadowCopy(this), isSendingStatusSending);
     }
   },
   updateSlice(hashToSlice, sliceKey) {
@@ -50,7 +50,7 @@ const _sendingRelatedData = {
 
     // listener
     if (_handleSendingRelatedDataChange) {
-      _handleSendingRelatedDataChange(this);
+      _handleSendingRelatedDataChange(shadowCopy(this));
     }
   },
 };
@@ -87,8 +87,11 @@ const _receivingRelatedData = {
 
     // listener
     if (_handleReceivingRelatedDataChange) {
-      _handleReceivingRelatedDataChange(this);
+      _handleReceivingRelatedDataChange(shadowCopy(this));
     }
+  },
+  shadowCopyThis() {
+    return { peerMap: this.peerMap };
   },
 };
 
@@ -462,6 +465,14 @@ const _receivingHashToBufferListMap = {
 
 const isStringValid = (string) => {
   return string && string.length > 0;
+};
+
+const shadowCopy = (obj) => {
+  const copied = {};
+  Object.keys(obj).forEach((property) => {
+    copied[property] = obj[property];
+  })
+  return copied;
 };
 
 export default {
