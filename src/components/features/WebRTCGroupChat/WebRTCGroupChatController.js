@@ -765,20 +765,20 @@ async function _sendFileToPeer(files, peerId) {
   // transform the files into a file hash to file object
   const fileHashToFile = await FileDataUtil.getUniqueFiles(files);
 
-  FileDataStore.prepareSendingMetaData(fileHashToFile);
+  const preparedFileHashToMetaData = FileDataStore.prepareSendingMetaData(fileHashToFile);
 
   // transform the file hash to file object into a file hash to file meta data object
-  const fileHashToMetaData = Object.keys(fileHashToFile).reduce((accumulator, fileHash) => {
-    const { name, type, size } = fileHashToFile[fileHash];
-    accumulator[fileHash] = { name, type, size };
-    return accumulator;
-  }, {});
+  // const fileHashToMetaData = Object.keys(fileHashToFile).reduce((accumulator, fileHash) => {
+  //   const { name, type, size } = fileHashToFile[fileHash];
+  //   accumulator[fileHash] = { name, type, size };
+  //   return accumulator;
+  // }, {});
 
   console.log(
     `WebRTCGroupChatController: the input files of`,
     files,
     `has been finnally converted into a file hash to file meta data object of`,
-    fileHashToMetaData
+    preparedFileHashToMetaData
   );
 
   // create and store a data channel to transfer the prepared file hash to file meta data object
@@ -786,7 +786,7 @@ async function _sendFileToPeer(files, peerId) {
     peerId: peerId,
     label: FILE_META_DATA_CHANNEL_LABEL,
     onOpenHandler: () => {
-      _handleSenderFileMetaDataChannelOpen(peerId, fileMetaDataChannel, fileHashToMetaData);
+      _handleSenderFileMetaDataChannelOpen(peerId, fileMetaDataChannel, preparedFileHashToMetaData);
     },
     onMessageHandler: (event) => {
       _handleSenderFileMetaDataChannelMessage(event, peerId, fileHashToFile);
@@ -798,13 +798,17 @@ async function _sendFileToPeer(files, peerId) {
 }
 
 // ( sender: file meta data )
-function _handleSenderFileMetaDataChannelOpen(peerId, fileMetaDataChannel, fileHashToMetaData) {
+function _handleSenderFileMetaDataChannelOpen(
+  peerId,
+  fileMetaDataChannel,
+  preparedFileHashToMetaData
+) {
   if (fileMetaDataChannel.readyState === "open") {
-    fileMetaDataChannel.send(JSON.stringify(fileHashToMetaData));
+    fileMetaDataChannel.send(JSON.stringify(preparedFileHashToMetaData));
 
     console.log(
       `WebRTCGroupChatController: the file hash to meta data object of `,
-      fileHashToMetaData,
+      preparedFileHashToMetaData,
       `has been sent to a peer (${peerId})`
     );
   }
@@ -1041,15 +1045,15 @@ function _handlePeerConnectionDataChannelEvent(event) {
   const peerId = _peerConnectionMap.getFirstKeyByValue(peerConnection);
 
   if (label === FILE_META_DATA_CHANNEL_LABEL) {
-    _peerFileMetaDataChannelMap.setChannel(peerId, label, channel);
     channel.onmessage = (event) => {
       _handleReceiverChannelFileMetaDataMessage(event, peerId, label);
     };
+    _peerFileMetaDataChannelMap.setChannel(peerId, label, channel);
   } else {
-    _peerFileBufferChannelMap.setChannel(peerId, label, channel);
     channel.onmessage = (event) => {
       _handleReceiverChannelFileBufferMessage(event, peerId);
     };
+    _peerFileBufferChannelMap.setChannel(peerId, label, channel);
   }
   channel.onclose = (event) => {
     _handleChannelClose(event, peerId);
@@ -1100,13 +1104,13 @@ async function _handleReceiverChannelFileBufferMessage(event, peerId) {
   const fileHash = label.split("-")?.[1];
 
   if (data === START_OF_FILE_BUFFER_MESSAGE) {
-    FileDataStore.resetReceivingBufferList(peerId, fileHash);
+    FileDataStore.resetReceivingBuffer(peerId, fileHash);
   } else if (data === CANCEL_OF_FILE_BUFFER_MESSAGE) {
     console.log(
       `WebRTCGroupChatController: a file (${fileHash}) buffer receiving process has been cancelled`
     );
 
-    FileDataStore.resetReceivingBufferList(peerId, fileHash);
+    FileDataStore.resetReceivingBuffer(peerId, fileHash);
   } else {
     console.log(`WebRTCGroupChatController: a new file (${fileHash}) buffer of`, data, `received`);
 
@@ -1201,8 +1205,8 @@ const _peerMediaStreamMap = {
   setTrack(peerId, track) {
     if (!(track instanceof MediaStreamTrack)) return;
 
-    console.log(`TEST: start to set track of kind (${track.kind})`)
-    
+    console.log(`TEST: start to set track of kind (${track.kind})`);
+
     const prevSize = this.peerMap.size;
 
     if (!this.peerMap.get(peerId)) {
@@ -1262,12 +1266,10 @@ function _addLocalMediaStream() {
       peerConnection.addTrack(track, _localMediaStream);
     });
 
-
-
     // const senders = peerConnection.getSenders();
     // let addTrackNeeded = senders.length === 0;
     // let replaceTrackNeeded = senders.length === 2 && !(senders[0].track) && !(senders[1].track)
-    
+
     // if (addTrackNeeded) {
     //   _localMediaStream.getTracks().forEach((track, index) => {
     //     console.log(
@@ -1363,20 +1365,20 @@ function _respondToPeerWithEqualKindTrackIfNeeded(peerId, transceiver, incomingT
   }
 
   const sender = transceiver.sender;
-  let addTrackNeeded = sender.track === null && transceiver.currentDirection === null && transceiver.direction === 'recvonly';
+  let addTrackNeeded =
+    sender.track === null &&
+    transceiver.currentDirection === null &&
+    transceiver.direction === "recvonly";
   let replaceTrackNeeded = sender.track !== null;
-  
+
   // const isNeeded = transceiver.sender.track === null;
   // if (!isNeeded) {
   //   return;
   // }
 
-  
-
   const peerConnection = _peerConnectionMap.get(peerId);
   _localMediaStream.getTracks().forEach((localTrack) => {
     if (localTrack.kind === incomingTrackKind) {
-
       if (addTrackNeeded) {
         console.log(`TEST: _respondToPeerWithEqualKindTrackIfNeeded will addtrack`);
         peerConnection.addTrack(localTrack, _localMediaStream);
@@ -1385,11 +1387,9 @@ function _respondToPeerWithEqualKindTrackIfNeeded(peerId, transceiver, incomingT
         if (senderTrackMuted) {
           sender.replaceTrack(localTrack);
         }
-        
       }
 
       // sender.replaceTrack(localTrack);
-
 
       // peerConnection.addTrack(localTrack, _localMediaStream);
     }
@@ -1437,16 +1437,13 @@ function _triggerAllRemoteMuteForLocalTracks() {
       //   peerConnection.removeTrack(sender);
       // }
 
-      transceiver.stop()
+      transceiver.stop();
     });
   });
 }
 
 function _stopLocalTracks() {
   if (_localMediaStream) {
-
-
-
     _localMediaStream.getTracks().forEach(function (track) {
       track.stop();
     });
@@ -1710,10 +1707,7 @@ export default {
   //
 
   // calling actions
-  openLocalMediaStreamIfNeeded() {
-
-  },
-
+  openLocalMediaStreamIfNeeded() {},
 
   startCalling: function () {
     _startCalling();
@@ -1803,9 +1797,10 @@ export default {
   get fileReceivingMetaDataSliceKey() {
     return FileDataStore.receivingMetaDataSliceKey;
   },
-  get fileReceivingBufferSliceKey() {
-    return FileDataStore.receivingBufferSliceKey;
+  get fileReceivingFileExporterSliceKey() {
+    return FileDataStore.receivingFileExporterSliceKey;
   },
+
   get fileReceivingProgressSliceKey() {
     return FileDataStore.receivingProgressSliceKey;
   },

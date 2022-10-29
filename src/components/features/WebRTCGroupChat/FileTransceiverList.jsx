@@ -11,7 +11,7 @@ function FileTransceiver(props) {
     transceivingMetaData,
     transceivingProgress,
 
-    receivingBufferList,
+    receivingFileExporter,
   } = props;
 
   // validating
@@ -52,19 +52,24 @@ function FileTransceiver(props) {
   // receiving downloading
   const receivingDownloadable =
     !isSender &&
-    receivingBufferList &&
-    receivingBufferList.length > 0 &&
+    receivingFileExporter &&
     transceivingMetaData &&
     transceivingProgress >= transceivingMetaData.size;
   let handleReceivingDownload;
   if (receivingDownloadable) {
     handleReceivingDownload = () => {
-      const a = document.createElement("a");
-      const blob = new Blob(receivingBufferList);
-      a.href = window.URL.createObjectURL(blob);
-      a.download = transceivingMetaData.name;
-      a.click();
-      a.remove();
+      const handleFileExportSuccess = (file) => {
+        if (file instanceof File === false) {
+          console.log(`FileTransceiver: unexpected params received from file Export handler`, file);
+          return;
+        }
+        const a = document.createElement("a");
+        a.href = window.URL.createObjectURL(file);
+        a.download = file.name;
+        a.click();
+        a.remove();
+      }
+      receivingFileExporter(handleFileExportSuccess);
     };
   }
 
@@ -139,8 +144,8 @@ export default function FileTransceiverList(props) {
             transceivingProgress={
               receivingConcatData[WebRTCGroupChatController.fileReceivingProgressSliceKey]
             }
-            receivingBufferList={
-              receivingConcatData[WebRTCGroupChatController.fileReceivingBufferSliceKey]
+            receivingFileExporter={
+              receivingConcatData[WebRTCGroupChatController.fileReceivingFileExporterSliceKey]
             }
           />
         );

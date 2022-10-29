@@ -8,7 +8,7 @@ const _sendingMinProgressSliceKey = "SENDING_MIN_PROGRESS_SLICE_KEY";
 
 const _receivingSliceContainerKey = "peerMap";
 const _receivingMetaDataSliceKey = "RECEIVING_META_DATA_SLICE_KEY";
-const _receivingBufferSliceKey = "RECEIVING_BUFFER_SLICE_KEY";
+const _receivingFileExporterSliceKey = "RECEIVING_FILE_EXPORTER_SLICE_KEY";
 const _receivingProgressSliceKey = "RECEIVING_PROGRESS_SLICE_KEY";
 
 let _handleSendingRelatedDataChange;
@@ -275,7 +275,7 @@ const _isSendingStatusSending = function (sendingHashToMinProgress, sendingHashT
 
   for (const [fileHash, metaData] of Object.entries(sendingHashToMetaData)) {
     const minProgress = sendingHashToMinProgress[fileHash];
-    if (!metaData || (typeof metaData.size !== 'number') || (typeof minProgress !== 'number')) {
+    if (!metaData || typeof metaData.size !== "number" || typeof minProgress !== "number") {
       console.log(
         `FileDataStore: unexpected sending meta data for a file hash (${fileHash}) in a sending file hash to meta data of`,
         sendingHashToMetaData
@@ -284,7 +284,7 @@ const _isSendingStatusSending = function (sendingHashToMinProgress, sendingHashT
     }
 
     sumSize += metaData.size;
-    sumMinProgress += minProgress
+    sumMinProgress += minProgress;
   }
 
   if (sumMinProgress > 0 && sumMinProgress < sumSize) {
@@ -365,97 +365,359 @@ const _receivingHashToMetaDataMap = {
 };
 
 /**
- * Receiving data (Buffer)
+ * Receiving persistence (using indexedDB)
  */
 
-const _receivingHashToBufferListMap = {
-  // the receiving and peer-related file hash to buffer list data container
-  peerMap: new Map(),
+let _db;
+let _isDBOpen = false;
+const _dbName = "WebRTCFileDataDB";
+const _dbReceivingBufferStoreName = "receivingBuffer";
+const _dbReceivingFileStoreName = "receivingFile";
+const _dbVersion = 1;
+const _dbIdKey = "bufferId";
+const _dbIdIndexName = "bufferId_idx";
 
-  // get the receiving buffer list of a file for a specific peer
-  getBufferList(peerId, fileHash) {
-    if (!isStringValid(peerId) || !isStringValid(fileHash)) {
-      return null;
+_dbStartup();
+
+function _dbReceivingBufferIdValue(peerId, fileHash, startOffset) {
+  return `${peerId}-${fileHash}-${startOffset}`;
+}
+
+function _dbIdValue(peerId, fileHash) {
+  return `${peerId}-${fileHash}`;
+}
+
+function _dbStartup() {
+  console.log(`FileDataStore: DB is opening ...`);
+
+  const dbOpenRequest = indexedDB.open(_dbName, _dbVersion);
+
+  dbOpenRequest.onerror = (event) => {
+    console.error(`FileDataStore: IndexedDB Open Request fail`);
+  };
+  dbOpenRequest.onupgradeneeded = function (event) {
+    // the existing database version is less than 2 (or it doesn't exist)
+    switch (
+      event.oldVersion // existing db version
+    ) {
+      case 0:
+        // version 0 means that the client had no database
+        // perform initialization
+        _db = dbOpenRequest.result;
+        if (!_db.objectStoreNames.contains(_dbReceivingBufferStoreName)) {
+          // store receiving buffer
+          const receivingBufferObjectStore = _db.createObjectStore(_dbReceivingBufferStoreName, {
+            keyPath: "bufferId",
+          });
+          receivingBufferObjectStore.createIndex("fileId_idx", "fileId");
+        }
+        if (!_db.objectStoreNames.contains(_dbReceivingFileStoreName)) {
+          // store files where each file is merged by receiving buffer
+          const receivingFileObjectStore = _db.createObjectStore(_dbReceivingFileStoreName, {
+            keyPath: "fileId",
+          });
+          receivingFileObjectStore.createIndex("fileId_idx", "fileId");
+        }
+
+      case 1:
+      // client had version 1
+      // update
     }
+  };
+  dbOpenRequest.onsuccess = function () {
+    _db = dbOpenRequest.result;
 
-    const hashToBufferList = this.peerMap.get(peerId);
-    if (!hashToBufferList) {
-      return null;
-    }
-    return hashToBufferList[fileHash];
-  },
+    _db.onversionchange = function () {
+      _db.close();
+      alert("Database is outdated, please reload the page.");
+      _isDBOpen = false;
+    };
 
-  // overwrite a receiving buffer list of a file for a specific peer
-  overwriteBufferList(peerId, fileHash, bufferList) {
-    if (!isStringValid(peerId) || !isStringValid(fileHash)) {
+    _isDBOpen = true;
+
+    console.log(`FileDataStore: DB is now open`);
+
+    // ...the db is ready, use it...
+  };
+  dbOpenRequest.onblocked = function () {
+    alert("Can not open a new version database");
+    // this event shouldn't trigger if we handle onversionchange correctly
+
+    // it means that there's another open connection to the same database
+    // and it wasn't closed after db.onversionchange triggered for it
+  };
+}
+
+function _dbPutReceivingBufferPromiseBuilder(peerId, fileHash, buffer, startOffset) {
+  return new Promise((resolve, reject) => {
+    if (!_isDBOpen) {
+      console.log(`FileDataStore: unexpected closed DB, and cannot put receiving buffer to DB`);
       return;
     }
 
-    let hashToBufferList = this.peerMap.get(peerId);
-    if (!hashToBufferList) {
-      hashToBufferList = { [fileHash]: [] };
+    const transaction = _db.transaction(_dbReceivingBufferStoreName, "readwrite");
+    transaction.oncomplete = () => {
+      console.log(
+        `FileDataStore: put receiving buffer of a file (${fileHash}) for a peer (${peerId}) completed`
+      );
+
+      // update progress map && merge into file if possible
+      _receivingProgressMap.addProgress(peerId, fileHash, buffer.byteLength);
+      _dbMergeReceivingBufferIfPossible(peerId, fileHash);
+
+      // next put receiving buffer callback
+      const startOffeset = _receivingProgressMap.getProgress(peerId, fileHash);
+      resolve(startOffeset);
+    };
+    const receivingBufferStore = transaction.objectStore(_dbReceivingBufferStoreName);
+    const record = {
+      bufferId: `${peerId}-${fileHash}-${startOffset}`,
+      fileId: `${peerId}-${fileHash}`,
+      buffer: buffer,
+      startOffset: startOffset,
+    };
+
+    const request = receivingBufferStore.put(record);
+    request.onsuccess = function () {
+      console.log(`FileDataStore: put receiving buffer to DB onsuccess`, request.result);
+    };
+    request.onerror = function () {
+      console.log(`FileDataStore: put receiving buffer to DB onerror`, request.error);
+    };
+  });
+}
+
+function _dbResetReceivingBuffer(peerId, fileHash, completionHandler) {
+  if (!_isDBOpen) {
+    console.log(`FileDataStore: unexpected closed DB, and cannot reset receiving buffer to DB`);
+    return;
+  }
+
+  const transaction = _db.transaction(_dbReceivingBufferStoreName, "readwrite");
+  transaction.oncomplete = () => {
+    if (completionHandler) {
+      console.log(
+        `FileDataStore: reset receiving buffer of a file (${fileHash}) for a peer (${peerId}) completed`
+      );
+      completionHandler();
     }
-    hashToBufferList[fileHash] = bufferList;
+  };
 
-    this.peerMap.set(peerId, hashToBufferList);
+  const receivingBufferStore = transaction.objectStore(_dbReceivingBufferStoreName);
+  const index = receivingBufferStore.index("fileId_idx");
+  const indexValue = `${peerId}-${fileHash}`;
 
-    console.log(
-      `FileDataStore: overwritting with a receiving buffer list`,
-      hashToBufferList,
-      `of a file (${fileHash}) for a peer (${peerId}) completed`
-    );
+  const openCursorRequest = index.openCursor(IDBKeyRange.only(indexValue));
+  openCursorRequest.onsuccess = function (event) {
+    console.log(`FileDataStore: reset receiving buffer from DB onsuccess`, event);
+    const cursor = event.target.result;
+    if (cursor) {
+      receivingBufferStore.delete(cursor.primaryKey);
+      cursor.continue();
+    }
+  };
+  openCursorRequest.onerror = function (event) {
+    console.log(`FileDataStore: reset receiving buffer from DB onerror`, event);
+  };
+}
 
-    _receivingRelatedData.updateSlice(this.peerMap, _receivingBufferSliceKey);
+function _dbMergeReceivingBufferIfPossible(peerId, fileHash) {
+  const metaData = _receivingHashToMetaDataMap.getMetaData(peerId, fileHash);
+  const receivingProgress = _receivingProgressMap.getProgress(peerId, fileHash);
+
+  if (!metaData || typeof metaData.size !== "number" || receivingProgress < metaData.size) {
+    return;
+  }
+  if (!_isDBOpen) {
+    console.log(`FileDataStore: unexpected closed DB, and cannot merge receiving buffer from DB`);
+    if (failureHandler) {
+      failureHandler();
+    }
+    return;
+  }
+
+  const tmpBufferWrapperList = [];
+
+  const transaction = _db.transaction(_dbReceivingBufferStoreName, "readwrite");
+  const receivingBufferStore = transaction.objectStore(_dbReceivingBufferStoreName);
+  const index = receivingBufferStore.index("fileId_idx");
+  const indexValue = `${peerId}-${fileHash}`;
+
+  const openCursorRequest = index.openCursor(IDBKeyRange.only(indexValue));
+  openCursorRequest.onsuccess = function (event) {
+    console.log(`FileDataStore: get a cursor of receiving buffer from DB onsuccess`, event);
+
+    const cursor = event.target.result;
+    if (cursor) {
+      const record = cursor.value;
+      console.log(
+        `FileDataStore: a valid cursor of receiving buffer from DB, so build a buffer wrapper with arraybuffer`,
+        record.buffer,
+        `and startOffset (${record.startOffset})`
+      );
+
+      const bufferWrapper = {
+        buffer: record.buffer,
+        startOffset: record.startOffset,
+      };
+      tmpBufferWrapperList.push(bufferWrapper);
+
+      // const cursorDeleteRequest = cursor.delete();
+      // cursorDeleteRequest.onsuccess = (event) => {
+      //   console.log(
+      //     `FileDataStore: delete a vaild cursor of receiving buffer from DB onsuccess`,
+      //     event
+      //   );
+      // };
+      // cursorDeleteRequest.onerror = (event) => {
+      //   console.log(
+      //     `FileDataStore: delete a vaild cursor of receiving buffer from DB onerror`,
+      //     event
+      //   );
+      // };
+
+      cursor.continue();
+    } else {
+      console.log(
+        `FileDataStore: no more valid cursor of receiving buffer from DB, start sorting array buffer wrapper list and then creating file`,
+        tmpBufferWrapperList
+      );
+
+      const sortedBufferList = tmpBufferWrapperList
+        .sort((a, b) => {
+          return a.startOffset - b.startOffset;
+        })
+        .map((bufferWrapper) => bufferWrapper.buffer);
+      const file = new File([new Blob(sortedBufferList)], metaData.name, {
+        type: metaData.type,
+        lastModified: metaData.lastModified,
+      });
+      const transaction = _db.transaction(_dbReceivingFileStoreName, "readwrite");
+      transaction.oncomplete = () => {
+        console.log(
+          `FileDataStore: merge receiving buffer of a file (${fileHash}) for a peer (${peerId}) completed`
+        );
+
+        const exporter = _receivingHashToExporterMap.buildExporter(peerId, fileHash);
+        _receivingHashToExporterMap.setExporter(peerId, fileHash, exporter);
+      };
+      const receivingFileStore = transaction.objectStore(_dbReceivingFileStoreName);
+      const record = {
+        fileId: `${peerId}-${fileHash}`,
+        file: file,
+      };
+
+      const putRequest = receivingFileStore.put(record);
+      putRequest.onsuccess = function (event) {
+        console.log(`FileDataStore: set receiving file to DB onsuccess`, event);
+      };
+      putRequest.onerror = function (event) {
+        console.log(`FileDataStore: set receiving file to DB onerror`, event);
+      };
+    }
+  };
+  openCursorRequest.onerror = function (event) {
+    console.log(`FileDataStore: get receiving buffer from DB Error`, event);
+  };
+}
+
+function _dbGetReceivingFile(peerId, fileHash, successHandler, errorHandler) {
+  if (!_isDBOpen) {
+    console.log(`FileDataStore: unexpected closed DB, and cannot get receiving buffer from DB`);
+    return;
+  }
+
+  const transaction = _db.transaction(_dbReceivingFileStoreName, "readwrite");
+  const receivingFileStore = transaction.objectStore(_dbReceivingFileStoreName);
+  const primaryKeyValue = `${peerId}-${fileHash}`;
+
+  let file;
+
+  const getRequest = receivingFileStore.get(primaryKeyValue);
+  getRequest.onsuccess = (event) => {
+    const record = event.target.result;
+    if (record !== undefined) {
+      file = record.file;
+    } else {
+      console.log(`FileDataStore: no such file`);
+    }
+
+    if (successHandler) {
+      successHandler(file);
+    }
+  };
+  getRequest.onerror = (event) => {
+    console.log(`FileDataStore: get receiving file from DB onerror`, event);
+
+    if (errorHandler) {
+      errorHandler(event.target.error);
+    }
+  };
+}
+
+/**
+ * Receiving data (Buffer)
+ */
+
+const _receivingCachingPromiseMap = {
+  peerMap: new Map(),
+  addNextOnFulfilled(peerId, fileHash, nextOnFulfilled) {
+    let cachingPromiseContainer = this.peerMap.get(peerId);
+    if (!cachingPromiseContainer) {
+      cachingPromiseContainer = {};
+    }
+    if (!cachingPromiseContainer[fileHash]) {
+      const initialStartOffset = 0;
+      cachingPromiseContainer[fileHash] = new Promise((resolve, reject) => {
+        resolve(initialStartOffset);
+      }).then(nextOnFulfilled);
+    } else {
+      cachingPromiseContainer[fileHash] = cachingPromiseContainer[fileHash].then(nextOnFulfilled);
+    }
+    this.peerMap.set(peerId, cachingPromiseContainer);
+  },
+};
+
+const _receivingHashToExporterMap = {
+  // the receiving and peer-related file hash to file exporter container
+  peerMap: new Map(),
+
+  buildExporter(peerId, fileHash) {
+    return (successHandler, errorHandler) => {
+      _dbGetReceivingFile(peerId, fileHash, successHandler, errorHandler);
+    };
   },
 
-  // add additional receiving buffer of a file for a specific peer
-  addBuffer(peerId, fileHash, buffer) {
-    // adding additional receiving buffer
-    console.log(
-      `FileDataStore: starting to add a buffer to a receiving buffer list of a given file hash (${fileHash}) for a given peer(${peerId}) ...`
-    );
-
-    let bufferList = this.getBufferList(peerId, fileHash);
-    if (!bufferList) {
-      bufferList = [];
+  setExporter(peerId, fileHash, exporter) {
+    let hashToExporter = this.peerMap.get(peerId);
+    if (!hashToExporter) {
+      hashToExporter = {};
     }
-    bufferList.push(buffer);
-    this.overwriteBufferList(peerId, fileHash, bufferList);
+    hashToExporter[fileHash] = exporter;
+    this.peerMap.set(peerId, hashToExporter);
 
-    console.log(
-      `FileDataStore: adding a buffer to a receiving buffer list of a given file hash (${fileHash}) for a given peer(${peerId}) completed`
-    );
+    _receivingRelatedData.updateSlice(this.peerMap, _receivingFileExporterSliceKey);
+  },
 
-    // as well as adding additional receiving progress
-    _receivingProgressMap.addProgress(peerId, fileHash, buffer.byteLength);
+  resetExporter(peerId, fileHash) {
+    this.setExporter(peerId, fileHash, null);
+  },
+
+  putBuffer(peerId, fileHash, buffer) {
+    // adding additional receiving buffer
+    const onCachingPromiseFilfilled = (startOffset) => {
+      return _dbPutReceivingBufferPromiseBuilder(peerId, fileHash, buffer, startOffset);
+    };
+    _receivingCachingPromiseMap.addNextOnFulfilled(peerId, fileHash, onCachingPromiseFilfilled);
   },
 
   // reset buffer list to an empty list of a file for a specific peer
-  resetBufferList(peerId, fileHash) {
-    console.log(
-      `FileDataStore: starting to reset a receiving buffer list of a file hash (${fileHash}) to an empty list for a peer(${peerId}) ...`
-    );
-
-    this.overwriteBufferList(peerId, fileHash, []);
-
-    console.log(
-      `FileDataStore: resetting a receiving buffer list of a file hash (${fileHash}) to an empty list for a peer(${peerId}) has been completed`
-    );
-
-    // as well as resetting receiving progress
-    _receivingProgressMap.resetProgress(peerId, fileHash);
-  },
-
-  // delete the file hash to buffer list object for a specific peer
-  deleteHashToBufferList(peerId) {
-    this.peerMap.delete(peerId);
-    _receivingRelatedData.updateSlice(this.peerMap, _receivingBufferSliceKey);
-  },
-
-  // clear all
-  clear() {
-    this.peerMap.clear();
-    _receivingRelatedData.updateSlice(this.peerMap, _receivingBufferSliceKey);
+  resetBuffer(peerId, fileHash) {
+    const handleResetReceivingBufferComplete = () => {
+      _receivingProgressMap.resetProgress(peerId, fileHash);
+      this.resetExporter(peerId, fileHash);
+    };
+    _dbResetReceivingBuffer(peerId, fileHash, handleResetReceivingBufferComplete);
   },
 };
 
@@ -471,7 +733,7 @@ const shadowCopy = (obj) => {
   const copied = {};
   Object.keys(obj).forEach((property) => {
     copied[property] = obj[property];
-  })
+  });
   return copied;
 };
 
@@ -495,9 +757,10 @@ export default {
   get receivingMetaDataSliceKey() {
     return _receivingMetaDataSliceKey;
   },
-  get receivingBufferSliceKey() {
-    return _receivingBufferSliceKey;
+  get receivingFileExporterSliceKey() {
+    return _receivingFileExporterSliceKey;
   },
+
   get receivingProgressSliceKey() {
     return _receivingProgressSliceKey;
   },
@@ -509,9 +772,15 @@ export default {
   get sendingHashToMetaData() {
     return _sendingHashToMetaData;
   },
-  prepareSendingMetaData(hashToFile) {
+  prepareSendingMetaData(hashToFile, chunkSize, lastChunkSize) {
     for (const [fileHash, file] of Object.entries(hashToFile)) {
-      _sendingHashToMetaData[fileHash] = { name: file.name, type: file.type, size: file.size };
+      _sendingHashToMetaData[fileHash] = {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        chunkSize,
+        lastChunkSize,
+      };
     }
 
     console.log(
@@ -521,6 +790,8 @@ export default {
     );
 
     _sendingRelatedData.updateSlice(_sendingHashToMetaData, _sendingMetaDataSliceKey);
+
+    return _sendingHashToMetaData;
   },
   checkIfSendingMetaDataPrepared(hashToFile) {
     let checkingPassed = true;
@@ -585,16 +856,10 @@ export default {
   //
 
   addReceivingBuffer(peerId, fileHash, buffer) {
-    _receivingHashToBufferListMap.addBuffer(peerId, fileHash, buffer);
+    _receivingHashToExporterMap.putBuffer(peerId, fileHash, buffer);
   },
-  resetReceivingBufferList(peerId, fileHash) {
-    _receivingHashToBufferListMap.resetBufferList(peerId, fileHash);
-  },
-  deleteReceivingHashToBufferList(peerId) {
-    _receivingHashToBufferListMap.deleteHashToBufferList(peerId);
-  },
-  clearReceivingHashToBufferList() {
-    _receivingHashToBufferListMap.clear();
+  resetReceivingBuffer(peerId, fileHash) {
+    _receivingHashToExporterMap.resetBuffer(peerId, fileHash);
   },
 
   //
