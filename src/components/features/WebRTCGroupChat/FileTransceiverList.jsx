@@ -69,7 +69,7 @@ function FileTransceiver(props) {
         a.click();
         a.remove();
       }
-      receivingFileExporter(handleFileExportSuccess);
+      receivingFileExporter().then(handleFileExportSuccess).catch(console.error);
     };
   }
 

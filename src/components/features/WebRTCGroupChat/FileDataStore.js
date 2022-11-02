@@ -1,5 +1,5 @@
 /**
- * For UI modeling
+ * View model
  */
 
 const _sendingSliceContainerKey = "hashToConcatData";
@@ -20,7 +20,7 @@ const _sendingRelatedData = {
     console.log(
       `FileDataStore: the sending related data is updated to`,
       this,
-      `by sending status of ${isSendingStatusSending}`
+      `by sending status of isSending(${isSendingStatusSending})`
     );
 
     // listener
@@ -96,16 +96,60 @@ const _receivingRelatedData = {
 };
 
 /**
- * Sending file hash to file
+ * Sending meta data
  */
 
 let _sendingHashToMetaData = {};
 
+function _prepareSendingMetaData(hashToFile) {
+  _sendingHashToMetaData = {};
+
+  for (const [fileHash, file] of Object.entries(hashToFile)) {
+    _sendingHashToMetaData[fileHash] = {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      lastModified: file.lastModified,
+    };
+  }
+
+  console.log(
+    `FileDataStore: new sending file hash to file meta data object of`,
+    _sendingHashToMetaData,
+    `prepared`
+  );
+
+  _sendingRelatedData.updateSlice(_sendingHashToMetaData, _sendingMetaDataSliceKey);
+
+  return _sendingHashToMetaData;
+}
+
+function _checkIfSendingMetaDataPrepared(hashToFile) {
+  let checkingPassed = true;
+
+  for (const fileHash of Object.keys(hashToFile)) {
+    if (!_sendingHashToMetaData[fileHash]) {
+      checkingPassed = false;
+      break;
+    }
+  }
+
+  console.log(
+    `FileDataStore: the current sending file hash to file meta data object of`,
+    _sendingHashToMetaData,
+    `is ${checkingPassed ? "" : "not"} prepared for file buffer sending`
+  );
+
+  return checkingPassed;
+}
+
 /**
- * Sending cancelled
+ * Sending && Receiving cancelled
  */
 
-const _sendingCancelledFileMap = {
+let _sendingHashToCancelled = {};
+
+const _receivingCancelledMap = {
   peerMap: new Map(),
   getCancelled(peerId, fileHash) {
     let hashToCancelled = this.peerMap.get(peerId);
@@ -130,13 +174,16 @@ const _sendingCancelledFileMap = {
     hashToCancelled[fileHash] = cancelled;
     this.peerMap.set(peerId, hashToCancelled);
   },
+  deleteCancelled(peerId, fileHash) {
+    this.setCancelled(peerId, fileHash, false);
+  },
   clear() {
     this.peerMap = new Map();
   },
 };
 
 /**
- * Progress
+ *  Sending && Receiving progress
  */
 
 const _sendingProgressMap = createFileProgressMap(true);
@@ -179,16 +226,14 @@ function createFileProgressMap(isSending) {
       );
 
       if (isSending) {
-        const sendingHashToMinProgress = _computedSendingHashToMinProgress(
-          _sendingHashToMetaData,
-          this
-        );
+        const sendingHashToMinProgress = _sendingHashToMinProgress(_sendingHashToMetaData, this);
         _sendingRelatedData.updateSlice(sendingHashToMinProgress, _sendingMinProgressSliceKey);
 
         // sending status is dependent on sending minimum porgress
         const isSendingStatusSending = _isSendingStatusSending(
           sendingHashToMinProgress,
-          _sendingHashToMetaData
+          _sendingHashToMetaData,
+          _sendingHashToCancelled
         );
         _sendingRelatedData.updateSendingStatus(isSendingStatusSending);
       } else {
@@ -200,9 +245,12 @@ function createFileProgressMap(isSending) {
     addProgress: function (peerId, fileHash, additionalProgress) {
       const curProgress = this.getProgress(peerId, fileHash) + additionalProgress;
       this.setProgress(peerId, fileHash, curProgress);
+
       console.log(
         `FileDataStore: adding the additional progress ( ${additionalProgress} ) for a given file hash ( ${fileHash} ) to a given peer ( ${peerId} ) completed`
       );
+
+      return curProgress;
     },
 
     // reset the transceiving progress of a file for a specific peer to '0'
@@ -237,11 +285,10 @@ function createFileProgressMap(isSending) {
 }
 
 /**
- * Sending file hash to min progress
+ * Sending minimum progress
  */
 
-// compute and output a file hash to sending minimum progress
-const _computedSendingHashToMinProgress = function (sendingHashToMetaData, sendingProgressMap) {
+function _sendingHashToMinProgress(sendingHashToMetaData, sendingProgressMap) {
   if (!sendingHashToMetaData) {
     console.log(`FileDataStore: sendingHashToMetaData not exist`);
     return null;
@@ -258,15 +305,21 @@ const _computedSendingHashToMinProgress = function (sendingHashToMetaData, sendi
   );
 
   return sendingHashToMinProgress;
-};
+}
 
-const _isSendingStatusSending = function (sendingHashToMinProgress, sendingHashToMetaData) {
+/**
+ * Sending status
+ */
+
+function _isSendingStatusSending(
+  sendingHashToMinProgress,
+  sendingHashToMetaData,
+  sendingHashToCancelled
+) {
   let isSending = false;
 
   if (!sendingHashToMinProgress || !sendingHashToMetaData) {
-    console.log(
-      `FileDataStore _isSendingStatusSending: unexpected sending file hash to meta data or sending file hash to meta data`
-    );
+    console.log(`FileDataStore: unexpected params when getting sending status`);
     return isSending;
   }
 
@@ -274,6 +327,9 @@ const _isSendingStatusSending = function (sendingHashToMinProgress, sendingHashT
   let sumMinProgress = 0;
 
   for (const [fileHash, metaData] of Object.entries(sendingHashToMetaData)) {
+    if (sendingHashToCancelled[fileHash]) {
+      continue;
+    }
     const minProgress = sendingHashToMinProgress[fileHash];
     if (!metaData || typeof metaData.size !== "number" || typeof minProgress !== "number") {
       console.log(
@@ -291,7 +347,7 @@ const _isSendingStatusSending = function (sendingHashToMinProgress, sendingHashT
     isSending = true;
   }
   return isSending;
-};
+}
 
 /**
  * Receiving meta data
@@ -365,328 +421,164 @@ const _receivingHashToMetaDataMap = {
 };
 
 /**
- * Receiving persistence (using indexedDB)
+ * Receiving buffer persistence
  */
 
-let _db;
-let _isDBOpen = false;
-const _dbName = "WebRTCFileDataDB";
-const _dbReceivingBufferStoreName = "receivingBuffer";
-const _dbReceivingFileStoreName = "receivingFile";
-const _dbVersion = 1;
-const _dbIdKey = "bufferId";
-const _dbIdIndexName = "bufferId_idx";
+ function _addReceivingBuffer(peerId, fileHash, buffer) {
+  if (_receivingCancelledMap.getCancelled(peerId, fileHash)) {
+    console.log(
+      `FileDataStore: a receiving buffer of a file (${fileHash}) for a peer (${peerId}) cancelled during adding it`
+    );
+    return;
+  }
 
-_dbStartup();
+  if (!_IDBDatabasePromise) {
+    console.error(
+      `FileDataStore: unfound IDB promise during adding receiving buffer of a file (${fileHash}) for a peer (${peerId})`
+    );
+    return;
+  }
 
-function _dbReceivingBufferIdValue(peerId, fileHash, startOffset) {
-  return `${peerId}-${fileHash}-${startOffset}`;
+  _IDBDatabasePromise
+    .then((IDBDatabase) => {
+      if (!IDBDatabase) {
+        throw new Error(
+          `FileDataStore: unfound IDB during adding receiving buffer of a file (${fileHash}) for a peer (${peerId})`
+        );
+      }
+      _receivingHashToExporterMap.scheduleAddBufferTask(peerId, fileHash, IDBDatabase, buffer);
+    })
+    .catch((error) => {
+      console.error(error);
+    });
 }
 
-function _dbIdValue(peerId, fileHash) {
-  return `${peerId}-${fileHash}`;
+function _resetReceivingBuffer(peerId, fileHash) {
+  if (!_IDBDatabasePromise) {
+    console.error(
+      `FileDataStore: unfound IDB promise during resetting receiving buffer of a file (${fileHash}) for a peer (${peerId})`
+    );
+    return;
+  }
+
+  _IDBDatabasePromise
+    .then((IDBDatabase) => {
+      if (!IDBDatabase) {
+        throw new Error(
+          `FileDataStore: unfound IDB during resetting receiving buffer of a file (${fileHash}) for a peer (${peerId})`
+        );
+      }
+      _receivingHashToExporterMap.scheduleResetBufferTask(peerId, fileHash, IDBDatabase);
+    })
+    .catch((error) => {
+      console.error(error);
+    });
 }
 
-function _dbStartup() {
-  console.log(`FileDataStore: DB is opening ...`);
+let _IDBDatabasePromise;
+const _IDBDatabaseName = "WebRTCFileTransceivingDB";
+const _IDBReceivingBufferStoreName = "receivingBufferStore";
+const _IDBReceivingFileStoreName = "receivingFileStore";
+const _IDBDatabaseVersion = 1;
 
-  const dbOpenRequest = indexedDB.open(_dbName, _dbVersion);
+function _openIDB() {
+  _IDBDatabasePromise = new Promise((resolve, reject) => {
+    console.log(`FileDataStore: indexedDB is opening ...`);
 
-  dbOpenRequest.onerror = (event) => {
-    console.error(`FileDataStore: IndexedDB Open Request fail`);
-  };
-  dbOpenRequest.onupgradeneeded = function (event) {
-    // the existing database version is less than 2 (or it doesn't exist)
-    switch (
-      event.oldVersion // existing db version
-    ) {
-      case 0:
-        // version 0 means that the client had no database
-        // perform initialization
-        _db = dbOpenRequest.result;
-        if (!_db.objectStoreNames.contains(_dbReceivingBufferStoreName)) {
-          // store receiving buffer
-          const receivingBufferObjectStore = _db.createObjectStore(_dbReceivingBufferStoreName, {
-            keyPath: "bufferId",
-          });
-          receivingBufferObjectStore.createIndex("fileId_idx", "fileId");
-        }
-        if (!_db.objectStoreNames.contains(_dbReceivingFileStoreName)) {
-          // store files where each file is merged by receiving buffer
-          const receivingFileObjectStore = _db.createObjectStore(_dbReceivingFileStoreName, {
-            keyPath: "fileId",
-          });
-          receivingFileObjectStore.createIndex("fileId_idx", "fileId");
-        }
+    const request = indexedDB.open(_IDBDatabaseName, _IDBDatabaseVersion);
 
-      case 1:
-      // client had version 1
-      // update
-    }
-  };
-  dbOpenRequest.onsuccess = function () {
-    _db = dbOpenRequest.result;
-
-    _db.onversionchange = function () {
-      _db.close();
-      alert("Database is outdated, please reload the page.");
-      _isDBOpen = false;
+    request.onupgradeneeded = function (event) {
+      console.log(`FileDataStore: indexedDB is upgrading ...`);
+      switch (
+        event.oldVersion // existing db version
+      ) {
+        case 0:
+          // version 0 means that the client had no database, perform initialization
+          let database = request.result;
+          if (!database.objectStoreNames.contains(_IDBReceivingBufferStoreName)) {
+            // store receiving buffer
+            const receivingBufferObjectStore = database.createObjectStore(
+              _IDBReceivingBufferStoreName,
+              {
+                keyPath: "bufferId",
+              }
+            );
+            receivingBufferObjectStore.createIndex("fileId_idx", "fileId");
+          }
+          if (!database.objectStoreNames.contains(_IDBReceivingFileStoreName)) {
+            // store files where each file is merged by receiving buffer
+            const receivingFileObjectStore = database.createObjectStore(
+              _IDBReceivingFileStoreName,
+              {
+                keyPath: "fileId",
+              }
+            );
+            receivingFileObjectStore.createIndex("fileId_idx", "fileId");
+          }
+        case 1:
+        // client had version 1
+        // update
+      }
     };
-
-    _isDBOpen = true;
-
-    console.log(`FileDataStore: DB is now open`);
-
-    // ...the db is ready, use it...
-  };
-  dbOpenRequest.onblocked = function () {
-    alert("Can not open a new version database");
-    // this event shouldn't trigger if we handle onversionchange correctly
-
-    // it means that there's another open connection to the same database
-    // and it wasn't closed after db.onversionchange triggered for it
-  };
-}
-
-function _dbPutReceivingBufferPromiseBuilder(peerId, fileHash, buffer, startOffset) {
-  return new Promise((resolve, reject) => {
-    if (!_isDBOpen) {
-      console.log(`FileDataStore: unexpected closed DB, and cannot put receiving buffer to DB`);
-      return;
-    }
-
-    const transaction = _db.transaction(_dbReceivingBufferStoreName, "readwrite");
-    transaction.oncomplete = () => {
-      console.log(
-        `FileDataStore: put receiving buffer of a file (${fileHash}) for a peer (${peerId}) completed`
-      );
-
-      // update progress map && merge into file if possible
-      _receivingProgressMap.addProgress(peerId, fileHash, buffer.byteLength);
-      _dbMergeReceivingBufferIfPossible(peerId, fileHash);
-
-      // next put receiving buffer callback
-      const startOffeset = _receivingProgressMap.getProgress(peerId, fileHash);
-      resolve(startOffeset);
-    };
-    const receivingBufferStore = transaction.objectStore(_dbReceivingBufferStoreName);
-    const record = {
-      bufferId: `${peerId}-${fileHash}-${startOffset}`,
-      fileId: `${peerId}-${fileHash}`,
-      buffer: buffer,
-      startOffset: startOffset,
-    };
-
-    const request = receivingBufferStore.put(record);
     request.onsuccess = function () {
-      console.log(`FileDataStore: put receiving buffer to DB onsuccess`, request.result);
+      // ...the db is ready, use it...
+      console.log(`FileDataStore: indexedDB is now open`);
+
+      const database = request.result;
+      database.onversionchange = function () {
+        database.close();
+        alert("IndexedDB is outdated, please reload the page in order to upgrade it");
+      };
+      resolve(database);
     };
-    request.onerror = function () {
-      console.log(`FileDataStore: put receiving buffer to DB onerror`, request.error);
+    request.onblocked = function () {
+      // this event shouldn't trigger if we handle onversionchange correctly
+
+      // it means that there's another open connection to the same database
+      // and it wasn't closed after db.onversionchange triggered for it
+      reject();
+      alert(
+        "Can not open a new version of indexedDB, because an outdated version of it is still open, please try close the outdated one first"
+      );
+    };
+    request.onerror = (event) => {
+      console.error(`FileDataStore: IndexedDB Open Request fail`);
+      reject();
     };
   });
 }
 
-function _dbResetReceivingBuffer(peerId, fileHash, completionHandler) {
-  if (!_isDBOpen) {
-    console.log(`FileDataStore: unexpected closed DB, and cannot reset receiving buffer to DB`);
-    return;
-  }
-
-  const transaction = _db.transaction(_dbReceivingBufferStoreName, "readwrite");
-  transaction.oncomplete = () => {
-    if (completionHandler) {
-      console.log(
-        `FileDataStore: reset receiving buffer of a file (${fileHash}) for a peer (${peerId}) completed`
-      );
-      completionHandler();
-    }
-  };
-
-  const receivingBufferStore = transaction.objectStore(_dbReceivingBufferStoreName);
-  const index = receivingBufferStore.index("fileId_idx");
-  const indexValue = `${peerId}-${fileHash}`;
-
-  const openCursorRequest = index.openCursor(IDBKeyRange.only(indexValue));
-  openCursorRequest.onsuccess = function (event) {
-    console.log(`FileDataStore: reset receiving buffer from DB onsuccess`, event);
-    const cursor = event.target.result;
-    if (cursor) {
-      receivingBufferStore.delete(cursor.primaryKey);
-      cursor.continue();
-    }
-  };
-  openCursorRequest.onerror = function (event) {
-    console.log(`FileDataStore: reset receiving buffer from DB onerror`, event);
-  };
-}
-
-function _dbMergeReceivingBufferIfPossible(peerId, fileHash) {
-  const metaData = _receivingHashToMetaDataMap.getMetaData(peerId, fileHash);
-  const receivingProgress = _receivingProgressMap.getProgress(peerId, fileHash);
-
-  if (!metaData || typeof metaData.size !== "number" || receivingProgress < metaData.size) {
-    return;
-  }
-  if (!_isDBOpen) {
-    console.log(`FileDataStore: unexpected closed DB, and cannot merge receiving buffer from DB`);
-    if (failureHandler) {
-      failureHandler();
-    }
-    return;
-  }
-
-  const tmpBufferWrapperList = [];
-
-  const transaction = _db.transaction(_dbReceivingBufferStoreName, "readwrite");
-  const receivingBufferStore = transaction.objectStore(_dbReceivingBufferStoreName);
-  const index = receivingBufferStore.index("fileId_idx");
-  const indexValue = `${peerId}-${fileHash}`;
-
-  const openCursorRequest = index.openCursor(IDBKeyRange.only(indexValue));
-  openCursorRequest.onsuccess = function (event) {
-    console.log(`FileDataStore: get a cursor of receiving buffer from DB onsuccess`, event);
-
-    const cursor = event.target.result;
-    if (cursor) {
-      const record = cursor.value;
-      console.log(
-        `FileDataStore: a valid cursor of receiving buffer from DB, so build a buffer wrapper with arraybuffer`,
-        record.buffer,
-        `and startOffset (${record.startOffset})`
-      );
-
-      const bufferWrapper = {
-        buffer: record.buffer,
-        startOffset: record.startOffset,
-      };
-      tmpBufferWrapperList.push(bufferWrapper);
-
-      // const cursorDeleteRequest = cursor.delete();
-      // cursorDeleteRequest.onsuccess = (event) => {
-      //   console.log(
-      //     `FileDataStore: delete a vaild cursor of receiving buffer from DB onsuccess`,
-      //     event
-      //   );
-      // };
-      // cursorDeleteRequest.onerror = (event) => {
-      //   console.log(
-      //     `FileDataStore: delete a vaild cursor of receiving buffer from DB onerror`,
-      //     event
-      //   );
-      // };
-
-      cursor.continue();
-    } else {
-      console.log(
-        `FileDataStore: no more valid cursor of receiving buffer from DB, start sorting array buffer wrapper list and then creating file`,
-        tmpBufferWrapperList
-      );
-
-      const sortedBufferList = tmpBufferWrapperList
-        .sort((a, b) => {
-          return a.startOffset - b.startOffset;
-        })
-        .map((bufferWrapper) => bufferWrapper.buffer);
-      const file = new File([new Blob(sortedBufferList)], metaData.name, {
-        type: metaData.type,
-        lastModified: metaData.lastModified,
-      });
-      const transaction = _db.transaction(_dbReceivingFileStoreName, "readwrite");
-      transaction.oncomplete = () => {
-        console.log(
-          `FileDataStore: merge receiving buffer of a file (${fileHash}) for a peer (${peerId}) completed`
-        );
-
-        const exporter = _receivingHashToExporterMap.buildExporter(peerId, fileHash);
-        _receivingHashToExporterMap.setExporter(peerId, fileHash, exporter);
-      };
-      const receivingFileStore = transaction.objectStore(_dbReceivingFileStoreName);
-      const record = {
-        fileId: `${peerId}-${fileHash}`,
-        file: file,
-      };
-
-      const putRequest = receivingFileStore.put(record);
-      putRequest.onsuccess = function (event) {
-        console.log(`FileDataStore: set receiving file to DB onsuccess`, event);
-      };
-      putRequest.onerror = function (event) {
-        console.log(`FileDataStore: set receiving file to DB onerror`, event);
-      };
-    }
-  };
-  openCursorRequest.onerror = function (event) {
-    console.log(`FileDataStore: get receiving buffer from DB Error`, event);
-  };
-}
-
-function _dbGetReceivingFile(peerId, fileHash, successHandler, errorHandler) {
-  if (!_isDBOpen) {
-    console.log(`FileDataStore: unexpected closed DB, and cannot get receiving buffer from DB`);
-    return;
-  }
-
-  const transaction = _db.transaction(_dbReceivingFileStoreName, "readwrite");
-  const receivingFileStore = transaction.objectStore(_dbReceivingFileStoreName);
-  const primaryKeyValue = `${peerId}-${fileHash}`;
-
-  let file;
-
-  const getRequest = receivingFileStore.get(primaryKeyValue);
-  getRequest.onsuccess = (event) => {
-    const record = event.target.result;
-    if (record !== undefined) {
-      file = record.file;
-    } else {
-      console.log(`FileDataStore: no such file`);
-    }
-
-    if (successHandler) {
-      successHandler(file);
-    }
-  };
-  getRequest.onerror = (event) => {
-    console.log(`FileDataStore: get receiving file from DB onerror`, event);
-
-    if (errorHandler) {
-      errorHandler(event.target.error);
-    }
-  };
-}
-
-/**
- * Receiving data (Buffer)
- */
-
-const _receivingCachingPromiseMap = {
+const _receivingBufferIDBPersistingSchedulerMap = {
   peerMap: new Map(),
-  addNextOnFulfilled(peerId, fileHash, nextOnFulfilled) {
-    let cachingPromiseContainer = this.peerMap.get(peerId);
-    if (!cachingPromiseContainer) {
-      cachingPromiseContainer = {};
+  scheduleNextTask(peerId, fileHash, task) {
+    let hashToPersistingPromiseChain = this.peerMap.get(peerId);
+    if (!hashToPersistingPromiseChain) {
+      console.log(`FileDataStore: unfound file hash to persisting promise chain object`);
+      hashToPersistingPromiseChain = {};
     }
-    if (!cachingPromiseContainer[fileHash]) {
-      const initialStartOffset = 0;
-      cachingPromiseContainer[fileHash] = new Promise((resolve, reject) => {
-        resolve(initialStartOffset);
-      }).then(nextOnFulfilled);
-    } else {
-      cachingPromiseContainer[fileHash] = cachingPromiseContainer[fileHash].then(nextOnFulfilled);
+    if (!hashToPersistingPromiseChain[fileHash]) {
+      console.log(`FileDataStore: unfound persisting promise chain of a file (${fileHash})`);
+
+      hashToPersistingPromiseChain[fileHash] = new Promise((resolve, _) => {
+        const initialStartOffset = 0;
+        resolve({ fulFilledType: "RESET", startOffset: initialStartOffset });
+      });
     }
-    this.peerMap.set(peerId, cachingPromiseContainer);
+
+    hashToPersistingPromiseChain[fileHash] = hashToPersistingPromiseChain[fileHash].then(
+      task,
+      (error) => {
+        console.error(error);
+      }
+    );
+
+    this.peerMap.set(peerId, hashToPersistingPromiseChain);
   },
 };
 
 const _receivingHashToExporterMap = {
   // the receiving and peer-related file hash to file exporter container
   peerMap: new Map(),
-
-  buildExporter(peerId, fileHash) {
-    return (successHandler, errorHandler) => {
-      _dbGetReceivingFile(peerId, fileHash, successHandler, errorHandler);
-    };
-  },
 
   setExporter(peerId, fileHash, exporter) {
     let hashToExporter = this.peerMap.get(peerId);
@@ -703,45 +595,310 @@ const _receivingHashToExporterMap = {
     this.setExporter(peerId, fileHash, null);
   },
 
-  putBuffer(peerId, fileHash, buffer) {
-    // adding additional receiving buffer
-    const onCachingPromiseFilfilled = (startOffset) => {
-      return _dbPutReceivingBufferPromiseBuilder(peerId, fileHash, buffer, startOffset);
+  scheduleAddBufferTask(peerId, fileHash, IDBDatabase, buffer) {
+    const addIDBBufferTask = (fulFilledValue) => {
+      let fulFilledType = fulFilledValue ? fulFilledValue.fulFilledType : undefined;
+      let startOffset = fulFilledValue ? fulFilledValue.startOffset : undefined;
+
+      if (startOffset === undefined) {
+        console.log(`FileDataStore: skipped an invalid startOffset of ${startOffset}`);
+        return;
+      }
+
+      return _addIDBReceivingBuffer(peerId, fileHash, IDBDatabase, buffer, startOffset);
     };
-    _receivingCachingPromiseMap.addNextOnFulfilled(peerId, fileHash, onCachingPromiseFilfilled);
+    _receivingBufferIDBPersistingSchedulerMap.scheduleNextTask(peerId, fileHash, addIDBBufferTask);
+    console.log(
+      `FileDataStore: scheduled adding receiving buffer of a file (${fileHash}) for a peer (${peerId})`
+    );
   },
 
   // reset buffer list to an empty list of a file for a specific peer
-  resetBuffer(peerId, fileHash) {
-    const handleResetReceivingBufferComplete = () => {
-      _receivingProgressMap.resetProgress(peerId, fileHash);
-      this.resetExporter(peerId, fileHash);
+  scheduleResetBufferTask(peerId, fileHash, IDBDatabase) {
+    const resetIDBBufferTask = (fulFilledValue) => {
+      let fulFilledType = fulFilledValue ? fulFilledValue.fulFilledType : undefined;
+      let startOffset = fulFilledValue ? fulFilledValue.startOffset : undefined;
+
+      return _resetIDBReceivingBuffer(peerId, fileHash, IDBDatabase);
     };
-    _dbResetReceivingBuffer(peerId, fileHash, handleResetReceivingBufferComplete);
+    _receivingBufferIDBPersistingSchedulerMap.scheduleNextTask(
+      peerId,
+      fileHash,
+      resetIDBBufferTask
+    );
+    console.log(
+      `FileDataStore: scheduled resetting receiving buffer of a file (${fileHash}) for a peer (${peerId})`
+    );
   },
 };
+
+function _addIDBReceivingBuffer(peerId, fileHash, IDBDatabase, buffer, startOffset) {
+  return new Promise((resolve, reject) => {
+    const transaction = IDBDatabase.transaction(_IDBReceivingBufferStoreName, "readwrite");
+    const store = transaction.objectStore(_IDBReceivingBufferStoreName);
+    const request = store.put({
+      bufferId: `${peerId}-${fileHash}-${startOffset}`,
+      fileId: `${peerId}-${fileHash}`,
+      buffer: buffer,
+      startOffset: startOffset,
+    });
+    let isOperationSuccessful = true;
+
+    request.onsuccess = function (event) {
+      console.log(`FileDataStore: IDB request to add(put) receiving buffer onsuccess`, event);
+    };
+    request.onerror = function (event) {
+      console.log(
+        `FileDataStore: IDB request to add(put) receiving buffer onerror, start to rollback`,
+        event
+      );
+      isOperationSuccessful = false;
+    };
+    transaction.onerror = (event) => {};
+    transaction.oncomplete = (event) => {
+      console.log(
+        `FileDataStore: IDB transaction to add(put) receiving buffer of a file (${fileHash}) for a peer (${peerId}) from startOffset (${startOffset}) oncomplete`
+      );
+
+      if (!isOperationSuccessful) {
+        reject(undefined);
+        return;
+      }
+
+      if (_receivingCancelledMap.getCancelled(peerId, fileHash)) {
+        console.log(`FileDataStore: due to receiving cancelled`);
+
+        // perform IDB rollback because of a receiving file cancelled
+        const transaction = IDBDatabase.transaction(_IDBReceivingBufferStoreName, "readwrite");
+        const store = transaction.objectStore(_IDBReceivingBufferStoreName);
+        const request = store.delete(`${peerId}-${fileHash}-${startOffset}`);
+        request.onsuccess = function (event) {
+          console.log(
+            `FileDataStore: IDB manaully rollbacking request to delete receiving buffer onsuccess`,
+            event
+          );
+        };
+        request.onerror = function (event) {
+          console.log(
+            `FileDataStore: IDB manaully rollbacking request to delete receiving buffer onerror`,
+            event
+          );
+        };
+        transaction.oncomplete = (event) => {
+          console.log(
+            `FileDataStore: IDB manaully rollbacking transaction to delete receiving buffer of a file (${fileHash}) for a peer (${peerId}) from startOffset (${startOffset}) oncomplete`
+          );
+        };
+
+        reject(undefined);
+        return;
+      }
+
+      // update progress map && perform merging buffer into a file if needed
+      const nextStartOffset = _receivingProgressMap.addProgress(
+        peerId,
+        fileHash,
+        buffer.byteLength
+      );
+      const metaData = _receivingHashToMetaDataMap.getMetaData(peerId, fileHash);
+      const isMergingBufferNeeded = metaData && nextStartOffset >= metaData.size;
+      if (isMergingBufferNeeded) {
+        _mergeIDBReceivingBufferIfNeeded(peerId, fileHash, IDBDatabase);
+        resolve({ fulFilledType: "ADD", startOffset: 0 });
+        return;
+      }
+      resolve({ fulFilledType: "ADD", startOffset: nextStartOffset });
+    };
+  });
+}
+
+function _mergeIDBReceivingBufferIfNeeded(peerId, fileHash, IDBDatabase) {
+  // get all receiving buffer of a file, from indexedDB, for merging purpose
+  const transaction = IDBDatabase.transaction(_IDBReceivingBufferStoreName, "readonly");
+  const store = transaction.objectStore(_IDBReceivingBufferStoreName);
+  const index = store.index("fileId_idx");
+  const request = index.openCursor(IDBKeyRange.only(`${peerId}-${fileHash}`));
+  const bufferWrapperList = [];
+
+  request.onerror = function (event) {
+    console.log(`FileDataStore: IDB request to open cursor of receiving buffer onerror`, event);
+  };
+  request.onsuccess = function (event) {
+    console.log(`FileDataStore: IDB request to open cursor of receiving buffer onsuccess`, event);
+
+    const cursor = event.target.result;
+    if (cursor) {
+      console.log(
+        `FileDataStore: it is a valid cursor of receiving buffer including startOffset (${cursor.value.startOffset})`
+      );
+
+      const record = cursor.value;
+      bufferWrapperList.push({
+        buffer: record.buffer,
+        startOffset: record.startOffset,
+      });
+      cursor.continue();
+    } else {
+      console.log(
+        `FileDataStore: ending up with a invalid cursor of receiving buffer, time to creat a file with a buffer wrapper list of`,
+        bufferWrapperList
+      );
+
+      // merge a list of arraybuffer into a file
+      const sortedBufferList = bufferWrapperList
+        .sort((a, b) => {
+          return a.startOffset - b.startOffset;
+        })
+        .map((bufferWrapper) => bufferWrapper.buffer);
+      const metaData = _receivingHashToMetaDataMap.getMetaData(peerId, fileHash);
+      const file = new File([new Blob(sortedBufferList)], metaData.name, {
+        type: metaData.type,
+        lastModified: metaData.lastModified,
+      });
+
+      // add the file into IDB
+      const transaction = IDBDatabase.transaction(_IDBReceivingFileStoreName, "readwrite");
+      const store = transaction.objectStore(_IDBReceivingFileStoreName);
+      const request = store.put({
+        fileId: `${peerId}-${fileHash}`,
+        file: file,
+      });
+
+      request.onsuccess = function (event) {
+        console.log(
+          `FileDataStore: IDB request to add(put) a merged receiving file onsuccess`,
+          event
+        );
+      };
+      request.onerror = function (event) {
+        console.log(
+          `FileDataStore: IDB request to add(put) a merged receiving file onerror`,
+          event
+        );
+      };
+      transaction.oncomplete = (event) => {
+        console.log(
+          `FileDataStore: IDB transaction to add(put) a merged receiving file (${fileHash}) for a peer (${peerId}) oncomplete`,
+          event
+        );
+        // after the file added into IDB, make a file exporter to export this file from indexedDB for future usage
+        const exporter = () => {
+          return _getIDBReceivingFile(peerId, fileHash, IDBDatabase);
+        };
+        _receivingHashToExporterMap.setExporter(peerId, fileHash, exporter);
+      };
+    }
+  };
+}
+
+function _getIDBReceivingFile(peerId, fileHash, IDBDatabase) {
+  return new Promise((resolve, reject) => {
+    const transaction = IDBDatabase.transaction(_IDBReceivingFileStoreName, "readwrite");
+    const store = transaction.objectStore(_IDBReceivingFileStoreName);
+    const request = store.get(`${peerId}-${fileHash}`);
+    let isOperationSuccessful = true;
+    let file;
+
+    request.onsuccess = (event) => {
+      console.log(`FileDataStore: IDB request to get a receiving file onsuccess`, event);
+
+      const record = event.target.result;
+      if (!record) {
+        console.log(
+          `FileDataStore: unexpected empty record of receiving file (${fileHash}) for a peer (${peerId})`
+        );
+        return;
+      }
+      file = record.file;
+    };
+    request.onerror = (event) => {
+      console.log(`FileDataStore: IDB request to get a receiving file onerror`, event);
+      isOperationSuccessful = false;
+    };
+    transaction.oncomplete = (event) => {
+      console.log(
+        `FileDataStore: IDB transaction to get a receiving file (${fileHash}) for a peer (${peerId}) oncomplete`,
+        event
+      );
+
+      if (!isOperationSuccessful) {
+        reject();
+        return;
+      }
+
+      resolve(file);
+    };
+  });
+}
+
+function _resetIDBReceivingBuffer(peerId, fileHash, IDBDatabase) {
+  return new Promise((resolve, reject) => {
+    const transaction = IDBDatabase.transaction(_IDBReceivingBufferStoreName, "readwrite");
+    const store = transaction.objectStore(_IDBReceivingBufferStoreName);
+    const index = store.index("fileId_idx");
+    const request = index.openCursor(IDBKeyRange.only(`${peerId}-${fileHash}`));
+    let isOperationSuccessful = true;
+
+    request.onsuccess = function (event) {
+      console.log(`FileDataStore: IDB request to open cursor of receiving buffer onsuccess`, event);
+
+      const cursor = event.target.result;
+      if (cursor) {
+        const request = store.delete(cursor.primaryKey);
+        request.onsuccess = function (event) {
+          console.log(`FileDataStore: IDB request to delete a receiving buffer onsuccess`, event);
+        };
+        request.onerror = function (event) {
+          console.log(`FileDataStore: IDB request to delete a receiving buffer onerror`, event);
+          isOperationSuccessful = false;
+        };
+        cursor.continue();
+      }
+    };
+    request.onerror = function (event) {
+      console.log(`FileDataStore: IDB request to open cursor of receiving buffer onerror`, event);
+      isOperationSuccessful = false;
+    };
+    transaction.oncomplete = () => {
+      console.log(
+        `FileDataStore: IDB transaction to open cursor and delete receiving buffer of a file (${fileHash}) for a peer (${peerId}) oncomplete`
+      );
+
+      if (!isOperationSuccessful) {
+        reject();
+        return;
+      }
+
+      _receivingProgressMap.resetProgress(peerId, fileHash);
+      resolve({ fulFilledType: "RESET", startOffset: 0 });
+    };
+  });
+}
+
+_openIDB();
 
 /**
  * Util
  */
 
-const isStringValid = (string) => {
+function isStringValid(string) {
   return string && string.length > 0;
-};
+}
 
-const shadowCopy = (obj) => {
+function shadowCopy(obj) {
   const copied = {};
   Object.keys(obj).forEach((property) => {
     copied[property] = obj[property];
   });
   return copied;
-};
+}
 
 export default {
   //
-  // slice keys
+  // Sending && Receiving view model
   //
 
+  // sending slice keys inside sending view model
   get sendingSliceContainerKey() {
     return _sendingSliceContainerKey;
   },
@@ -751,6 +908,7 @@ export default {
   get sendingMinProgressSliceKey() {
     return _sendingMinProgressSliceKey;
   },
+  // receiving slice keys inside receiving view model
   get receivingSliceContainerKey() {
     return _receivingSliceContainerKey;
   },
@@ -760,75 +918,56 @@ export default {
   get receivingFileExporterSliceKey() {
     return _receivingFileExporterSliceKey;
   },
-
   get receivingProgressSliceKey() {
     return _receivingProgressSliceKey;
   },
+  // sending view model changing listener
+  onSendingRelatedDataChanged: function (handler) {
+    _handleSendingRelatedDataChange = handler;
+  },
+  // receiving view model changing listener
+  onReceivingRelatedDataChanged: function (handler) {
+    _handleReceivingRelatedDataChange = handler;
+  },
 
   //
-  // Sending file hash to file
+  // Sending meta data
   //
 
-  get sendingHashToMetaData() {
+  get preparedSendingHashToMetaData() {
     return _sendingHashToMetaData;
   },
-  prepareSendingMetaData(hashToFile, chunkSize, lastChunkSize) {
-    for (const [fileHash, file] of Object.entries(hashToFile)) {
-      _sendingHashToMetaData[fileHash] = {
-        name: file.name,
-        type: file.type,
-        size: file.size,
-        chunkSize,
-        lastChunkSize,
-      };
-    }
-
-    console.log(
-      `FileDataStore: new sending file hash to file meta data object of`,
-      _sendingHashToMetaData,
-      `prepared`
-    );
-
-    _sendingRelatedData.updateSlice(_sendingHashToMetaData, _sendingMetaDataSliceKey);
-
-    return _sendingHashToMetaData;
+  prepareSendingMetaData(hashToFile) {
+    return _prepareSendingMetaData(hashToFile);
   },
   checkIfSendingMetaDataPrepared(hashToFile) {
-    let checkingPassed = true;
-    for (const fileHash of Object.keys(hashToFile)) {
-      if (!_sendingHashToMetaData[fileHash]) {
-        checkingPassed = false;
-        break;
-      }
-    }
-
-    console.log(
-      `FileDataStore: the current sending file hash to file meta data object of`,
-      _sendingHashToMetaData,
-      `is ${checkingPassed ? "" : "not"} prepared for file buffer sending`
-    );
-
-    return checkingPassed;
+    return _checkIfSendingMetaDataPrepared(hashToFile);
   },
 
   //
-  // Sending cancelled
+  // Sending && Receiving cancelled
   //
 
-  getSendingCancelled(peerId, filehash) {
-    return _sendingCancelledFileMap.getCancelled(peerId, filehash);
+  // sending cancelled
+  getSendingCancelled(fileHash) {
+    return _sendingHashToCancelled[fileHash];
   },
-  setSendingCancelled(peerId, fileHash, cancelled) {
-    _sendingCancelledFileMap.setCancelled(peerId, fileHash, cancelled);
+  setSendingCancelled(fileHash, cancelled) {
+    _sendingHashToCancelled[fileHash] = cancelled;
   },
   clearSendingCancelled() {
-    _sendingCancelledFileMap.clear();
+    _sendingHashToCancelled = {};
+  },
+  // receiving cancelled
+  setReceivingCancelled(peerId, fileHash, cancelled) {
+    _receivingCancelledMap.setCancelled(peerId, fileHash, cancelled);
+  },
+  deleteReceivingCancelled(peerId, fileHash) {
+    _receivingCancelledMap.deleteCancelled(peerId, fileHash);
   },
 
   //
-  // Sending Progress
-  //
-  // attention: only sender can directly update progress-related data
+  // Sending progress
   //
 
   getSendingProgress(peerId, fileHash) {
@@ -850,26 +989,13 @@ export default {
   },
 
   //
-  // Receiving data (Buffer)
-  //
-  // attention: progress-related data is updated internally
+  // Receiving buffer persistence
   //
 
   addReceivingBuffer(peerId, fileHash, buffer) {
-    _receivingHashToExporterMap.putBuffer(peerId, fileHash, buffer);
+    _addReceivingBuffer(peerId, fileHash, buffer);
   },
   resetReceivingBuffer(peerId, fileHash) {
-    _receivingHashToExporterMap.resetBuffer(peerId, fileHash);
-  },
-
-  //
-  // Listeners
-  //
-
-  onSendingRelatedDataChanged: function (handler) {
-    _handleSendingRelatedDataChange = handler;
-  },
-  onReceivingRelatedDataChanged: function (handler) {
-    _handleReceivingRelatedDataChange = handler;
+    _resetReceivingBuffer(peerId, fileHash);
   },
 };
