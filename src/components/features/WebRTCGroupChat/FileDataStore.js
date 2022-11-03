@@ -475,6 +475,54 @@ function _resetReceivingBuffer(peerId, fileHash) {
     });
 }
 
+function _resetAllReceivingBuffers() {
+  if (!_IDBDatabasePromise) {
+    console.error(
+      `FileDataStore: unfound IDB promise during resetting all receiving buffers`
+    );
+    return;
+  }
+
+  _IDBDatabasePromise
+    .then((IDBDatabase) => {
+      if (!IDBDatabase) {
+        throw new Error(
+          `FileDataStore: unfound IDB during resetting all receiving buffers`
+        );
+      }
+
+      _resetIDBAllReceivingBuffers(IDBDatabase);
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+}
+
+function _resetAllReceivingBufferMergedFiles() {
+  const allFileIds = _receivingHashToExporterMap.avaliableFileIds;
+
+  if (!_IDBDatabasePromise) {
+    console.error(
+      `FileDataStore: unfound IDB promise during resetting all receiving buffer merged files with all file Ids`, allFileIds
+    );
+    return;
+  }
+
+  _IDBDatabasePromise
+    .then((IDBDatabase) => {
+      if (!IDBDatabase) {
+        throw new Error(
+          `FileDataStore: unfound IDB during resetting all receiving buffer merged files with all file Ids`
+        );
+      }
+
+      _resetIDBReceivingBufferMergedFiles(allFileIds, IDBDatabase);
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+}
+
 let _IDBDatabasePromise;
 const _IDBDatabaseName = "WebRTCFileTransceivingDB";
 const _IDBReceivingBufferStoreName = "receivingBufferStore";
@@ -579,6 +627,8 @@ const _receivingBufferIDBPersistingSchedulerMap = {
 const _receivingHashToExporterMap = {
   // the receiving and peer-related file hash to file exporter container
   peerMap: new Map(),
+  
+  avaliableFileIds: [],
 
   setExporter(peerId, fileHash, exporter) {
     let hashToExporter = this.peerMap.get(peerId);
@@ -588,11 +638,23 @@ const _receivingHashToExporterMap = {
     hashToExporter[fileHash] = exporter;
     this.peerMap.set(peerId, hashToExporter);
 
+    if (exporter) {
+      this.avaliableFileIds.push(_buildFileId(peerId, fileHash));
+    } else {
+      const fileId = _buildFileId(peerId, fileHash);
+      const deletionIndex = this.avaliableFileIds.indexOf(fileId);
+      this.avaliableFileIds.splice(deletionIndex, 1);
+    }
     _receivingRelatedData.updateSlice(this.peerMap, _receivingFileExporterSliceKey);
   },
 
-  resetExporter(peerId, fileHash) {
-    this.setExporter(peerId, fileHash, null);
+  clearExporters() {
+    this.peerMap.forEach((hashToExporter, peerId) => {
+      Object.entries(hashToExporter).forEach(([fileHash, exporter]) => {
+        this.setExporter(peerId, fileHash, null);
+      })
+    })
+    _receivingRelatedData.updateSlice(this.peerMap, _receivingFileExporterSliceKey);
   },
 
   scheduleAddBufferTask(peerId, fileHash, IDBDatabase, buffer) {
@@ -637,8 +699,8 @@ function _addIDBReceivingBuffer(peerId, fileHash, IDBDatabase, buffer, startOffs
     const transaction = IDBDatabase.transaction(_IDBReceivingBufferStoreName, "readwrite");
     const store = transaction.objectStore(_IDBReceivingBufferStoreName);
     const request = store.put({
-      bufferId: `${peerId}-${fileHash}-${startOffset}`,
-      fileId: `${peerId}-${fileHash}`,
+      bufferId: _buildBufferId(peerId, fileHash, startOffset),
+      fileId: _buildFileId(peerId, fileHash),
       buffer: buffer,
       startOffset: startOffset,
     });
@@ -671,7 +733,7 @@ function _addIDBReceivingBuffer(peerId, fileHash, IDBDatabase, buffer, startOffs
         // perform IDB rollback because of a receiving file cancelled
         const transaction = IDBDatabase.transaction(_IDBReceivingBufferStoreName, "readwrite");
         const store = transaction.objectStore(_IDBReceivingBufferStoreName);
-        const request = store.delete(`${peerId}-${fileHash}-${startOffset}`);
+        const request = store.delete(_buildBufferId(peerId, fileHash, startOffset));
         request.onsuccess = function (event) {
           console.log(
             `FileDataStore: IDB manaully rollbacking request to delete receiving buffer onsuccess`,
@@ -717,7 +779,7 @@ function _mergeIDBReceivingBufferIfNeeded(peerId, fileHash, IDBDatabase) {
   const transaction = IDBDatabase.transaction(_IDBReceivingBufferStoreName, "readonly");
   const store = transaction.objectStore(_IDBReceivingBufferStoreName);
   const index = store.index("fileId_idx");
-  const request = index.openCursor(IDBKeyRange.only(`${peerId}-${fileHash}`));
+  const request = index.openCursor(IDBKeyRange.only(_buildFileId(peerId, fileHash)));
   const bufferWrapperList = [];
 
   request.onerror = function (event) {
@@ -737,6 +799,7 @@ function _mergeIDBReceivingBufferIfNeeded(peerId, fileHash, IDBDatabase) {
         buffer: record.buffer,
         startOffset: record.startOffset,
       });
+
       cursor.continue();
     } else {
       console.log(
@@ -760,7 +823,7 @@ function _mergeIDBReceivingBufferIfNeeded(peerId, fileHash, IDBDatabase) {
       const transaction = IDBDatabase.transaction(_IDBReceivingFileStoreName, "readwrite");
       const store = transaction.objectStore(_IDBReceivingFileStoreName);
       const request = store.put({
-        fileId: `${peerId}-${fileHash}`,
+        fileId: _buildFileId(peerId, fileHash),
         file: file,
       });
 
@@ -781,11 +844,32 @@ function _mergeIDBReceivingBufferIfNeeded(peerId, fileHash, IDBDatabase) {
           `FileDataStore: IDB transaction to add(put) a merged receiving file (${fileHash}) for a peer (${peerId}) oncomplete`,
           event
         );
+
         // after the file added into IDB, make a file exporter to export this file from indexedDB for future usage
         const exporter = () => {
           return _getIDBReceivingFile(peerId, fileHash, IDBDatabase);
         };
         _receivingHashToExporterMap.setExporter(peerId, fileHash, exporter);
+
+        // after the file added into IDB, delete all receiving buffers which are merged into it
+        const transaction = IDBDatabase.transaction(_IDBReceivingBufferStoreName, "readwrite");
+        const store = transaction.objectStore(_IDBReceivingBufferStoreName);
+        const index = store.index("fileId_idx");
+        const request = index.openCursor(IDBKeyRange.only(_buildFileId(peerId, fileHash)));
+        request.onerror = function (event) {
+          console.log(`FileDataStore: IDB request to open cursor of receiving buffer onerror`, event);
+        };
+        request.onsuccess = function (event) {
+          console.log(`FileDataStore: IDB request to open cursor of receiving buffer onsuccess`, event);
+
+          const cursor = event.target.result;
+          if (cursor) {
+            const request = store.delete(cursor.primaryKey);
+            request.onsuccess = function (event) {};
+            request.onerror = function (event) {};
+            cursor.continue();
+          }
+        }
       };
     }
   };
@@ -795,7 +879,7 @@ function _getIDBReceivingFile(peerId, fileHash, IDBDatabase) {
   return new Promise((resolve, reject) => {
     const transaction = IDBDatabase.transaction(_IDBReceivingFileStoreName, "readwrite");
     const store = transaction.objectStore(_IDBReceivingFileStoreName);
-    const request = store.get(`${peerId}-${fileHash}`);
+    const request = store.get(_buildFileId(peerId, fileHash));
     let isOperationSuccessful = true;
     let file;
 
@@ -831,12 +915,41 @@ function _getIDBReceivingFile(peerId, fileHash, IDBDatabase) {
   });
 }
 
+function _resetIDBAllReceivingBuffers(IDBDatabase) {
+  return new Promise((resolve, reject) => {
+    const transaction = IDBDatabase.transaction(_IDBReceivingBufferStoreName, "readwrite");
+    const store = transaction.objectStore(_IDBReceivingBufferStoreName);
+    const request = store.clear();
+    let isOperationSuccessful = true;
+
+    request.onsuccess = function (event) {
+      console.log(`FileDataStore: IDB request to clear all receiving buffers onsuccess`, event);
+    };
+    request.onerror = function (event) {
+      console.log(`FileDataStore: IDB request to clear all receiving buffers onerror`, event);
+      isOperationSuccessful = false;
+    };
+
+    transaction.oncomplete = () => {
+      console.log(
+        `FileDataStore: IDB transaction to clear all receiving buffers oncomplete`
+      );
+
+      if (!isOperationSuccessful) {
+        reject();
+        return;
+      }
+      resolve();
+    };
+  });
+}
+
 function _resetIDBReceivingBuffer(peerId, fileHash, IDBDatabase) {
   return new Promise((resolve, reject) => {
     const transaction = IDBDatabase.transaction(_IDBReceivingBufferStoreName, "readwrite");
     const store = transaction.objectStore(_IDBReceivingBufferStoreName);
     const index = store.index("fileId_idx");
-    const request = index.openCursor(IDBKeyRange.only(`${peerId}-${fileHash}`));
+    const request = index.openCursor(IDBKeyRange.only(_buildFileId(peerId, fileHash)));
     let isOperationSuccessful = true;
 
     request.onsuccess = function (event) {
@@ -875,10 +988,85 @@ function _resetIDBReceivingBuffer(peerId, fileHash, IDBDatabase) {
   });
 }
 
+function _resetIDBReceivingBufferMergedFiles(fileIds, IDBDatabase) {
+  const intersectingFileIds = _receivingHashToExporterMap.avaliableFileIds.filter(x => fileIds.includes(x));
+  const isAllResetting = (intersectingFileIds.length >= _receivingHashToExporterMap.avaliableFileIds.length);
+
+  return new Promise((resolve, reject) => {
+    const transaction = IDBDatabase.transaction(_IDBReceivingFileStoreName, "readwrite");
+    const store = transaction.objectStore(_IDBReceivingFileStoreName);
+    let isOperationSuccessful = true;
+
+    if (isAllResetting) {
+      const request = store.clear();
+      request.onsuccess = function (event) {
+        console.log(`FileDataStore: IDB request to clear all receiving buffer merged files onsuccess`, event);
+        _receivingHashToExporterMap.clearExporters();
+      };
+      request.onerror = function (event) {
+        console.log(`FileDataStore: IDB request to clear all receiving buffer merged files onerror`, event);
+        isOperationSuccessful = false;
+      };
+    } else {
+      const request = store.openCursor();
+      request.onsuccess = function (event) {
+        const cursor = event.target.result;
+
+        console.log(
+          `FileDataStore: IDB request to open cursor of receiving buffer merged file 'onsuccess' with a primaryKey(${cursor.primaryKey})`,
+          event
+        );
+
+        if (cursor) {
+          const fileId = cursor.primaryKey;
+          if (intersectingFileIds.includes(fileId)) {
+            const request = store.delete(fileId);
+            request.onsuccess = function (event) {
+              console.log(
+                `FileDataStore: IDB request to delete a receiving buffer merged file with fileId(${cursor.primaryKey}) onsuccess`,
+                event
+              );
+
+              const { peerId, fileHash } = _parseFileId(fileId);
+              _receivingHashToExporterMap.setExporter(peerId, fileHash, null);
+            };
+            request.onerror = function (event) {
+              console.log(
+                `FileDataStore: IDB request to delete a receiving buffer merged file with fileId(${cursor.primaryKey}) onerror`,
+                event
+              );
+            };
+          }
+          cursor.continue();
+        }
+      }
+      request.onerror = function (event) {
+        isOperationSuccessful = false;
+        console.log(
+          `FileDataStore: IDB request to open cursor of receiving buffer merged files onerror`,
+          event
+        );
+      };
+    }
+
+    transaction.oncomplete = () => {
+      console.log(
+        `FileDataStore: IDB transaction to delete receiving buffer merged files oncomplete`
+      );
+
+      if (!isOperationSuccessful) {
+        reject()
+        return;
+      }
+      resolve();
+    };
+  });
+}
+
 _openIDB();
 
 /**
- * Util
+ * Utils
  */
 
 function isStringValid(string) {
@@ -891,6 +1079,32 @@ function shadowCopy(obj) {
     copied[property] = obj[property];
   });
   return copied;
+}
+
+function _buildFileId(peerId, fileHash) {
+  return `${peerId}-${fileHash}`;
+}
+
+function _buildBufferId(peerId, fileHash, startOffset) {
+  return `${peerId}-${fileHash}-${startOffset}`;
+}
+
+function _parseFileId(fileId) {
+  const elements = fileId.split("-");
+  return { 
+    peerId: elements.slice(0, -1).join(''), 
+    fileHash: elements[elements.length - 1] 
+  };
+}
+
+function _parseBufferId(bufferId) {
+  const elements = bufferId.split("-");
+  const startOffsetString = elements[elements.length - 1];
+  return { 
+    peerId: elements.slice(0, -2).join(''), 
+    fileHash: elements[elements.length - 2],  
+    startOffset: (Number(startOffsetString) !== NaN ? Number(startOffsetString) : undefined) 
+  }
 }
 
 export default {
@@ -998,4 +1212,10 @@ export default {
   resetReceivingBuffer(peerId, fileHash) {
     _resetReceivingBuffer(peerId, fileHash);
   },
+  resetAllReceivingBuffers() {
+    _resetAllReceivingBuffers();
+  },
+  resetAllReceivingBufferMergedFiles() {
+    _resetAllReceivingBufferMergedFiles();
+  }
 };

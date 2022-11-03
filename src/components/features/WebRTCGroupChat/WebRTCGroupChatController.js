@@ -1108,6 +1108,10 @@ async function _handleReceiverChannelFileBufferMessage(event, peerId) {
   }
 }
 
+function _resetAllReceivingBufferMergedFiles() {
+  FileDataStore.resetAllReceivingBufferMergedFiles();
+}
+
 /**
  * Media Streams management
  */
@@ -1606,6 +1610,7 @@ function _leaveRoom() {
 
   _clearAllPeerTransceivers();
   _closeALLPeerConnections();
+  _resetAllReceivingBufferMergedFiles();
 
   SocketService.emitMessageEvent(_webSocketUrl, SocketService.typeEnum.LEAVE_ROOM, {});
 }
@@ -1756,6 +1761,14 @@ export default {
   },
   cancelFileSendingToAllPeer(fileHash) {
     _cancelSenderFileSendingToAllPeer(fileHash);
+  },
+
+  // receiving resetting (all buffers / downloadable files, will be deleted)
+  resetAllFileBuffersReceived() {
+    FileDataStore.resetAllReceivingBuffers();
+  },
+  resetAllFilesReceived() {
+    _resetAllReceivingBufferMergedFiles()
   },
 
   // sending slice keys inside sending view model

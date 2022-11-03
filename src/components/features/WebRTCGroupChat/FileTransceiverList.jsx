@@ -59,8 +59,12 @@ function FileTransceiver(props) {
   if (receivingDownloadable) {
     handleReceivingDownload = () => {
       const handleFileExportSuccess = (file) => {
+        if (file === undefined) {
+          alert('This cached file has been deleted, please let your peer send it again');
+          return;
+        }
         if (file instanceof File === false) {
-          console.log(`FileTransceiver: unexpected params received from file Export handler`, file);
+          console.log(`FileTransceiver: unexpected type of params received from file Export handler`, file);
           return;
         }
         const a = document.createElement("a");

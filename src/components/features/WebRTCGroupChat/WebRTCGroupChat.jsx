@@ -266,6 +266,18 @@ export default function WebRTCGroupChat() {
       WebRTCGroupChatController.cancelAllFileSending();
     }
   };
+  // click to reset all file buffers received
+  const onResetAllFileBuffersReceivedClick = (e) => {
+    if (joinedRoomId.length > 0) {
+      WebRTCGroupChatController.resetAllFileBuffersReceived();
+    }
+  }
+  // click to reset all files received
+  const onResetAllFilesReceivedClick = (e) => {
+    if (joinedRoomId.length > 0) {
+      WebRTCGroupChatController.resetAllFilesReceived();
+    }
+  }
 
   /**
    * Stateful Rendering
@@ -490,6 +502,24 @@ export default function WebRTCGroupChat() {
       Cancel Sending All Files To All Peers
     </button>
   );
+  const resetAllFileBuffersReceivedButtonRendering = (
+    <button
+      className={style.button}
+      onClick={onResetAllFileBuffersReceivedClick}
+      disabled={isFileSendingStatusSending}
+    >
+      Reset All File Buffers(Chunks) Received From All Peers
+    </button>
+  );
+  const resetAllFilesReceivedButtonRendering = (
+    <button
+      className={style.button}
+      onClick={onResetAllFilesReceivedClick}
+      disabled={isFileSendingStatusSending}
+    >
+      Reset All Files Received From All Peers
+    </button>
+  );
 
   let fileSendingRendering;
   if (fileSendingRelatedData) {
@@ -513,6 +543,8 @@ export default function WebRTCGroupChat() {
       {joinedRoomId.length > 0 && fileInputBlockRendering}
       {joinedRoomId.length > 0 && sendFileButtonRendering}
       {joinedRoomId.length > 0 && cancelSendingAllFileButtonRendering}
+      {joinedRoomId.length > 0 && resetAllFileBuffersReceivedButtonRendering}
+      {joinedRoomId.length > 0 && resetAllFilesReceivedButtonRendering}
 
       {joinedRoomId.length > 0 && fileSendingRendering}
       {joinedRoomId.length > 0 && fileReceivingRendering}
