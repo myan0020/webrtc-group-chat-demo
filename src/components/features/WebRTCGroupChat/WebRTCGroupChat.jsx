@@ -127,12 +127,14 @@ export default function WebRTCGroupChat() {
 
   // hook 23: file transceiving
   useEffect(() => {
-    WebRTCGroupChatController.onFileSendingRelatedDataChanged((fileSendingRelatedData, isFileSendingStatusSending) => {
-      if (isFileSendingStatusSending !== undefined) {
-        setIsFileSendingStatusSending(isFileSendingStatusSending);
+    WebRTCGroupChatController.onFileSendingRelatedDataChanged(
+      (fileSendingRelatedData, isFileSendingStatusSending) => {
+        if (isFileSendingStatusSending !== undefined) {
+          setIsFileSendingStatusSending(isFileSendingStatusSending);
+        }
+        setFileSendingRelatedData(fileSendingRelatedData);
       }
-      setFileSendingRelatedData(fileSendingRelatedData);
-    });
+    );
     WebRTCGroupChatController.onFileReceivingRelatedDataChanged((fileReceivingRelatedData) => {
       setFileReceivingRelatedData(fileReceivingRelatedData);
     });
@@ -271,13 +273,13 @@ export default function WebRTCGroupChat() {
     if (joinedRoomId.length > 0) {
       WebRTCGroupChatController.resetAllFileBuffersReceived();
     }
-  }
+  };
   // click to clear all files received
   const onClearAllFilesReceivedClick = (e) => {
     if (joinedRoomId.length > 0) {
       WebRTCGroupChatController.clearAllFilesReceived();
     }
-  }
+  };
 
   /**
    * Stateful Rendering
@@ -540,25 +542,24 @@ export default function WebRTCGroupChat() {
       <p>Web Socket + WebRTC Group Chat Client</p>
       {loginoutBlockRendered}
 
+      {/* Media Calling Feature */}
+      {/* {isCalling && localVideo}
+      {isCalling && peerVideoList} */}
+      {localVideo}
+      {peerVideoList}
+      {isCalling && toggleMicEnablingButtonRendering}
+      {isCalling && toggleCameraEnablingButtonRendering}
+      {isCalling && toggleMicMutingButtonRendering}
+      {isCalling && toggleCameraMutingButtonRendering}
+
+      {/* File Transceiving Feature */}
       {joinedRoomId.length > 0 && fileInputBlockRendering}
       {joinedRoomId.length > 0 && sendFileButtonRendering}
       {joinedRoomId.length > 0 && cancelSendingAllFileButtonRendering}
       {joinedRoomId.length > 0 && resetAllFileBuffersReceivedButtonRendering}
       {joinedRoomId.length > 0 && clearAllFilesReceivedButtonRendering}
-
       {joinedRoomId.length > 0 && fileSendingRendering}
       {joinedRoomId.length > 0 && fileReceivingRendering}
-
-      {/* {isCalling && localVideo}
-      {isCalling && peerVideoList} */}
-      {localVideo}
-      {peerVideoList}
-
-      {isCalling && toggleMicEnablingButtonRendering}
-      {isCalling && toggleCameraEnablingButtonRendering}
-
-      {isCalling && toggleMicMutingButtonRendering}
-      {isCalling && toggleCameraMutingButtonRendering}
     </div>
   );
 }
