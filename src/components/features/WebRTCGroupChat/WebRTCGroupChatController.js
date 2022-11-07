@@ -664,7 +664,7 @@ function _closeALLPeerConnections() {
  * Peer Connection Data Channel
  */
 
-const MAXIMUM_FILE_CHUNK_SIZE = 16384;
+const MAXIMUM_FILE_CHUNK_SIZE = FileDataStore.maxSendingChunkSize;
 const FILE_META_DATA_CHANNEL_LABEL = "FILE_META_DATA_CHANNEL_LABEL";
 const ACK_OF_FILE_META_DATA_MESSAGE = "ACK_OF_FILE_META_DATA_MESSAGE";
 const START_OF_FILE_BUFFER_MESSAGE = "START_OF_FILE_BUFFER_MESSAGE";
@@ -900,7 +900,7 @@ function _createAndStoreDataChannel({
   }
 
   const dataChannel = peerConnection.createDataChannel(label);
-  console.log(`WebRTCGroupChatController: a new data channel of label(${label}) for a peer(${peerId}) has been created`)
+  console.log(`WebRTCGroupChatController: a new data channel of label(${label}) for a peer(${peerId}) has been created`, `and max message size is (${peerConnection.sctp ? peerConnection.sctp.maxMessageSize : 'unknown'})`)
 
   if (onOpenHandler) {
     dataChannel.onopen = onOpenHandler;
@@ -1108,7 +1108,7 @@ async function _handleReceiverChannelFileBufferMessage(event, peerId) {
   }
 }
 
-function _resetAllReceivingBufferMergedFiles() {
+function _clearAllReceivingFiles() {
   FileDataStore.resetAllReceivingBufferMergedFiles();
 }
 
@@ -1610,7 +1610,7 @@ function _leaveRoom() {
 
   _clearAllPeerTransceivers();
   _closeALLPeerConnections();
-  _resetAllReceivingBufferMergedFiles();
+  _clearAllReceivingFiles();
 
   SocketService.emitMessageEvent(_webSocketUrl, SocketService.typeEnum.LEAVE_ROOM, {});
 }
@@ -1767,8 +1767,8 @@ export default {
   resetAllFileBuffersReceived() {
     FileDataStore.resetAllReceivingBuffers();
   },
-  resetAllFilesReceived() {
-    _resetAllReceivingBufferMergedFiles()
+  clearAllFilesReceived() {
+    _clearAllReceivingFiles()
   },
 
   // sending slice keys inside sending view model

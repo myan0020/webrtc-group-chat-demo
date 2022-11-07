@@ -1,5 +1,12 @@
 /**
- * View model
+ * TODO:
+ *
+ * 1. indexedDB persisting cannot work correctly when receiving buffer(chunk) size is higher than 32 * 1024 bytes;
+ * 2. too frequent receiving buffer persisting, not good for performance;
+ */
+
+/**
+ * Sending && Receiving view model
  */
 
 const _sendingSliceContainerKey = "hashToConcatData";
@@ -25,7 +32,7 @@ const _sendingRelatedData = {
 
     // listener
     if (_handleSendingRelatedDataChange) {
-      _handleSendingRelatedDataChange(shadowCopy(this), isSendingStatusSending);
+      _handleSendingRelatedDataChange(_shadowCopy(this), isSendingStatusSending);
     }
   },
   updateSlice(hashToSlice, sliceKey) {
@@ -50,7 +57,7 @@ const _sendingRelatedData = {
 
     // listener
     if (_handleSendingRelatedDataChange) {
-      _handleSendingRelatedDataChange(shadowCopy(this));
+      _handleSendingRelatedDataChange(_shadowCopy(this));
     }
   },
 };
@@ -87,10 +94,10 @@ const _receivingRelatedData = {
 
     // listener
     if (_handleReceivingRelatedDataChange) {
-      _handleReceivingRelatedDataChange(shadowCopy(this));
+      _handleReceivingRelatedDataChange(_shadowCopy(this));
     }
   },
-  shadowCopyThis() {
+  _shadowCopyThis() {
     return { peerMap: this.peerMap };
   },
 };
@@ -120,8 +127,6 @@ function _prepareSendingMetaData(hashToFile) {
   );
 
   _sendingRelatedData.updateSlice(_sendingHashToMetaData, _sendingMetaDataSliceKey);
-
-  return _sendingHashToMetaData;
 }
 
 function _checkIfSendingMetaDataPrepared(hashToFile) {
@@ -159,7 +164,7 @@ const _receivingCancelledMap = {
     return hashToCancelled[fileHash];
   },
   setCancelled(peerId, fileHash, cancelled) {
-    if (!isStringValid(peerId) || !isStringValid(fileHash)) {
+    if (!_isStringValid(peerId) || !_isStringValid(fileHash)) {
       return;
     }
     if (typeof cancelled !== "boolean") {
@@ -186,17 +191,17 @@ const _receivingCancelledMap = {
  *  Sending && Receiving progress
  */
 
-const _sendingProgressMap = createFileProgressMap(true);
-const _receivingProgressMap = createFileProgressMap(false);
+const _sendingProgressMap = _createFileProgressMap(true);
+const _receivingProgressMap = _createFileProgressMap(false);
 
-function createFileProgressMap(isSending) {
+function _createFileProgressMap(isSending) {
   const progressMap = {
     // the progress data container
     peerMap: new Map(),
 
     // get the transceiving progress of a file for a specific peer
     getProgress: function (peerId, fileHash) {
-      if (!isStringValid(peerId) || !isStringValid(fileHash)) {
+      if (!_isStringValid(peerId) || !_isStringValid(fileHash)) {
         return 0;
       }
       if (!this.peerMap.has(peerId) || !this.peerMap.get(peerId)[fileHash]) {
@@ -207,7 +212,7 @@ function createFileProgressMap(isSending) {
 
     // set the transceiving progress of a file for a specific peer
     setProgress: function (peerId, fileHash, progress) {
-      if (!isStringValid(peerId) || !isStringValid(fileHash)) {
+      if (!_isStringValid(peerId) || !_isStringValid(fileHash)) {
         return;
       }
       if (typeof progress !== "number" || progress < 0) {
@@ -263,7 +268,7 @@ function createFileProgressMap(isSending) {
 
     // calculate the minimum progress(only for sending) of the given file being sent to every peer
     calculateMinProgress(fileHash) {
-      if (!isStringValid(fileHash) || this.peerMap.size === 0) {
+      if (!_isStringValid(fileHash) || this.peerMap.size === 0) {
         return 0;
       }
 
@@ -359,7 +364,7 @@ const _receivingHashToMetaDataMap = {
 
   // get the file hash to meta data object for a given peer
   getHashToMetaData(peerId) {
-    if (!isStringValid(peerId)) {
+    if (!_isStringValid(peerId)) {
       return null;
     }
     return this.peerMap.get(peerId);
@@ -367,7 +372,7 @@ const _receivingHashToMetaDataMap = {
 
   // get the meta data of a given file hash for a given peer
   getMetaData(peerId, fileHash) {
-    if (!isStringValid(fileHash)) {
+    if (!_isStringValid(fileHash)) {
       return null;
     }
 
@@ -381,7 +386,7 @@ const _receivingHashToMetaDataMap = {
 
   // overwrite a file hash to meta data object for a specific peer
   overwriteHashToMetaData(peerId, hashToMetaData) {
-    if (!isStringValid(peerId)) {
+    if (!_isStringValid(peerId)) {
       return;
     }
 
@@ -413,7 +418,7 @@ const _receivingHashToMetaDataMap = {
 
   // set a meta data of a given file hash for a given peer
   setMetaData(peerId, fileHash, metaData) {
-    if (!isStringValid(peerId) || !isStringValid(fileHash)) {
+    if (!_isStringValid(peerId) || !_isStringValid(fileHash)) {
       return;
     }
     this.mergeHashToMetaData(peerId, { [fileHash]: metaData });
@@ -424,7 +429,7 @@ const _receivingHashToMetaDataMap = {
  * Receiving buffer persistence
  */
 
- function _addReceivingBuffer(peerId, fileHash, buffer) {
+function _addReceivingBuffer(peerId, fileHash, buffer) {
   if (_receivingCancelledMap.getCancelled(peerId, fileHash)) {
     console.log(
       `FileDataStore: a receiving buffer of a file (${fileHash}) for a peer (${peerId}) cancelled during adding it`
@@ -477,18 +482,14 @@ function _resetReceivingBuffer(peerId, fileHash) {
 
 function _resetAllReceivingBuffers() {
   if (!_IDBDatabasePromise) {
-    console.error(
-      `FileDataStore: unfound IDB promise during resetting all receiving buffers`
-    );
+    console.error(`FileDataStore: unfound IDB promise during resetting all receiving buffers`);
     return;
   }
 
   _IDBDatabasePromise
     .then((IDBDatabase) => {
       if (!IDBDatabase) {
-        throw new Error(
-          `FileDataStore: unfound IDB during resetting all receiving buffers`
-        );
+        throw new Error(`FileDataStore: unfound IDB during resetting all receiving buffers`);
       }
 
       _resetIDBAllReceivingBuffers(IDBDatabase);
@@ -503,7 +504,8 @@ function _resetAllReceivingBufferMergedFiles() {
 
   if (!_IDBDatabasePromise) {
     console.error(
-      `FileDataStore: unfound IDB promise during resetting all receiving buffer merged files with all file Ids`, allFileIds
+      `FileDataStore: unfound IDB promise during resetting all receiving buffer merged files with all file Ids`,
+      allFileIds
     );
     return;
   }
@@ -537,9 +539,7 @@ function _openIDB() {
 
     request.onupgradeneeded = function (event) {
       console.log(`FileDataStore: indexedDB is upgrading ...`);
-      switch (
-        event.oldVersion // existing db version
-      ) {
+      switch (event.oldVersion) {
         case 0:
           // version 0 means that the client had no database, perform initialization
           let database = request.result;
@@ -577,6 +577,12 @@ function _openIDB() {
         database.close();
         alert("IndexedDB is outdated, please reload the page in order to upgrade it");
       };
+      database.onerror = function (event) {
+        console.error(
+          `FileDataStore: unexpected and uncatched indexedDB onerror`,
+          event.target.error
+        );
+      };
       resolve(database);
     };
     request.onblocked = function () {
@@ -590,7 +596,10 @@ function _openIDB() {
       );
     };
     request.onerror = (event) => {
-      console.error(`FileDataStore: IndexedDB Open Request fail`);
+      console.error(
+        `FileDataStore: unexpected indexedDB open database request onerror`,
+        event.target.error
+      );
       reject();
     };
   });
@@ -627,7 +636,7 @@ const _receivingBufferIDBPersistingSchedulerMap = {
 const _receivingHashToExporterMap = {
   // the receiving and peer-related file hash to file exporter container
   peerMap: new Map(),
-  
+
   avaliableFileIds: [],
 
   setExporter(peerId, fileHash, exporter) {
@@ -652,8 +661,8 @@ const _receivingHashToExporterMap = {
     this.peerMap.forEach((hashToExporter, peerId) => {
       Object.entries(hashToExporter).forEach(([fileHash, exporter]) => {
         this.setExporter(peerId, fileHash, null);
-      })
-    })
+      });
+    });
     _receivingRelatedData.updateSlice(this.peerMap, _receivingFileExporterSliceKey);
   },
 
@@ -710,16 +719,19 @@ function _addIDBReceivingBuffer(peerId, fileHash, IDBDatabase, buffer, startOffs
       console.log(`FileDataStore: IDB request to add(put) receiving buffer onsuccess`, event);
     };
     request.onerror = function (event) {
-      console.log(
+      console.error(
         `FileDataStore: IDB request to add(put) receiving buffer onerror, start to rollback`,
         event
       );
       isOperationSuccessful = false;
     };
-    transaction.onerror = (event) => {};
+    transaction.onerror = (event) => {
+      console.error(`FileDataStore: IDB transaction to add(put) receiving buffer onerror`, event);
+    };
     transaction.oncomplete = (event) => {
       console.log(
-        `FileDataStore: IDB transaction to add(put) receiving buffer of a file (${fileHash}) for a peer (${peerId}) from startOffset (${startOffset}) oncomplete`
+        `FileDataStore: IDB transaction to add(put) receiving buffer of a file (${fileHash}) for a peer (${peerId}) from startOffset (${startOffset}) oncomplete`,
+        isOperationSuccessful
       );
 
       if (!isOperationSuccessful) {
@@ -741,7 +753,7 @@ function _addIDBReceivingBuffer(peerId, fileHash, IDBDatabase, buffer, startOffs
           );
         };
         request.onerror = function (event) {
-          console.log(
+          console.error(
             `FileDataStore: IDB manaully rollbacking request to delete receiving buffer onerror`,
             event
           );
@@ -783,7 +795,7 @@ function _mergeIDBReceivingBufferIfNeeded(peerId, fileHash, IDBDatabase) {
   const bufferWrapperList = [];
 
   request.onerror = function (event) {
-    console.log(`FileDataStore: IDB request to open cursor of receiving buffer onerror`, event);
+    console.error(`FileDataStore: IDB request to open cursor of receiving buffer onerror`, event);
   };
   request.onsuccess = function (event) {
     console.log(`FileDataStore: IDB request to open cursor of receiving buffer onsuccess`, event);
@@ -834,7 +846,7 @@ function _mergeIDBReceivingBufferIfNeeded(peerId, fileHash, IDBDatabase) {
         );
       };
       request.onerror = function (event) {
-        console.log(
+        console.error(
           `FileDataStore: IDB request to add(put) a merged receiving file onerror`,
           event
         );
@@ -846,10 +858,10 @@ function _mergeIDBReceivingBufferIfNeeded(peerId, fileHash, IDBDatabase) {
         );
 
         // after the file added into IDB, make a file exporter to export this file from indexedDB for future usage
-        const exporter = () => {
+        const fileExporter = () => {
           return _getIDBReceivingFile(peerId, fileHash, IDBDatabase);
         };
-        _receivingHashToExporterMap.setExporter(peerId, fileHash, exporter);
+        _receivingHashToExporterMap.setExporter(peerId, fileHash, fileExporter);
 
         // after the file added into IDB, delete all receiving buffers which are merged into it
         const transaction = IDBDatabase.transaction(_IDBReceivingBufferStoreName, "readwrite");
@@ -857,10 +869,16 @@ function _mergeIDBReceivingBufferIfNeeded(peerId, fileHash, IDBDatabase) {
         const index = store.index("fileId_idx");
         const request = index.openCursor(IDBKeyRange.only(_buildFileId(peerId, fileHash)));
         request.onerror = function (event) {
-          console.log(`FileDataStore: IDB request to open cursor of receiving buffer onerror`, event);
+          console.error(
+            `FileDataStore: IDB request to open cursor of receiving buffer onerror`,
+            event
+          );
         };
         request.onsuccess = function (event) {
-          console.log(`FileDataStore: IDB request to open cursor of receiving buffer onsuccess`, event);
+          console.log(
+            `FileDataStore: IDB request to open cursor of receiving buffer onsuccess`,
+            event
+          );
 
           const cursor = event.target.result;
           if (cursor) {
@@ -869,7 +887,7 @@ function _mergeIDBReceivingBufferIfNeeded(peerId, fileHash, IDBDatabase) {
             request.onerror = function (event) {};
             cursor.continue();
           }
-        }
+        };
       };
     }
   };
@@ -896,7 +914,7 @@ function _getIDBReceivingFile(peerId, fileHash, IDBDatabase) {
       file = record.file;
     };
     request.onerror = (event) => {
-      console.log(`FileDataStore: IDB request to get a receiving file onerror`, event);
+      console.error(`FileDataStore: IDB request to get a receiving file onerror`, event);
       isOperationSuccessful = false;
     };
     transaction.oncomplete = (event) => {
@@ -926,14 +944,12 @@ function _resetIDBAllReceivingBuffers(IDBDatabase) {
       console.log(`FileDataStore: IDB request to clear all receiving buffers onsuccess`, event);
     };
     request.onerror = function (event) {
-      console.log(`FileDataStore: IDB request to clear all receiving buffers onerror`, event);
+      console.error(`FileDataStore: IDB request to clear all receiving buffers onerror`, event);
       isOperationSuccessful = false;
     };
 
     transaction.oncomplete = () => {
-      console.log(
-        `FileDataStore: IDB transaction to clear all receiving buffers oncomplete`
-      );
+      console.log(`FileDataStore: IDB transaction to clear all receiving buffers oncomplete`);
 
       if (!isOperationSuccessful) {
         reject();
@@ -962,14 +978,14 @@ function _resetIDBReceivingBuffer(peerId, fileHash, IDBDatabase) {
           console.log(`FileDataStore: IDB request to delete a receiving buffer onsuccess`, event);
         };
         request.onerror = function (event) {
-          console.log(`FileDataStore: IDB request to delete a receiving buffer onerror`, event);
+          console.error(`FileDataStore: IDB request to delete a receiving buffer onerror`, event);
           isOperationSuccessful = false;
         };
         cursor.continue();
       }
     };
     request.onerror = function (event) {
-      console.log(`FileDataStore: IDB request to open cursor of receiving buffer onerror`, event);
+      console.error(`FileDataStore: IDB request to open cursor of receiving buffer onerror`, event);
       isOperationSuccessful = false;
     };
     transaction.oncomplete = () => {
@@ -989,8 +1005,11 @@ function _resetIDBReceivingBuffer(peerId, fileHash, IDBDatabase) {
 }
 
 function _resetIDBReceivingBufferMergedFiles(fileIds, IDBDatabase) {
-  const intersectingFileIds = _receivingHashToExporterMap.avaliableFileIds.filter(x => fileIds.includes(x));
-  const isAllResetting = (intersectingFileIds.length >= _receivingHashToExporterMap.avaliableFileIds.length);
+  const intersectingFileIds = _receivingHashToExporterMap.avaliableFileIds.filter((x) =>
+    fileIds.includes(x)
+  );
+  const isAllResetting =
+    intersectingFileIds.length >= _receivingHashToExporterMap.avaliableFileIds.length;
 
   return new Promise((resolve, reject) => {
     const transaction = IDBDatabase.transaction(_IDBReceivingFileStoreName, "readwrite");
@@ -1000,11 +1019,17 @@ function _resetIDBReceivingBufferMergedFiles(fileIds, IDBDatabase) {
     if (isAllResetting) {
       const request = store.clear();
       request.onsuccess = function (event) {
-        console.log(`FileDataStore: IDB request to clear all receiving buffer merged files onsuccess`, event);
+        console.log(
+          `FileDataStore: IDB request to clear all receiving buffer merged files onsuccess`,
+          event
+        );
         _receivingHashToExporterMap.clearExporters();
       };
       request.onerror = function (event) {
-        console.log(`FileDataStore: IDB request to clear all receiving buffer merged files onerror`, event);
+        console.error(
+          `FileDataStore: IDB request to clear all receiving buffer merged files onerror`,
+          event
+        );
         isOperationSuccessful = false;
       };
     } else {
@@ -1031,7 +1056,7 @@ function _resetIDBReceivingBufferMergedFiles(fileIds, IDBDatabase) {
               _receivingHashToExporterMap.setExporter(peerId, fileHash, null);
             };
             request.onerror = function (event) {
-              console.log(
+              console.error(
                 `FileDataStore: IDB request to delete a receiving buffer merged file with fileId(${cursor.primaryKey}) onerror`,
                 event
               );
@@ -1039,10 +1064,10 @@ function _resetIDBReceivingBufferMergedFiles(fileIds, IDBDatabase) {
           }
           cursor.continue();
         }
-      }
+      };
       request.onerror = function (event) {
         isOperationSuccessful = false;
-        console.log(
+        console.error(
           `FileDataStore: IDB request to open cursor of receiving buffer merged files onerror`,
           event
         );
@@ -1055,7 +1080,7 @@ function _resetIDBReceivingBufferMergedFiles(fileIds, IDBDatabase) {
       );
 
       if (!isOperationSuccessful) {
-        reject()
+        reject();
         return;
       }
       resolve();
@@ -1069,11 +1094,11 @@ _openIDB();
  * Utils
  */
 
-function isStringValid(string) {
+function _isStringValid(string) {
   return string && string.length > 0;
 }
 
-function shadowCopy(obj) {
+function _shadowCopy(obj) {
   const copied = {};
   Object.keys(obj).forEach((property) => {
     copied[property] = obj[property];
@@ -1091,20 +1116,20 @@ function _buildBufferId(peerId, fileHash, startOffset) {
 
 function _parseFileId(fileId) {
   const elements = fileId.split("-");
-  return { 
-    peerId: elements.slice(0, -1).join(''), 
-    fileHash: elements[elements.length - 1] 
+  return {
+    peerId: elements.slice(0, -1).join(""),
+    fileHash: elements[elements.length - 1],
   };
 }
 
 function _parseBufferId(bufferId) {
   const elements = bufferId.split("-");
   const startOffsetString = elements[elements.length - 1];
-  return { 
-    peerId: elements.slice(0, -2).join(''), 
-    fileHash: elements[elements.length - 2],  
-    startOffset: (Number(startOffsetString) !== NaN ? Number(startOffsetString) : undefined) 
-  }
+  return {
+    peerId: elements.slice(0, -2).join(""),
+    fileHash: elements[elements.length - 2],
+    startOffset: Number(startOffsetString) !== NaN ? Number(startOffsetString) : undefined,
+  };
 }
 
 export default {
@@ -1135,13 +1160,21 @@ export default {
   get receivingProgressSliceKey() {
     return _receivingProgressSliceKey;
   },
-  // sending view model changing listener
+  // sending view model changed listener
   onSendingRelatedDataChanged: function (handler) {
     _handleSendingRelatedDataChange = handler;
   },
-  // receiving view model changing listener
+  // receiving view model changed listener
   onReceivingRelatedDataChanged: function (handler) {
     _handleReceivingRelatedDataChange = handler;
+  },
+
+  //
+  // Sending chunk size
+  //
+
+  get maxSendingChunkSize() {
+    return 32 * 1024;
   },
 
   //
@@ -1152,7 +1185,7 @@ export default {
     return _sendingHashToMetaData;
   },
   prepareSendingMetaData(hashToFile) {
-    return _prepareSendingMetaData(hashToFile);
+    _prepareSendingMetaData(hashToFile);
   },
   checkIfSendingMetaDataPrepared(hashToFile) {
     return _checkIfSendingMetaDataPrepared(hashToFile);
@@ -1217,5 +1250,5 @@ export default {
   },
   resetAllReceivingBufferMergedFiles() {
     _resetAllReceivingBufferMergedFiles();
-  }
+  },
 };
