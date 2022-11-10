@@ -27,12 +27,12 @@ export default function WebRTCGroupChat() {
   // hook 7
   const [joinedRoomId, setJoinedRoomId] = useState("");
 
-  // media transceiving
+  // user media streaming
   //
   // hook 8
   const [localMediaStream, setLocalMediaStream] = useState();
   // hook 9
-  const [peerMediaStreamsMap, setPeerMediaStreamsMap] = useState(new Map());
+  const [peerUserMediaStreamMap, setPeerUserMediaStreamMap] = useState();
   // hook 10
   const [isCalling, setIsCalling] = useState(false);
   // hook 11
@@ -111,13 +111,13 @@ export default function WebRTCGroupChat() {
       setIsMicEnabled(WebRTCGroupChatController.localMicEnabled);
       setIsCameraEnabled(WebRTCGroupChatController.localCameraEnabled);
     });
-    WebRTCGroupChatController.onPeerMediaStreamMapChanged((peerStreamsMap) => {
+    WebRTCGroupChatController.onPeerMediaStreamMapChanged((peerUserMediaStreamMap) => {
       console.log(
         `onPeerMediaStreamMapChanged called with peer stream map size ${
-          peerStreamsMap && peerStreamsMap.peerMap ? peerStreamsMap.peerMap.size : "unknown"
+          peerUserMediaStreamMap ? peerUserMediaStreamMap.size : "unknown"
         }`
       );
-      setPeerMediaStreamsMap(peerStreamsMap);
+      setPeerUserMediaStreamMap(peerUserMediaStreamMap);
 
       // TODO: it is the temperary location where the code below is called
       setIsMicMuted(WebRTCGroupChatController.localMicMuted);
@@ -404,22 +404,18 @@ export default function WebRTCGroupChat() {
   // video rendering
   const localVideo = localMediaStream ? (
     <>
-      <div>Check Local Video</div>
-      <div>
-        <VideoList mediaStreamsMap={new Map([["local", localMediaStream]])} />
-      </div>
+      <div className={style.videoTitle}>Local</div>
+      <VideoList mediaStreamMap={new Map([["local", localMediaStream]])} />
     </>
   ) : (
     <></>
   );
   const peerVideoList =
-    peerMediaStreamsMap && peerMediaStreamsMap.peerMap ? (
-      <div>
-        <div>Check Peer Video List</div>
-        <div>
-          <VideoList mediaStreamsMap={peerMediaStreamsMap.peerMap} />
-        </div>
-      </div>
+    peerUserMediaStreamMap && peerUserMediaStreamMap.size() > 0 ? (
+      <>
+        <div className={style.videoTitle}>Peers</div>
+        <VideoList mediaStreamMap={peerUserMediaStreamMap.peerMap} />
+      </>
     ) : (
       <></>
     );
@@ -542,17 +538,15 @@ export default function WebRTCGroupChat() {
       <p>Web Socket + WebRTC Group Chat Client</p>
       {loginoutBlockRendered}
 
-      {/* Media Calling Feature */}
-      {/* {isCalling && localVideo}
-      {isCalling && peerVideoList} */}
-      {localVideo}
-      {peerVideoList}
+      {/* User Media Streaming */}
+      {joinedRoomId.length > 0 && localVideo}
+      {joinedRoomId.length > 0 && peerVideoList}
       {isCalling && toggleMicEnablingButtonRendering}
       {isCalling && toggleCameraEnablingButtonRendering}
       {isCalling && toggleMicMutingButtonRendering}
       {isCalling && toggleCameraMutingButtonRendering}
 
-      {/* File Transceiving Feature */}
+      {/* File Transceiving */}
       {joinedRoomId.length > 0 && fileInputBlockRendering}
       {joinedRoomId.length > 0 && sendFileButtonRendering}
       {joinedRoomId.length > 0 && cancelSendingAllFileButtonRendering}

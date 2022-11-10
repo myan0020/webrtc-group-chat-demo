@@ -221,7 +221,7 @@ function _joinRoom(roomId) {
 
 function _leaveRoom() {
   if (_isCalling) {
-    _hangUpCalling();
+    _hangUpCalling(true);
   }
 
   _clearAllPeerTransceivers();
@@ -254,7 +254,6 @@ let _peerConnectionConfig = {
   ],
 };
 const _peerConnectionMap = {
-  // data structure: [[ peerId, peerConnectionInstance ], ...]
   peerMap: new Map(),
   has(key) {
     return this.peerMap.has(key);
@@ -514,8 +513,30 @@ function _addPeerConnection(peerId) {
   peerConnection.onicecandidate = _handlePeerConnectionICECandidateEvent;
   peerConnection.oniceconnectionstatechange = _handlePeerConnectionICEConnectionStateChangeEvent;
   peerConnection.onnegotiationneeded = _handlePeerConnectionNegotiationEvent;
-  peerConnection.ontrack = _handlePeerConnectionTrackEvent;
   peerConnection.ondatachannel = _handlePeerConnectionDataChannelEvent;
+
+  peerConnection.ontrack = _handlePeerConnectionTrackEvent;
+  if (_localUserMediaStream) {
+    _localUserMediaStream.getTracks().forEach((track, index) => {
+      let reusableTransceiversMap;
+      if (track.kind === "audio") {
+        reusableTransceiversMap = _reusableAudioTransceiversMap;
+      } else if (track.kind === "video") {
+        reusableTransceiversMap = _reusableVideoTransceiversMap;
+      }
+
+      const transceivers = reusableTransceiversMap.get(peerId);
+      if (transceivers && transceivers.length > 0 && transceivers[0].sender) {
+        const transceiver = transceivers[0];
+        transceiver.sender.replaceTrack(track).then(() => {
+          transceiver.direction = "sendrecv";
+        });
+      } else if (!transceivers || transceivers.length === 0) {
+        peerConnection.addTrack(track);
+        reusableTransceiversMap.set(peerId, _getTransceiversOfPureKind(peerConnection, track.kind));
+      }
+    });
+  }
 }
 
 function _handlePeerConnectionICECandidateEvent(event) {
@@ -600,32 +621,6 @@ function _handlePeerConnectionNegotiationEvent(event) {
     });
 }
 
-function _handlePeerConnectionTrackEvent(event) {
-  if (!(event.target instanceof RTCPeerConnection) || !event.track || !event.transceiver) {
-    console.log(
-      `WebRTCGroupChatController: unexpected event target / track / transceiver during 'ontrack'`
-    );
-    return;
-  }
-
-  const peerConnection = event.target;
-  const track = event.track;
-  const transceiver = event.transceiver;
-  const peerId = _peerConnectionMap.getFirstKeyByValue(peerConnection);
-
-  if (!peerId) {
-    console.log(`WebRTCGroupChatController: unexpected peerId ( ${peerId} ) during 'ontrack'`);
-    return;
-  }
-
-  const incomingTrackKind = event.track.kind;
-
-  _setupTransceiverMap(transceiver, incomingTrackKind, peerId);
-  _setupTrackMuteEventHandlers(track, peerId);
-
-  _respondToPeerWithEqualKindTrackIfNeeded(peerId, transceiver, incomingTrackKind);
-}
-
 function _closePeerConnection(peerId) {
   if (!peerId || peerId.length === 0) {
     console.log(`WebRTCGroupChatController: unexpected peerId when stopping peer side connection`);
@@ -654,13 +649,17 @@ function _closeALLPeerConnections() {
  * Media Streams management
  */
 
+let _handlePeerUserMediaStreamMapChanged;
+let _handleLocalUserMediaStreamChanged;
+
 let _mediaStreamConstraints = {
   video: true,
   audio: true,
 };
-let _localMediaStream;
-const _peerMediaStreamMap = {
-  peerMap: new Map(), // [[ peerId, { mediaStream } ], ...]
+
+let _localUserMediaStream;
+const _peerUserMediaStreamMap = {
+  peerMap: new Map(),
   has(key) {
     return this.peerMap.has(key);
   },
@@ -682,19 +681,6 @@ const _peerMediaStreamMap = {
   get(key) {
     return this.peerMap.get(key);
   },
-  clear() {
-    const prevSize = this.peerMap.size;
-    this.peerMap.clear();
-    const curSize = this.peerMap.size;
-    console.log(
-      `WebRTCGroupChatController: _peerMediaStreamMap clear executed, and its size changed from ${prevSize} to ${curSize}`
-    );
-
-    if (_handlePeerMediaStreamMapChanged) {
-      _handlePeerMediaStreamMapChanged(_shadowCopy(this));
-    }
-  },
-
   deleteTrack(peerId, kind) {
     if (!this.peerMap.get(peerId)) {
       return;
@@ -708,33 +694,23 @@ const _peerMediaStreamMap = {
       }
     });
 
-    console.log(
-      `WebRTCGroupChatController: a media stream's tracks count changed from ${
-        oldMediaStream.getTracks().length
-      } to ${newMediaStream.getTracks().length}`
-    );
-
     if (newMediaStream.getTracks().length === 0) {
       const prevSize = this.peerMap.size;
       this.peerMap.delete(peerId);
       const curSize = this.peerMap.size;
       console.log(
-        `WebRTCGroupChatController: _peerMediaStreamMap delete executed, and its size changed from ${prevSize} to ${curSize}`
+        `WebRTCGroupChatController: _peerUserMediaStreamMap delete executed, and its size changed from ${prevSize} to ${curSize}`
       );
     } else {
       this.peerMap.set(peerId, newMediaStream);
     }
 
-    if (_handlePeerMediaStreamMapChanged) {
-      _handlePeerMediaStreamMapChanged(_shadowCopy(this));
+    if (_handlePeerUserMediaStreamMapChanged) {
+      _handlePeerUserMediaStreamMapChanged(_shadowCopyPlainObject(this));
     }
   },
 
   setTrack(peerId, track) {
-    if (!(track instanceof MediaStreamTrack)) return;
-
-    console.log(`TEST: start to set track of kind (${track.kind})`);
-
     const prevSize = this.peerMap.size;
 
     if (!this.peerMap.get(peerId)) {
@@ -742,7 +718,6 @@ const _peerMediaStreamMap = {
     }
 
     const oldMediaStream = this.peerMap.get(peerId);
-
     const newMediaStream = new MediaStream();
     oldMediaStream.getTracks().forEach((existTrack) => {
       if (existTrack.kind !== track.kind) {
@@ -753,231 +728,175 @@ const _peerMediaStreamMap = {
     this.peerMap.set(peerId, newMediaStream);
 
     console.log(
-      `WebRTCGroupChatController: _peerMediaStreamMap size changed from ${prevSize} to ${this.peerMap.size}`
+      `WebRTCGroupChatController: _peerUserMediaStreamMap size changed from ${prevSize} to ${this.peerMap.size}`
     );
 
-    if (_handlePeerMediaStreamMapChanged) {
-      _handlePeerMediaStreamMapChanged(_shadowCopy(this));
+    if (_handlePeerUserMediaStreamMapChanged) {
+      _handlePeerUserMediaStreamMapChanged(_shadowCopyPlainObject(this));
     }
   },
 };
-const _audioTransceiverMap = new Map();
-const _videoTransceiverMap = new Map();
 
-let _handlePeerMediaStreamMapChanged;
-let _handleLocalMediaStreamChanged;
-
-async function _createLocalMediaStream() {
-  console.log(`WebRTCGroupChatController: start to create local media stream`);
-  return navigator.mediaDevices.getUserMedia(_mediaStreamConstraints).then((mediaStream) => {
-    console.log(`WebRTCGroupChatController: local media stream created`);
-    _localMediaStream = mediaStream;
-    if (_handleLocalMediaStreamChanged) {
-      _handleLocalMediaStreamChanged(mediaStream);
-    }
-  });
-}
-
-function _addLocalMediaStream() {
-  if (!_localMediaStream) {
-    console.log(
-      `WebRTCGroupChatController: unexpected _localMediaStream of ${_localMediaStream} when adding local media stream to peer connection (peerId: ${peerId})`
-    );
-    return;
-  }
-
-  _peerConnectionMap.forEach((peerConnection, peerId) => {
-    _localMediaStream.getTracks().forEach((track, index) => {
-      console.log(
-        `WebRTCGroupChatController: add (trackId: ${track.id}) (kind: ${track.kind}) track of local media stream to a peer connection to ${peerId}`
-      );
-      peerConnection.addTrack(track, _localMediaStream);
-    });
-
-    // const senders = peerConnection.getSenders();
-    // let addTrackNeeded = senders.length === 0;
-    // let replaceTrackNeeded = senders.length === 2 && !(senders[0].track) && !(senders[1].track)
-
-    // if (addTrackNeeded) {
-    //   _localMediaStream.getTracks().forEach((track, index) => {
-    //     console.log(
-    //       `WebRTCGroupChatController: add (trackId: ${track.id}) (kind: ${track.kind}) track of local media stream to a peer connection to ${peerId}`
-    //     );
-    //     peerConnection.addTrack(track, _localMediaStream);
-    //   });
-    // } else if (replaceTrackNeeded) {
-    //   _localMediaStream.getTracks().forEach((track, index) => {
-    //     console.log(
-    //       `WebRTCGroupChatController: replace (trackId: ${track.id}) (kind: ${track.kind}) track of local media stream to a peer connection to ${peerId}`
-    //     );
-
-    //     let transceiver;
-    //     if (track.kind === 'audio') {
-    //       transceiver = _audioTransceiverMap.get(peerId);
-    //     } else if (track.kind === 'video') {
-    //       transceiver = _videoTransceiverMap.get(peerId);
-    //     }
-    //     transceiver.sender.replaceTrack(track);
-    //   });
-    // }
-  });
-}
-
-function _handleIncomingTrackUnmute(event, peerId) {
-  console.log(
-    `WebRTCGroupChatController: a track from the peer ( ${peerId} ) is available to use, because it's been added by that peer`
-  );
-  const track = event.target;
-  _peerMediaStreamMap.setTrack(peerId, track);
-}
-
-function _handleIncomingTrackMute(event, peerId) {
-  console.log(
-    `WebRTCGroupChatController: a track from the peer ( ${peerId} ) is unavailable to use, because it's been removed by that peer`
-  );
-  const track = event.target;
-  _peerMediaStreamMap.deleteTrack(peerId, track.kind);
-}
-
-function _setupTransceiverMap(transceiver, incomingTrackKind, peerId) {
-  if (
-    !transceiver ||
-    !incomingTrackKind ||
-    incomingTrackKind.length === 0 ||
-    !peerId ||
-    peerId.length === 0
-  ) {
-    console.log(
-      `WebRTCGroupChatController: unexpected transceiver/incomingTrackKind/peerId during transceiver map setup`
-    );
-    return;
-  }
-
-  if (incomingTrackKind === "video") {
-    _videoTransceiverMap.set(peerId, transceiver);
-    console.log(`WebRTCGroupChatController: a new video transceiver received and stored`);
-  } else if (incomingTrackKind === "audio") {
-    _audioTransceiverMap.set(peerId, transceiver);
-    console.log(`WebRTCGroupChatController: a new audio transceiver received and stored`);
-  }
-}
-
-function _deletePeerTransceiver(peerId) {
-  if (!peerId || peerId.length === 0) {
-    return;
-  }
-
-  _audioTransceiverMap.delete(peerId);
-  console.log(`WebRTCGroupChatController: an audio transceiver of peer ( ${peerId} ) deleted`);
-
-  _videoTransceiverMap.delete(peerId);
-  console.log(`WebRTCGroupChatController: a video transceiver of peer ( ${peerId} ) deleted`);
-}
-
-function _clearAllPeerTransceivers() {
-  _audioTransceiverMap.clear();
-  _videoTransceiverMap.clear();
-  console.log(`WebRTCGroupChatController: all audio/video transceivers cleared`);
-}
-
-function _respondToPeerWithEqualKindTrackIfNeeded(peerId, transceiver, incomingTrackKind) {
-  if (
-    !_localMediaStream ||
-    !peerId ||
-    peerId.length === 0 ||
-    !incomingTrackKind ||
-    !_peerConnectionMap.has(peerId) ||
-    !transceiver
-  ) {
-    return;
-  }
-
-  const sender = transceiver.sender;
-  let addTrackNeeded =
-    sender.track === null &&
-    transceiver.currentDirection === null &&
-    transceiver.direction === "recvonly";
-  let replaceTrackNeeded = sender.track !== null;
-
-  // const isNeeded = transceiver.sender.track === null;
-  // if (!isNeeded) {
-  //   return;
-  // }
-
-  const peerConnection = _peerConnectionMap.get(peerId);
-  _localMediaStream.getTracks().forEach((localTrack) => {
-    if (localTrack.kind === incomingTrackKind) {
-      if (addTrackNeeded) {
-        console.log(`TEST: _respondToPeerWithEqualKindTrackIfNeeded will addtrack`);
-        peerConnection.addTrack(localTrack, _localMediaStream);
-      } else if (replaceTrackNeeded) {
-        let senderTrackMuted = sender.track.muted;
-        if (senderTrackMuted) {
-          sender.replaceTrack(localTrack);
+const _reusableAudioTransceiversMap = _createReusableTransceiversMap();
+const _reusableVideoTransceiversMap = _createReusableTransceiversMap();
+function _createReusableTransceiversMap() {
+  return {
+    peerMap: new Map(),
+    set(peerId, transceivers) {
+      this.peerMap.set(peerId, transceivers);
+    },
+    get(peerId) {
+      return this.peerMap.get(peerId);
+    },
+    has(peerId) {
+      return this.peerMap.has(peerId);
+    },
+    delete(peerId) {
+      this.peerMap.delete(peerId);
+    },
+    clear() {
+      this.peerMap.clear();
+    },
+    forEach(callback) {
+      this.peerMap.forEach(callback);
+    },
+    replaceAllSenders(withTrack) {
+      this.peerMap.forEach((transceivers, peerId) => {
+        if (transceivers && transceivers.length > 0 && transceivers[0].sender) {
+          const transceiver = transceivers[0];
+          transceiver.sender.replaceTrack(withTrack).then(() => {
+            if (transceiver.currentDirection === "stopped") {
+              return;
+            }
+            if (!withTrack) {
+              transceiver.direction = "recvonly";
+            }
+          });
         }
-      }
-
-      // sender.replaceTrack(localTrack);
-
-      // peerConnection.addTrack(localTrack, _localMediaStream);
-    }
-  });
+      });
+    },
+  };
 }
 
-function _setupTrackMuteEventHandlers(track, peerId) {
-  if (!track || !peerId || peerId.length === 0) {
-    console.log(
-      `WebRTCGroupChatController: unexpected track / peerId during track Mute/Unmute event handler binding`
-    );
+function _handlePeerConnectionTrackEvent(event) {
+  if (!(event.target instanceof RTCPeerConnection) || !event.track) {
+    console.log(`WebRTCGroupChatController: unexpected event target / track during 'ontrack'`);
     return;
   }
 
+  const peerConnection = event.target;
+  const peerId = _peerConnectionMap.getFirstKeyByValue(peerConnection);
+  if (!peerId) {
+    console.log(`WebRTCGroupChatController: unexpected peerId ( ${peerId} ) during 'ontrack'`);
+    return;
+  }
+
+  const track = event.track;
+  _setupTrackEventHandlers(track, peerId);
+}
+
+function _setupTrackEventHandlers(track, peerId) {
   track.onunmute = (event) => {
     _handleIncomingTrackUnmute(event, peerId);
   };
   track.onmute = (event) => {
     _handleIncomingTrackMute(event, peerId);
   };
+  track.onended = (event) => {
+    _handleIncomingTrackEnded(event, peerId);
+  };
 }
 
-//
-// TODO: it needs signal server to route the message
-//
-function _triggerOneRemoteMuteForLocalTracks(peerId) {
-  const peerConnection = _peerConnectionMap.get(peerId);
-  if (!peerConnection || !peerConnection.getTransceivers()) {
+function _handleIncomingTrackUnmute(event, peerId) {
+  const track = event.target;
+  _peerUserMediaStreamMap.setTrack(peerId, track);
+  console.log(`WebRTCGroupChatController: unmute a track for a peer( ${peerId} )`, track);
+}
+
+function _handleIncomingTrackMute(event, peerId) {
+  const track = event.target;
+  _peerUserMediaStreamMap.deleteTrack(peerId, track.kind);
+  console.log(`WebRTCGroupChatController: muted a track for a peer( ${peerId} )`, track);
+}
+
+function _handleIncomingTrackEnded(event, peerId) {
+  const track = event.target;
+  _peerUserMediaStreamMap.deleteTrack(peerId, track.kind);
+  console.log(`WebRTCGroupChatController: ended a track for a peer( ${peerId} )`, track);
+}
+
+async function _createLocalUserMediaStream() {
+  console.log(`WebRTCGroupChatController: start to create local user media stream`);
+  return navigator.mediaDevices
+    .getUserMedia(_mediaStreamConstraints)
+    .then((localUserMediaStream) => {
+      console.log(`WebRTCGroupChatController: local media stream created`);
+      _localUserMediaStream = localUserMediaStream;
+      if (_handleLocalUserMediaStreamChanged) {
+        _handleLocalUserMediaStreamChanged(localUserMediaStream);
+      }
+    });
+}
+
+function _addLocalUserMediaStream() {
+  if (!_localUserMediaStream) {
+    console.log(
+      `WebRTCGroupChatController: unexpected _localUserMediaStream of ${_localUserMediaStream} when adding local media stream to peer connection (peerId: ${peerId})`
+    );
     return;
   }
 
-  peerConnection.getTransceivers().forEach((transceiver) => {
-    const sender = transceiver.sender;
-    if (sender) {
-      peerConnection.removeTrack(sender);
+  _localUserMediaStream.getTracks().forEach((track, index) => {
+    let reusableTransceiversMap;
+    if (track.kind === "audio") {
+      reusableTransceiversMap = _reusableAudioTransceiversMap;
+    } else if (track.kind === "video") {
+      reusableTransceiversMap = _reusableVideoTransceiversMap;
     }
-  });
-}
 
-function _triggerAllRemoteMuteForLocalTracks() {
-  _peerConnectionMap.forEach((peerConnection) => {
-    peerConnection.getTransceivers().forEach((transceiver) => {
-      // const sender = transceiver.sender;
-      // if (sender) {
-      //   peerConnection.removeTrack(sender);
-      // }
-
-      transceiver.stop();
+    _peerConnectionMap.forEach((peerConnection, peerId) => {
+      const transceivers = reusableTransceiversMap.get(peerId);
+      if (transceivers && transceivers.length > 0 && transceivers[0].sender) {
+        const transceiver = transceivers[0];
+        transceiver.sender.replaceTrack(track).then(() => {
+          transceiver.direction = "sendrecv";
+        });
+      } else if (!transceivers || transceivers.length === 0) {
+        peerConnection.addTrack(track);
+        reusableTransceiversMap.set(peerId, _getTransceiversOfPureKind(peerConnection, track.kind));
+      }
     });
   });
 }
 
-function _stopLocalTracks() {
-  if (_localMediaStream) {
-    _localMediaStream.getTracks().forEach(function (track) {
+function _deletePeerTransceiver(peerId) {
+  _reusableAudioTransceiversMap.delete(peerId);
+  _reusableVideoTransceiversMap.delete(peerId);
+  console.log(
+    `WebRTCGroupChatController: both reusable audio && video transceivers for a peer( ${peerId} ) deleted`
+  );
+}
+
+function _clearAllPeerTransceivers() {
+  _reusableAudioTransceiversMap.clear();
+  _reusableVideoTransceiversMap.clear();
+  console.log(`WebRTCGroupChatController: all reusable audio && video transceivers cleared`);
+}
+
+function _pauseAllTransceiverSending() {
+  _reusableAudioTransceiversMap.replaceAllSenders(null);
+  _reusableVideoTransceiversMap.replaceAllSenders(null);
+}
+
+function _stopLocalUserMediaTracks() {
+  if (_localUserMediaStream) {
+    _localUserMediaStream.getTracks().forEach(function (track) {
       track.stop();
     });
-    // _localMediaStream = null;
-    if (_handleLocalMediaStreamChanged) {
-      _handleLocalMediaStreamChanged(_localMediaStream);
+
+    _localUserMediaStream = null;
+    if (_handleLocalUserMediaStreamChanged) {
+      _handleLocalUserMediaStreamChanged(_localUserMediaStream);
     }
   }
 }
@@ -985,15 +904,15 @@ function _stopLocalTracks() {
 function _getLocalMediaTrackEnabled(trackKind) {
   let trackEnabled = false;
 
-  if (!_localMediaStream) {
+  if (!_localUserMediaStream) {
     return trackEnabled;
   }
 
   let track;
-  if (trackKind === "audio" && _localMediaStream.getAudioTracks()) {
-    track = _localMediaStream.getAudioTracks()[0];
-  } else if (trackKind === "video" && _localMediaStream.getVideoTracks()) {
-    track = _localMediaStream.getVideoTracks()[0];
+  if (trackKind === "audio" && _localUserMediaStream.getAudioTracks()) {
+    track = _localUserMediaStream.getAudioTracks()[0];
+  } else if (trackKind === "video" && _localUserMediaStream.getVideoTracks()) {
+    track = _localUserMediaStream.getVideoTracks()[0];
   }
 
   if (!track) {
@@ -1008,18 +927,18 @@ function _getLocalMediaTrackEnabled(trackKind) {
 }
 
 function _setLocalMediaTrackEnabled(trackKind, enabled) {
-  if (!_localMediaStream) {
+  if (!_localUserMediaStream) {
     console.error(
-      `WebRTCGroupChatController: unexpected empty _localMediaStream when 'set' enabling ( ${trackKind} ) kind of local media device`
+      `WebRTCGroupChatController: unexpected empty _localUserMediaStream when 'set' enabling ( ${trackKind} ) kind of local media device`
     );
     return;
   }
 
   let track;
-  if (trackKind === "audio" && _localMediaStream.getAudioTracks()) {
-    track = _localMediaStream.getAudioTracks()[0];
-  } else if (trackKind === "video" && _localMediaStream.getVideoTracks()) {
-    track = _localMediaStream.getVideoTracks()[0];
+  if (trackKind === "audio" && _localUserMediaStream.getAudioTracks()) {
+    track = _localUserMediaStream.getAudioTracks()[0];
+  } else if (trackKind === "video" && _localUserMediaStream.getVideoTracks()) {
+    track = _localUserMediaStream.getVideoTracks()[0];
   }
 
   if (!track) {
@@ -1033,21 +952,17 @@ function _setLocalMediaTrackEnabled(trackKind, enabled) {
 
 function _getLocalMediaTrackMuted(trackKind) {
   let isLocalMediaTrackMuted = true;
-
+  let reusableTransceiversMap;
   if (trackKind === "audio") {
-    _audioTransceiverMap.forEach((audioTransceiver) => {
-      switch (audioTransceiver.currentDirection) {
-        case "sendrecv":
-        case "sendonly":
-          isLocalMediaTrackMuted = false;
-          return;
-        default:
-          break;
-      }
-    });
+    reusableTransceiversMap = _reusableAudioTransceiversMap;
   } else if (trackKind === "video") {
-    _videoTransceiverMap.forEach((videoTransceiver, peerId) => {
-      switch (videoTransceiver.currentDirection) {
+    reusableTransceiversMap = _reusableVideoTransceiversMap;
+  }
+
+  reusableTransceiversMap.forEach((transceivers) => {
+    if (transceivers.length > 0) {
+      const transceiver = transceivers[0];
+      switch (transceiver.currentDirection) {
         case "sendrecv":
         case "sendonly":
           isLocalMediaTrackMuted = false;
@@ -1055,26 +970,25 @@ function _getLocalMediaTrackMuted(trackKind) {
         default:
           break;
       }
-    });
-  }
+    }
+  });
 
   return isLocalMediaTrackMuted;
 }
 
 function _setLocalMediaTrackMuted(trackKind, muted) {
+  let reusableTransceiversMap;
   if (trackKind === "audio") {
-    _audioTransceiverMap.forEach((audioTransceiver) => {
-      if (audioTransceiver) {
-        audioTransceiver.direction = muted ? "recvonly" : "sendrecv";
-      }
-    });
+    reusableTransceiversMap = _reusableAudioTransceiversMap;
   } else if (trackKind === "video") {
-    _videoTransceiverMap.forEach((videoTransceiver) => {
-      if (videoTransceiver) {
-        videoTransceiver.direction = muted ? "recvonly" : "sendrecv";
-      }
-    });
+    reusableTransceiversMap = _reusableVideoTransceiversMap;
   }
+  reusableTransceiversMap.forEach((transceivers) => {
+    if (transceivers.length > 0) {
+      const transceiver = transceivers[0];
+      transceiver.direction = muted ? "recvonly" : "sendrecv";
+    }
+  });
 }
 
 /**
@@ -1107,7 +1021,7 @@ function _changeCallingState(changeToCalling) {
 
 function _startCalling() {
   _changeCallingState(true);
-  _createLocalMediaStream().then(_addLocalMediaStream, (error) => {
+  _createLocalUserMediaStream().then(_addLocalUserMediaStream, (error) => {
     console.log(
       `WebRTCGroupChatController: met error of ${error} when creating local media stream`
     );
@@ -1115,10 +1029,13 @@ function _startCalling() {
   });
 }
 
-function _hangUpCalling() {
+function _hangUpCalling(isLeavingRoom) {
   _changeCallingState(false);
-  _triggerAllRemoteMuteForLocalTracks();
-  _stopLocalTracks();
+  _stopLocalUserMediaTracks();
+
+  if (!isLeavingRoom) {
+    _pauseAllTransceiverSending();
+  }
 }
 
 /**
@@ -1602,12 +1519,12 @@ function _clearAllReceivingFiles() {
  * Utils
  */
 
-function _shadowCopy(obj) {
-  const copied = {};
-  Object.keys(obj).forEach((property) => {
-    copied[property] = obj[property];
+function _shadowCopyPlainObject(plainObj) {
+  const copiedPlainObj = {};
+  Object.keys(plainObj).forEach((property) => {
+    copiedPlainObj[property] = plainObj[property];
   });
-  return copied;
+  return copiedPlainObj;
 }
 
 function _checkUserName(username) {
@@ -1638,6 +1555,51 @@ function _checkPeerConnectionConfig(config) {
 function _checkUserId(id) {
   // use regular expression to check it literally
   return true;
+}
+
+function _pureKindOfTransceiver(transceiver) {
+  let senderKind = "";
+  let receiverKind = "";
+  if (transceiver.sender && transceiver.sender.track) {
+    senderKind = transceiver.sender.track.kind;
+  }
+  if (transceiver.receiver && transceiver.receiver.track) {
+    receiverKind = transceiver.receiver.track.kind;
+  }
+  if (senderKind !== receiverKind) {
+    return undefined;
+  }
+  return senderKind;
+}
+
+function _getTransceiversOfPureKind(peerConnection, pureKind) {
+  const transceivers = peerConnection.getTransceivers();
+  if (!transceivers || transceivers.length === 0) {
+    return [];
+  }
+  return transceivers.filter((transceiver) => {
+    return _pureKindOfTransceiver(transceiver) === pureKind;
+  });
+}
+
+function _getSendersOfKind(peerConnection, kind) {
+  const senders = peerConnection.getSenders();
+  if (!senders || senders.length === 0) {
+    return [];
+  }
+  return senders.filter((sender) => {
+    return sender.kind === kind;
+  });
+}
+
+function _getReceiversOfKind(peerConnection, kind) {
+  const receivers = peerConnection.getReceivers();
+  if (!receivers || receivers.length === 0) {
+    return [];
+  }
+  return receivers.filter((receiver) => {
+    return receiver.kind === kind;
+  });
 }
 
 export default {
@@ -1725,7 +1687,7 @@ export default {
     _startCalling();
   },
   hangUpCalling: function () {
-    _hangUpCalling();
+    _hangUpCalling(false);
   },
 
   // media tracks enabling during media calling
@@ -1761,10 +1723,10 @@ export default {
     _handleCallingStateChanged = handler;
   },
   onLocalMediaStreamChanged: function (handler) {
-    _handleLocalMediaStreamChanged = handler;
+    _handleLocalUserMediaStreamChanged = handler;
   },
   onPeerMediaStreamMapChanged: function (handler) {
-    _handlePeerMediaStreamMapChanged = handler;
+    _handlePeerUserMediaStreamMapChanged = handler;
   },
 
   //
