@@ -1,7 +1,6 @@
 import React from "react";
 
-import FileDataUtil from "./FileDataUtil.js";
-import WebRTCGroupChatController from "./WebRTCGroupChatController.js";
+import WebRTCGroupChatService from "./WebRTCGroupChatService/WebRTCGroupChatService.js";
 
 function FileTransceiver(props) {
   const {
@@ -45,7 +44,7 @@ function FileTransceiver(props) {
     transceivingFileHash.length > 0;
   const onCancelSendingClick = (e) => {
     if (sendingCancellable) {
-      WebRTCGroupChatController.cancelFileSendingToAllPeer(transceivingFileHash);
+      WebRTCGroupChatService.cancelFileSendingToAllPeer(transceivingFileHash);
     }
   };
 
@@ -60,11 +59,14 @@ function FileTransceiver(props) {
     handleReceivingDownload = () => {
       const handleFileExportSuccess = (file) => {
         if (file === undefined) {
-          alert('This cached file has been deleted, please let your peer send it again');
+          alert("This cached file has been deleted, please let your peer send it again");
           return;
         }
         if (file instanceof File === false) {
-          console.log(`FileTransceiver: unexpected type of params received from file Export handler`, file);
+          console.log(
+            `FileTransceiver: unexpected type of params received from file Export handler`,
+            file
+          );
           return;
         }
         const a = document.createElement("a");
@@ -72,7 +74,7 @@ function FileTransceiver(props) {
         a.download = file.name;
         a.click();
         a.remove();
-      }
+      };
       receivingFileExporter().then(handleFileExportSuccess).catch(console.error);
     };
   }
@@ -85,9 +87,9 @@ function FileTransceiver(props) {
           value={curTransProgress}
           max={maxTransProgress}
         />
-        <span>{FileDataUtil.formatBytes(curTransProgress)}</span>
+        <span>{WebRTCGroupChatService.formatBytes(curTransProgress)}</span>
         {" / "}
-        <span>{FileDataUtil.formatBytes(maxTransProgress)}</span>
+        <span>{WebRTCGroupChatService.formatBytes(maxTransProgress)}</span>
       </div>
       {sendingCancellable && (
         <div>
@@ -109,11 +111,11 @@ export default function FileTransceiverList(props) {
 
   if (
     sendingRelatedData &&
-    sendingRelatedData[WebRTCGroupChatController.fileSendingSliceContainerKey]
+    sendingRelatedData[WebRTCGroupChatService.fileSendingSliceContainerKey]
   ) {
     // sending
     const sendingFileHashToConcatData =
-      sendingRelatedData[WebRTCGroupChatController.fileSendingSliceContainerKey];
+      sendingRelatedData[WebRTCGroupChatService.fileSendingSliceContainerKey];
     Object.entries(sendingFileHashToConcatData).forEach(([fileHash, sendingConcatData]) => {
       transceivingList.push(
         <FileTransceiver
@@ -121,21 +123,21 @@ export default function FileTransceiverList(props) {
           isSender={true}
           transceivingFileHash={fileHash}
           transceivingMetaData={
-            sendingConcatData[WebRTCGroupChatController.fileSendingMetaDataSliceKey]
+            sendingConcatData[WebRTCGroupChatService.fileSendingMetaDataSliceKey]
           }
           transceivingProgress={
-            sendingConcatData[WebRTCGroupChatController.fileSendingMinProgressSliceKey]
+            sendingConcatData[WebRTCGroupChatService.fileSendingMinProgressSliceKey]
           }
         />
       );
     });
   } else if (
     receivingRelatedData &&
-    receivingRelatedData[WebRTCGroupChatController.fileReceivingSliceContainerKey]
+    receivingRelatedData[WebRTCGroupChatService.fileReceivingSliceContainerKey]
   ) {
     // receiving
     const receivingPeerMap =
-      receivingRelatedData[WebRTCGroupChatController.fileReceivingSliceContainerKey];
+      receivingRelatedData[WebRTCGroupChatService.fileReceivingSliceContainerKey];
     receivingPeerMap.forEach((hashToConcatData, peerId) => {
       Object.entries(hashToConcatData).forEach(([fileHash, receivingConcatData]) => {
         transceivingList.push(
@@ -143,13 +145,13 @@ export default function FileTransceiverList(props) {
             key={`${peerId}-${fileHash}`}
             isSender={false}
             transceivingMetaData={
-              receivingConcatData[WebRTCGroupChatController.fileReceivingMetaDataSliceKey]
+              receivingConcatData[WebRTCGroupChatService.fileReceivingMetaDataSliceKey]
             }
             transceivingProgress={
-              receivingConcatData[WebRTCGroupChatController.fileReceivingProgressSliceKey]
+              receivingConcatData[WebRTCGroupChatService.fileReceivingProgressSliceKey]
             }
             receivingFileExporter={
-              receivingConcatData[WebRTCGroupChatController.fileReceivingFileExporterSliceKey]
+              receivingConcatData[WebRTCGroupChatService.fileReceivingFileExporterSliceKey]
             }
           />
         );

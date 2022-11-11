@@ -7,9 +7,9 @@
  */
 
 import axios from "axios";
-import SocketService from "./SocketService.js";
-import FileDataStore from "./FileDataStore.js";
-import FileDataUtil from "./FileDataUtil.js";
+import SocketService from "./WebRTCGroupChatService/WebRTCSocketService.js";
+import FileDataStore from "./WebRTCFileDataStore.js";
+import FileDataUtil from "./WebRTCFileDataUtil.js";
 
 /**
  * The self id given by server side

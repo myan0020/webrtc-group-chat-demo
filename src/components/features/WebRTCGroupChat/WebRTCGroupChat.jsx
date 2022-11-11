@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-import WebRTCGroupChatController from "./WebRTCGroupChatController.js";
+import WebRTCGroupChatService from "./WebRTCGroupChatService/WebRTCGroupChatService.js";
 import VideoList from "./VideoList.jsx";
 import FileTransceiverList from "./FileTransceiverList.jsx";
 import style from "./WebRTCGroupChat.module.css";
@@ -61,14 +61,14 @@ export default function WebRTCGroupChat() {
 
   // hook 19: authentication
   useEffect(() => {
-    WebRTCGroupChatController.onLoginInSuccess((payload) => {
+    WebRTCGroupChatService.onLoginInSuccess((payload) => {
       const authenticatedUsername = payload.username;
       if (authenticatedUsername.length > 0) {
         setIsLogin(true);
         setAuthenticatedUsername(authenticatedUsername);
       }
     });
-    WebRTCGroupChatController.onLogoutInSuccess(() => {
+    WebRTCGroupChatService.onLogoutInSuccess(() => {
       setIsLogin(false);
       setJoinedRoomId("");
       setRooms({});
@@ -78,40 +78,40 @@ export default function WebRTCGroupChat() {
 
   // hook 20: chat room actions
   useEffect(() => {
-    WebRTCGroupChatController.onRoomsInfoUpdated((payload) => {
+    WebRTCGroupChatService.onRoomsInfoUpdated((payload) => {
       const rooms = payload.rooms;
       if (rooms) {
         setRooms(rooms);
       }
     });
-    WebRTCGroupChatController.onJoinRoomInSuccess((payload) => {
+    WebRTCGroupChatService.onJoinRoomInSuccess((payload) => {
       const roomId = payload.roomId;
       const roomName = payload.roomName;
       if (roomId.length > 0 && roomName.length > 0) {
         setJoinedRoomId(roomId);
       }
     });
-    WebRTCGroupChatController.onLeaveRoomInSuccess((payload) => {
+    WebRTCGroupChatService.onLeaveRoomInSuccess((payload) => {
       setJoinedRoomId("");
     });
   }, []);
 
   // hook 21: media calling state
   useEffect(() => {
-    WebRTCGroupChatController.onWebRTCCallingStateChanged((isCalling) => {
+    WebRTCGroupChatService.onWebRTCCallingStateChanged((isCalling) => {
       setIsCalling(isCalling);
     });
   }, []);
 
   // hook 22: WebRTC media streams
   useEffect(() => {
-    WebRTCGroupChatController.onLocalMediaStreamChanged((mediaStream) => {
+    WebRTCGroupChatService.onLocalMediaStreamChanged((mediaStream) => {
       setLocalMediaStream(mediaStream);
 
-      setIsMicEnabled(WebRTCGroupChatController.localMicEnabled);
-      setIsCameraEnabled(WebRTCGroupChatController.localCameraEnabled);
+      setIsMicEnabled(WebRTCGroupChatService.localMicEnabled);
+      setIsCameraEnabled(WebRTCGroupChatService.localCameraEnabled);
     });
-    WebRTCGroupChatController.onPeerMediaStreamMapChanged((peerUserMediaStreamMap) => {
+    WebRTCGroupChatService.onPeerMediaStreamMapChanged((peerUserMediaStreamMap) => {
       console.log(
         `onPeerMediaStreamMapChanged called with peer stream map size ${
           peerUserMediaStreamMap ? peerUserMediaStreamMap.size : "unknown"
@@ -120,14 +120,14 @@ export default function WebRTCGroupChat() {
       setPeerUserMediaStreamMap(peerUserMediaStreamMap);
 
       // TODO: it is the temperary location where the code below is called
-      setIsMicMuted(WebRTCGroupChatController.localMicMuted);
-      setIsCameraMuted(WebRTCGroupChatController.localCameraMuted);
+      setIsMicMuted(WebRTCGroupChatService.localMicMuted);
+      setIsCameraMuted(WebRTCGroupChatService.localCameraMuted);
     });
   }, []);
 
   // hook 23: file transceiving
   useEffect(() => {
-    WebRTCGroupChatController.onFileSendingRelatedDataChanged(
+    WebRTCGroupChatService.onFileSendingRelatedDataChanged(
       (fileSendingRelatedData, isFileSendingStatusSending) => {
         if (isFileSendingStatusSending !== undefined) {
           setIsFileSendingStatusSending(isFileSendingStatusSending);
@@ -135,7 +135,7 @@ export default function WebRTCGroupChat() {
         setFileSendingRelatedData(fileSendingRelatedData);
       }
     );
-    WebRTCGroupChatController.onFileReceivingRelatedDataChanged((fileReceivingRelatedData) => {
+    WebRTCGroupChatService.onFileReceivingRelatedDataChanged((fileReceivingRelatedData) => {
       setFileReceivingRelatedData(fileReceivingRelatedData);
     });
   }, []);
@@ -157,10 +157,10 @@ export default function WebRTCGroupChat() {
   // click to login or logout
   const onLoginoutClick = (e) => {
     if (!isLogin && inputUserName.length > 0) {
-      WebRTCGroupChatController.login(inputUserName);
+      WebRTCGroupChatService.login(inputUserName);
       return;
     }
-    WebRTCGroupChatController.logout();
+    WebRTCGroupChatService.logout();
   };
 
   // set keyboard shortcuts
@@ -172,13 +172,13 @@ export default function WebRTCGroupChat() {
       return;
     }
     if (inputUserName.length === 0) return;
-    WebRTCGroupChatController.login(inputUserName);
+    WebRTCGroupChatService.login(inputUserName);
   };
 
   // click to create a new room
   const onCreateNewRoomClick = (e) => {
     if (!inputRoomName.length > 0 || joinedRoomId.length > 0) return;
-    WebRTCGroupChatController.createNewRoom(inputRoomName);
+    WebRTCGroupChatService.createNewRoom(inputRoomName);
   };
 
   // click to select a room
@@ -191,33 +191,33 @@ export default function WebRTCGroupChat() {
   // click to join the selected room
   const onJoinSelectedRoomClick = (e) => {
     if (!selectedRoomId.length > 0) return;
-    WebRTCGroupChatController.joinRoom(selectedRoomId);
+    WebRTCGroupChatService.joinRoom(selectedRoomId);
   };
 
   // click to leave the current room
   const onLeaveFromCurRoomClick = (e) => {
-    WebRTCGroupChatController.leaveRoom();
+    WebRTCGroupChatService.leaveRoom();
   };
 
   // click to start calling
   const onStartMediaCallingClick = (e) => {
     if (joinedRoomId.length > 0) {
-      WebRTCGroupChatController.startCalling();
+      WebRTCGroupChatService.startCalling();
     }
   };
 
   // click to hang up calling
   const onHangUpMediaCallingClick = (e) => {
     if (joinedRoomId.length > 0) {
-      WebRTCGroupChatController.hangUpCalling();
+      WebRTCGroupChatService.hangUpCalling();
     }
   };
 
   // click to toggle microphone enabling
   const onToggleMicEnablingClick = (e) => {
     if (joinedRoomId.length > 0 && isCalling) {
-      const curEnabled = WebRTCGroupChatController.localMicEnabled;
-      WebRTCGroupChatController.localMicEnabled = !curEnabled;
+      const curEnabled = WebRTCGroupChatService.localMicEnabled;
+      WebRTCGroupChatService.localMicEnabled = !curEnabled;
       setIsMicEnabled(!curEnabled);
     }
   };
@@ -225,8 +225,8 @@ export default function WebRTCGroupChat() {
   // click to toggle camera enabling
   const onToggleCameraEnablingClick = (e) => {
     if (joinedRoomId.length > 0 && isCalling) {
-      const curEnabled = WebRTCGroupChatController.localCameraEnabled;
-      WebRTCGroupChatController.localCameraEnabled = !curEnabled;
+      const curEnabled = WebRTCGroupChatService.localCameraEnabled;
+      WebRTCGroupChatService.localCameraEnabled = !curEnabled;
       setIsCameraEnabled(!curEnabled);
     }
   };
@@ -234,8 +234,8 @@ export default function WebRTCGroupChat() {
   // click to toggle microphone muting
   const onToggleMicMutingClick = (e) => {
     if (joinedRoomId.length > 0 && isCalling) {
-      const curMuted = WebRTCGroupChatController.localMicMuted;
-      WebRTCGroupChatController.localMicMuted = !curMuted;
+      const curMuted = WebRTCGroupChatService.localMicMuted;
+      WebRTCGroupChatService.localMicMuted = !curMuted;
       setIsMicMuted(!curMuted);
     }
   };
@@ -243,8 +243,8 @@ export default function WebRTCGroupChat() {
   // click to toggle camera muting
   const onToggleCameraMutingClick = (e) => {
     if (joinedRoomId.length > 0 && isCalling) {
-      const curMuted = WebRTCGroupChatController.localCameraMuted;
-      WebRTCGroupChatController.localCameraMuted = !curMuted;
+      const curMuted = WebRTCGroupChatService.localCameraMuted;
+      WebRTCGroupChatService.localCameraMuted = !curMuted;
       setIsCameraMuted(!curMuted);
     }
   };
@@ -259,25 +259,25 @@ export default function WebRTCGroupChat() {
   // click to send file
   const onSendFileClick = (e) => {
     if (joinedRoomId.length > 0) {
-      WebRTCGroupChatController.sendFileToAllPeer(files);
+      WebRTCGroupChatService.sendFileToAllPeer(files);
     }
   };
   // click to cancel sending all files
   const onCancelAllFileSendingClick = (e) => {
     if (joinedRoomId.length > 0) {
-      WebRTCGroupChatController.cancelAllFileSending();
+      WebRTCGroupChatService.cancelAllFileSending();
     }
   };
   // click to reset all file buffers received
   const onResetAllFileBuffersReceivedClick = (e) => {
     if (joinedRoomId.length > 0) {
-      WebRTCGroupChatController.resetAllFileBuffersReceived();
+      WebRTCGroupChatService.resetAllFileBuffersReceived();
     }
   };
   // click to clear all files received
   const onClearAllFilesReceivedClick = (e) => {
     if (joinedRoomId.length > 0) {
-      WebRTCGroupChatController.clearAllFilesReceived();
+      WebRTCGroupChatService.clearAllFilesReceived();
     }
   };
 
