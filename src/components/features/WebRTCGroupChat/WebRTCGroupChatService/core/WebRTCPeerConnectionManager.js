@@ -1,13 +1,8 @@
 import WebRTCDataChannelManager from "./WebRTCDataChannelManager.js";
 import WebRTCMediaCallingManager from "./WebRTCMediaCallingManager.js";
-import WebRTCSocketService from "./WebRTCSocketService.js";
+import WebRTCSocketManager from "./WebRTCSocketManager.js";
 
 let _webSocketUrl;
-
-/**
- * Peer connections management
- */
-
 let _peerConnectionConfig = {
   iceServers: [
     { urls: ["stun:ntk-turn-2.xirsys.com"] },
@@ -120,7 +115,7 @@ function _handleNewPeerArivalInternally(payload) {
 
 function _handleNewPassthroughArival(payload) {
   const peerId = payload.from;
-  const { sdp, iceCandidate } = payload;
+  const { sdp, iceCandidate, callingConstraints } = payload;
   const isSDP = sdp !== undefined;
   const isICE = iceCandidate !== undefined;
 
@@ -209,6 +204,11 @@ function _handleNewPassthroughArival(payload) {
     peerConnection.isSettingRemoteAnswerPending = true;
   }
 
+  if (callingConstraints) {
+    console.log(`callingConstraints:`, callingConstraints);
+    peerConnection.callingConstraints = callingConstraints;
+  }
+
   console.log(
     `WebRTCGroupChatController: before setting 'setRemoteDescription', the remoteDescription is ${
       peerConnection.remoteDescription ? peerConnection.remoteDescription.type : "unknown"
@@ -227,11 +227,13 @@ function _handleNewPassthroughArival(payload) {
         }`
       );
 
+      // remote description is answer
       if (sdp.type == "answer") {
         peerConnection.isSettingRemoteAnswerPending = false;
         return;
       }
 
+      // remote description is offer
       return peerConnection.setLocalDescription();
     })
     .then(() => {
@@ -239,10 +241,14 @@ function _handleNewPassthroughArival(payload) {
         return;
       }
 
-      WebRTCSocketService.emitMessageEvent(_webSocketUrl, WebRTCSocketService.typeEnum.WEBRTC_NEW_PASSTHROUGH, {
-        sdp: peerConnection.localDescription,
-        userId: peerId,
-      });
+      WebRTCSocketManager.emitMessageEvent(
+        _webSocketUrl,
+        WebRTCSocketManager.typeEnum.WEBRTC_NEW_PASSTHROUGH,
+        {
+          sdp: peerConnection.localDescription,
+          to: peerId,
+        }
+      );
     })
     .catch((error) => {
       console.error(
@@ -295,23 +301,26 @@ function _addPeerConnection(peerId) {
   };
   peerConnection.oniceconnectionstatechange = _handlePeerConnectionICEConnectionStateChangeEvent;
   peerConnection.onnegotiationneeded = _handlePeerConnectionNegotiationEvent;
-
   peerConnection.ondatachannel = (event) => {
     WebRTCDataChannelManager.handlePeerConnectionDataChannelEvent(event, peerId);
   };
 
   peerConnection.ontrack = (event) => {
-    WebRTCMediaCallingManager.handlePeerConnectionTrackEvent(event, peerId);
+    WebRTCMediaCallingManager.handlePeerConnectionTrackEvent(event, peerId, peerConnection);
   };
   WebRTCMediaCallingManager.addLocalTracksIfPossible(peerId, peerConnection);
 }
 
 function _handlePeerConnectionICECandidateEvent(event, peerId) {
   if (event.candidate) {
-    WebRTCSocketService.emitMessageEvent(_webSocketUrl, WebRTCSocketService.typeEnum.WEBRTC_NEW_PASSTHROUGH, {
-      iceCandidate: event.candidate,
-      userId: peerId,
-    });
+    WebRTCSocketManager.emitMessageEvent(
+      _webSocketUrl,
+      WebRTCSocketManager.typeEnum.WEBRTC_NEW_PASSTHROUGH,
+      {
+        iceCandidate: event.candidate,
+        to: peerId,
+      }
+    );
     console.log(
       `WebRTCGroupChatController: a peer connection's 'onicecandidate' fired with a new ICE candidate, then it's sent to ${peerId}`
     );
@@ -365,10 +374,15 @@ function _handlePeerConnectionNegotiationEvent(event) {
         },  during 'onnegotiationneeded'`
       );
 
-      WebRTCSocketService.emitMessageEvent(_webSocketUrl, WebRTCSocketService.typeEnum.WEBRTC_NEW_PASSTHROUGH, {
-        sdp: offer,
-        userId: peerId,
-      });
+      WebRTCSocketManager.emitMessageEvent(
+        _webSocketUrl,
+        WebRTCSocketManager.typeEnum.WEBRTC_NEW_PASSTHROUGH,
+        {
+          sdp: offer,
+          to: peerId,
+          callingConstraints: WebRTCMediaCallingManager.callingConstraints,
+        }
+      );
     })
     .catch((error) => {
       console.error(`WebRTCGroupChatController: Found error with message of ${error}`);

@@ -1,6 +1,95 @@
 import WebRTCFileDataStore from "./WebRTCFileDataStore.js";
 import WebRTCFileDataUtil from "./WebRTCFileDataUtil.js";
 
+/**
+ * Chat messaging
+ */
+
+const CHAT_MESSAGING_CHANNEL_LABEL = "CHAT_MESSAGING_CHANNEL_LABEL";
+const _peerChatMessagingChannelMap = _createDataChannelMap();
+
+let _handleChatMessageReceived;
+
+function _sendChatMessageToAllPeer(peerConnectionMap, message) {
+  if (!peerConnectionMap) {
+    console.log(
+      `WebRTCGroupChatController: unexpected peerConnectionMap during chat messaging`,
+      peerConnectionMap
+    );
+    return;
+  }
+
+  if (!message || typeof message !== "string" || message.length === 0) {
+    console.log(`WebRTCGroupChatController: unexpected message during chat messaging`, message);
+    return;
+  }
+
+  peerConnectionMap.forEach((peerConnection, peerId) => {
+    _sendChatMessageToPeer(message, peerId, peerConnection);
+  });
+}
+
+function _sendChatMessageToPeer(message, peerId, peerConnection) {
+  if (!message || typeof message !== "string" || message.length === 0) {
+    console.log(`WebRTCGroupChatController: unexpected message during chat messaging`, message);
+    return;
+  }
+
+  let dataChannel;
+  if (_peerChatMessagingChannelMap.hasChannel(peerId, CHAT_MESSAGING_CHANNEL_LABEL)) {
+    dataChannel = _peerChatMessagingChannelMap.getChannel(peerId, CHAT_MESSAGING_CHANNEL_LABEL);
+    _handleSenderChatMessagingChannelOpen(peerId, dataChannel, message);
+  } else {
+    dataChannel = _createAndStoreDataChannel({
+      peerConnection: peerConnection,
+      peerId: peerId,
+      label: CHAT_MESSAGING_CHANNEL_LABEL,
+      onOpenHandler: () => {
+        _handleSenderChatMessagingChannelOpen(peerId, dataChannel, message);
+      },
+      onMessageHandler: (event) => {
+        _handleChatMessagingChannelMessage({
+          event,
+          peerId,
+          label: CHAT_MESSAGING_CHANNEL_LABEL,
+        });
+      },
+      onCloseHandler: (event) => {
+        _handleChannelClose(event, peerId);
+      },
+    });
+  }
+}
+
+function _handleSenderChatMessagingChannelOpen(peerId, dataChannel, message) {
+  if (dataChannel.readyState === "open") {
+    dataChannel.send(message);
+    console.log(
+      `WebRTCGroupChatController: sent a chat starting message(${message}) to a peer(${peerId})`
+    );
+  }
+}
+
+function _handleChatMessagingChannelMessage({ event, peerId, label }) {
+  const { data: message } = event;
+  if (typeof message !== "string") {
+    console.log(`WebRTCGroupChatController: unexpected 'data' type, it is not type of 'string'`);
+    return;
+  }
+  if (_handleChatMessageReceived) {
+    _handleChatMessageReceived(message);
+  }
+  console.log(
+    `WebRTCGroupChatController: the '${
+      label ? label : "unknown"
+    }' labeled data channel's 'onmessage' fired with a chat message(${message})`
+  );
+}
+
+/**
+ * File transceiving
+ */
+
 const MAXIMUM_FILE_CHUNK_SIZE = WebRTCFileDataStore.maxSendingChunkSize;
 const FILE_META_DATA_CHANNEL_LABEL = "FILE_META_DATA_CHANNEL_LABEL";
 const ACK_OF_FILE_META_DATA_MESSAGE = "ACK_OF_FILE_META_DATA_MESSAGE";
@@ -288,7 +377,9 @@ function _createAndStoreDataChannel({
     dataChannel.onclose = onCloseHandler;
   }
 
-  if (label === FILE_META_DATA_CHANNEL_LABEL) {
+  if (label === CHAT_MESSAGING_CHANNEL_LABEL) {
+    _peerChatMessagingChannelMap.setChannel(peerId, label, dataChannel);
+  } else if (label === FILE_META_DATA_CHANNEL_LABEL) {
     _peerFileMetaDataChannelMap.setChannel(peerId, label, dataChannel);
   } else {
     _peerFileBufferChannelMap.setChannel(peerId, label, dataChannel);
@@ -396,7 +487,7 @@ function _handleChannelClose(event, peerId) {
   );
 }
 
-// ( receiver: file meta data && file buffer )
+// ( receiver: file meta data && file buffer && chat messaging )
 function _handlePeerConnectionDataChannelEvent(event, peerId) {
   const {
     channel,
@@ -407,9 +498,12 @@ function _handlePeerConnectionDataChannelEvent(event, peerId) {
     `WebRTCGroupChatController: fired 'ondatachannel' with a channel of label (${label})`
   );
 
-  // const peerId = peerConnectionMap.getFirstKeyByValue(peerConnection);
-
-  if (label === FILE_META_DATA_CHANNEL_LABEL) {
+  if (label === CHAT_MESSAGING_CHANNEL_LABEL) {
+    channel.onmessage = (event) => {
+      _handleChatMessagingChannelMessage({ event, peerId, label });
+      _peerChatMessagingChannelMap.setChannel(peerId, label, channel);
+    };
+  } else if (label === FILE_META_DATA_CHANNEL_LABEL) {
     channel.onmessage = (event) => {
       _handleReceiverChannelFileMetaDataMessage(event, peerId, label);
     };
@@ -500,6 +594,11 @@ function _resetAllFileBuffersReceived() {
 }
 
 export default {
+  sendChatMessageToAllPeer: _sendChatMessageToAllPeer,
+  onChatMessageReceived: function (handler) {
+    _handleChatMessageReceived = handler;
+  },
+
   sendFileToAllPeer: _sendFileToAllPeer,
   cancelSenderAllFileSending: _cancelSenderAllFileSending,
   cancelSenderFileSendingToAllPeer: _cancelSenderFileSendingToAllPeer,

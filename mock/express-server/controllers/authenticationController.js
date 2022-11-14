@@ -30,7 +30,7 @@ exports.handleLogout = (req, res, next) => {
 
   // TODO:
   //
-  // Very important!!!
+  // Priority Level: Middle
   //
   // WebSocket connection does not close at a right moment or for a right user
   //
@@ -49,7 +49,7 @@ exports.handleLogout = (req, res, next) => {
 
   // TODO:
   //
-  // Very important!!!
+  // Priority Level: Middle
   //
   // this 'session.destroy' method is used incorrectly,
   // and it will cause all sessiones to be deleted

@@ -286,8 +286,8 @@ const handleWebRTCNewPassthrough = (
   sessionUserId,
   payload
 ) => {
-  if (!userRoomMap.has(sessionUserId)) return;
-  const websocketToPassThrough = sessionMap.get(payload.userId);
+  if (!userRoomMap.has(sessionUserId) || !payload.to) return;
+  const websocketToPassThrough = sessionMap.get(payload.to);
   const { sdp, iceCandidate } = payload;
 
   if ((sdp || iceCandidate) && websocketToPassThrough) {
@@ -310,10 +310,8 @@ const handleWebRTCNewPassthrough = (
       websocketToPassThrough,
       signalTypeEnum.WEBRTC_NEW_PASSTHROUGH,
       {
-        sdp,
-        iceCandidate,
+        ...payload,
         from: sessionUserId,
-        to: payload.userId,
       }
     );
   }

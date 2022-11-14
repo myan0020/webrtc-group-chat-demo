@@ -1,5 +1,5 @@
 import axios from "axios";
-import WebRTCSocketService from "./WebRTCSocketService.js";
+import WebRTCSocketManager from "./WebRTCSocketManager.js";
 
 let _selfId;
 let _webSocketUrl;
@@ -112,35 +112,35 @@ function _loginSignaling(username) {
       if (!passChecking) return;
       _selfId = userId;
       if (type === _httpSignalTypeEnum.LOG_IN_SUCCESS) {
-        WebRTCSocketService.createSocket(_webSocketUrl, _handleSocketOpen, _handleSocketClose);
-        WebRTCSocketService.registerMessageEvent(
+        WebRTCSocketManager.createSocket(_webSocketUrl, _handleSocketOpen, _handleSocketClose);
+        WebRTCSocketManager.registerMessageEvent(
           _webSocketUrl,
-          WebRTCSocketService.typeEnum.UPDATE_ROOMS,
+          WebRTCSocketManager.typeEnum.UPDATE_ROOMS,
           _handleSocketUpdateRooms
         );
-        WebRTCSocketService.registerMessageEvent(
+        WebRTCSocketManager.registerMessageEvent(
           _webSocketUrl,
-          WebRTCSocketService.typeEnum.JOIN_ROOM_SUCCESS,
+          WebRTCSocketManager.typeEnum.JOIN_ROOM_SUCCESS,
           _handleSocketJoinRoomSuccess
         );
-        WebRTCSocketService.registerMessageEvent(
+        WebRTCSocketManager.registerMessageEvent(
           _webSocketUrl,
-          WebRTCSocketService.typeEnum.LEAVE_ROOM_SUCCESS,
+          WebRTCSocketManager.typeEnum.LEAVE_ROOM_SUCCESS,
           _handleSocketLeaveRoomSuccess
         );
-        WebRTCSocketService.registerMessageEvent(
+        WebRTCSocketManager.registerMessageEvent(
           _webSocketUrl,
-          WebRTCSocketService.typeEnum.WEBRTC_NEW_PEER_ARIVAL,
+          WebRTCSocketManager.typeEnum.WEBRTC_NEW_PEER_ARIVAL,
           _handleSocketNewWebRTCPeerArival
         );
-        WebRTCSocketService.registerMessageEvent(
+        WebRTCSocketManager.registerMessageEvent(
           _webSocketUrl,
-          WebRTCSocketService.typeEnum.WEBRTC_NEW_PASSTHROUGH,
+          WebRTCSocketManager.typeEnum.WEBRTC_NEW_PASSTHROUGH,
           _handleSocketNewWebRTCPassthroughArival
         );
-        WebRTCSocketService.registerMessageEvent(
+        WebRTCSocketManager.registerMessageEvent(
           _webSocketUrl,
-          WebRTCSocketService.typeEnum.WEBRTC_NEW_PEER_LEAVE,
+          WebRTCSocketManager.typeEnum.WEBRTC_NEW_PEER_LEAVE,
           _handleSocketNewWebRTCPeerLeave
         );
         // the first time rooms info updating should be transfored through axios
@@ -187,7 +187,7 @@ function _logoutSignaling() {
 
 function _createNewRoomSignaling(roomName) {
   if (roomName.length > 0) {
-    WebRTCSocketService.emitMessageEvent(_webSocketUrl, WebRTCSocketService.typeEnum.CREATE_ROOM, {
+    WebRTCSocketManager.emitMessageEvent(_webSocketUrl, WebRTCSocketManager.typeEnum.CREATE_ROOM, {
       roomName: roomName,
     });
   }
@@ -195,14 +195,14 @@ function _createNewRoomSignaling(roomName) {
 
 function _joinRoomSignaling(roomId) {
   if (roomId.length > 0) {
-    WebRTCSocketService.emitMessageEvent(_webSocketUrl, WebRTCSocketService.typeEnum.JOIN_ROOM, {
+    WebRTCSocketManager.emitMessageEvent(_webSocketUrl, WebRTCSocketManager.typeEnum.JOIN_ROOM, {
       roomId: roomId,
     });
   }
 }
 
 function _leaveRoomSignaling() {
-  WebRTCSocketService.emitMessageEvent(_webSocketUrl, WebRTCSocketService.typeEnum.LEAVE_ROOM, {});
+  WebRTCSocketManager.emitMessageEvent(_webSocketUrl, WebRTCSocketManager.typeEnum.LEAVE_ROOM, {});
 }
 
 /**

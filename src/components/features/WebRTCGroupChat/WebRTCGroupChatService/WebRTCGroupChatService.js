@@ -1,7 +1,15 @@
-import WebRTCSignalingManager from "./WebRTCSignalingManager.js";
-import WebRTCPeerConnectionManager from "./WebRTCPeerConnectionManager.js";
-import WebRTCDataChannelManager from "./WebRTCDataChannelManager.js";
-import WebRTCMediaCallingManager from "./WebRTCMediaCallingManager.js";
+/**
+ *
+ * This service provides a number of group chat features
+ * including chat messaging, media calling and file transceiving
+ * using WebRTC mesh architecture.
+ *
+ */
+
+import WebRTCSignalingManager from "./core/WebRTCSignalingManager.js";
+import WebRTCPeerConnectionManager from "./core/WebRTCPeerConnectionManager.js";
+import WebRTCDataChannelManager from "./core/WebRTCDataChannelManager.js";
+import WebRTCMediaCallingManager from "./core/WebRTCMediaCallingManager.js";
 
 const _webSocketHost = location.hostname;
 const _webSocketPort = "3002"; // websocket port number should same as mock express server port number
@@ -30,6 +38,9 @@ export default {
   logout: function () {
     //
     // TODO:
+    //
+    // Priority Level: Middle
+    //
     // a error is found when logout, then re-login + join room + start calling,
     // react_devtools_backend.js:4026 WebRTCGroupChatController: Found an error with message of InvalidStateError: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote answer sdp: Called in wrong state: stable during 'setRemoteDescription' or 'setLocalDescription'
     //
@@ -75,6 +86,20 @@ export default {
   },
   onLeaveRoomInSuccess: function (handler) {
     WebRTCSignalingManager.onLeaveRoomInSuccess(handler);
+  },
+
+  /**
+   * Messaging
+   */
+
+  sendChatMessageToAllPeer(message) {
+    WebRTCDataChannelManager.sendChatMessageToAllPeer(
+      WebRTCPeerConnectionManager.peerConnectionMap,
+      message
+    );
+  },
+  onChatMessageReceived: function (handler) {
+    WebRTCDataChannelManager.onChatMessageReceived(handler);
   },
 
   /**
@@ -148,12 +173,16 @@ export default {
    * Media Calling
    */
 
+  applyCallingConstraints(callingConstraints) {
+    WebRTCMediaCallingManager.applyCallingConstraints(callingConstraints);
+  },
   startCalling() {
     WebRTCMediaCallingManager.startCalling(WebRTCPeerConnectionManager.peerConnectionMap);
   },
   hangUpCalling() {
     WebRTCMediaCallingManager.hangUpCalling(false);
   },
+
   // media tracks enabling during media calling
   get localMicEnabled() {
     return WebRTCMediaCallingManager.localMicEnabled;
@@ -189,5 +218,17 @@ export default {
   },
   onPeerMediaStreamMapChanged: function (handler) {
     WebRTCMediaCallingManager.onPeerMediaStreamMapChanged(handler);
+  },
+  onLocalAudioEnableAvaliableChanged: function (handler) {
+    WebRTCMediaCallingManager.onLocalAudioEnableAvaliableChanged(handler);
+  },
+  onLocalVideoEnableAvaliableChanged: function (handler) {
+    WebRTCMediaCallingManager.onLocalVideoEnableAvaliableChanged(handler);
+  },
+  onLocalAudioMuteAvaliableChanged: function (handler) {
+    WebRTCMediaCallingManager.onLocalAudioMuteAvaliableChanged(handler);
+  },
+  onLocalVideoMuteAvaliableChanged: function (handler) {
+    WebRTCMediaCallingManager.onLocalVideoMuteAvaliableChanged(handler);
   },
 };

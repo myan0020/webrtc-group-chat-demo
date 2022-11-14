@@ -36,30 +36,38 @@ export default function WebRTCGroupChat() {
   // hook 10
   const [isCalling, setIsCalling] = useState(false);
   // hook 11
-  const [isMicEnabled, setIsMicEnabled] = useState(false);
+  const [isAudioEnableAvaliable, setIsAudioEnableAvaliable] = useState(false);
   // hook 12
-  const [isCameraEnabled, setIsCameraEnabled] = useState(false);
+  const [isAudioEnabled, setIsAudioEnabled] = useState(false);
   // hook 13
-  const [isMicMuted, setIsMicMuted] = useState(true);
+  const [isVideoEnableAvaliable, setIsVideoEnableAvaliable] = useState(false);
   // hook 14
-  const [isCameraMuted, setIsCameraMuted] = useState(true);
+  const [isVideoEnabled, setIsVideoEnabled] = useState(false);
+  // hook 15
+  const [isAudioMuteAvaliable, setIsAudioMuteAvaliable] = useState(false);
+  // hook 16
+  const [isAudioMuted, setIsAudioMuted] = useState(true);
+  // hook 17
+  const [isVideoMuteAvaliable, setIsVideoMuteAvaliable] = useState(false);
+  // hook 18
+  const [isVideoMuted, setIsVideoMuted] = useState(true);
 
   // file transceiving
   //
-  // hook 15
+  // hook 19
   const [files, setFiles] = useState(null);
-  // hook 16
+  // hook 20
   const [isFileSendingStatusSending, setIsFileSendingStatusSending] = useState(false);
-  // hook 17
+  // hook 21
   const [fileSendingRelatedData, setFileSendingRelatedData] = useState(null);
-  // hook 18
+  // hook 22
   const [fileReceivingRelatedData, setFileReceivingRelatedData] = useState(null);
 
   /**
    * Side Effects
    */
 
-  // hook 19: authentication
+  // hook 23: authentication
   useEffect(() => {
     WebRTCGroupChatService.onLoginInSuccess((payload) => {
       const authenticatedUsername = payload.username;
@@ -76,7 +84,7 @@ export default function WebRTCGroupChat() {
     });
   }, []);
 
-  // hook 20: chat room actions
+  // hook 24: chat room actions
   useEffect(() => {
     WebRTCGroupChatService.onRoomsInfoUpdated((payload) => {
       const rooms = payload.rooms;
@@ -96,20 +104,17 @@ export default function WebRTCGroupChat() {
     });
   }, []);
 
-  // hook 21: media calling state
+  // hook 25: media calling state
   useEffect(() => {
     WebRTCGroupChatService.onWebRTCCallingStateChanged((isCalling) => {
       setIsCalling(isCalling);
     });
   }, []);
 
-  // hook 22: WebRTC media streams
+  // hook 26: WebRTC media streams
   useEffect(() => {
     WebRTCGroupChatService.onLocalMediaStreamChanged((mediaStream) => {
       setLocalMediaStream(mediaStream);
-
-      setIsMicEnabled(WebRTCGroupChatService.localMicEnabled);
-      setIsCameraEnabled(WebRTCGroupChatService.localCameraEnabled);
     });
     WebRTCGroupChatService.onPeerMediaStreamMapChanged((peerUserMediaStreamMap) => {
       console.log(
@@ -118,14 +123,26 @@ export default function WebRTCGroupChat() {
         }`
       );
       setPeerUserMediaStreamMap(peerUserMediaStreamMap);
-
-      // TODO: it is the temperary location where the code below is called
-      setIsMicMuted(WebRTCGroupChatService.localMicMuted);
-      setIsCameraMuted(WebRTCGroupChatService.localCameraMuted);
+    });
+    WebRTCGroupChatService.onLocalAudioEnableAvaliableChanged((avaliable) => {
+      setIsAudioEnableAvaliable(avaliable);
+      setIsAudioEnabled(WebRTCGroupChatService.localMicEnabled);
+    });
+    WebRTCGroupChatService.onLocalVideoEnableAvaliableChanged((avaliable) => {
+      setIsVideoEnableAvaliable(avaliable);
+      setIsVideoEnabled(WebRTCGroupChatService.localCameraEnabled);
+    });
+    WebRTCGroupChatService.onLocalAudioMuteAvaliableChanged((avaliable) => {
+      setIsAudioMuteAvaliable(avaliable);
+      setIsAudioMuted(WebRTCGroupChatService.localMicMuted);
+    });
+    WebRTCGroupChatService.onLocalVideoMuteAvaliableChanged((avaliable) => {
+      setIsVideoMuteAvaliable(avaliable);
+      setIsVideoMuted(WebRTCGroupChatService.localCameraMuted);
     });
   }, []);
 
-  // hook 23: file transceiving
+  // hook 27: file transceiving
   useEffect(() => {
     WebRTCGroupChatService.onFileSendingRelatedDataChanged(
       (fileSendingRelatedData, isFileSendingStatusSending) => {
@@ -202,6 +219,7 @@ export default function WebRTCGroupChat() {
   // click to start calling
   const onStartMediaCallingClick = (e) => {
     if (joinedRoomId.length > 0) {
+      WebRTCGroupChatService.applyCallingConstraints({ audio: "microphone", video: "camera" });
       WebRTCGroupChatService.startCalling();
     }
   };
@@ -215,37 +233,37 @@ export default function WebRTCGroupChat() {
 
   // click to toggle microphone enabling
   const onToggleMicEnablingClick = (e) => {
-    if (joinedRoomId.length > 0 && isCalling) {
+    if (joinedRoomId.length > 0 && isCalling && isAudioEnableAvaliable) {
       const curEnabled = WebRTCGroupChatService.localMicEnabled;
       WebRTCGroupChatService.localMicEnabled = !curEnabled;
-      setIsMicEnabled(!curEnabled);
+      setIsAudioEnabled(!curEnabled);
     }
   };
 
   // click to toggle camera enabling
   const onToggleCameraEnablingClick = (e) => {
-    if (joinedRoomId.length > 0 && isCalling) {
+    if (joinedRoomId.length > 0 && isCalling && isVideoEnableAvaliable) {
       const curEnabled = WebRTCGroupChatService.localCameraEnabled;
       WebRTCGroupChatService.localCameraEnabled = !curEnabled;
-      setIsCameraEnabled(!curEnabled);
+      setIsVideoEnabled(!curEnabled);
     }
   };
 
   // click to toggle microphone muting
   const onToggleMicMutingClick = (e) => {
-    if (joinedRoomId.length > 0 && isCalling) {
+    if (joinedRoomId.length > 0 && isCalling && isAudioMuteAvaliable) {
       const curMuted = WebRTCGroupChatService.localMicMuted;
       WebRTCGroupChatService.localMicMuted = !curMuted;
-      setIsMicMuted(!curMuted);
+      setIsAudioMuted(!curMuted);
     }
   };
 
   // click to toggle camera muting
   const onToggleCameraMutingClick = (e) => {
-    if (joinedRoomId.length > 0 && isCalling) {
+    if (joinedRoomId.length > 0 && isCalling && isVideoMuteAvaliable) {
       const curMuted = WebRTCGroupChatService.localCameraMuted;
       WebRTCGroupChatService.localCameraMuted = !curMuted;
-      setIsCameraMuted(!curMuted);
+      setIsVideoMuted(!curMuted);
     }
   };
 
@@ -278,6 +296,12 @@ export default function WebRTCGroupChat() {
   const onClearAllFilesReceivedClick = (e) => {
     if (joinedRoomId.length > 0) {
       WebRTCGroupChatService.clearAllFilesReceived();
+    }
+  };
+
+  const onSendChatMessageClick = (e) => {
+    if (joinedRoomId.length > 0) {
+      WebRTCGroupChatService.sendChatMessageToAllPeer("This is a chat message");
     }
   };
 
@@ -426,8 +450,9 @@ export default function WebRTCGroupChat() {
       <button
         onClick={onToggleMicEnablingClick}
         className={style.button}
+        disabled={!isAudioEnableAvaliable}
       >
-        {isMicEnabled ? "Disable Mic" : "Enable Mic"}
+        {isAudioEnabled ? "Disable Mic" : "Enable Mic"}
       </button>
     </div>
   );
@@ -436,8 +461,9 @@ export default function WebRTCGroupChat() {
       <button
         onClick={onToggleCameraEnablingClick}
         className={style.button}
+        disabled={!isVideoEnableAvaliable}
       >
-        {isCameraEnabled ? "Disable Camera" : "Enable Camera"}
+        {isVideoEnabled ? "Disable Camera" : "Enable Camera"}
       </button>
     </div>
   );
@@ -448,8 +474,9 @@ export default function WebRTCGroupChat() {
       <button
         onClick={onToggleMicMutingClick}
         className={style.button}
+        disabled={!isAudioMuteAvaliable}
       >
-        {isMicMuted ? "Unmute Mic" : "Mute Mic"}
+        {isAudioMuted ? "Unmute Mic" : "Mute Mic"}
       </button>
     </div>
   );
@@ -458,8 +485,9 @@ export default function WebRTCGroupChat() {
       <button
         onClick={onToggleCameraMutingClick}
         className={style.button}
+        disabled={!isVideoMuteAvaliable}
       >
-        {isCameraMuted ? "Unmute Camera" : "Mute Camera"}
+        {isVideoMuted ? "Unmute Camera" : "Mute Camera"}
       </button>
     </div>
   );
@@ -554,6 +582,13 @@ export default function WebRTCGroupChat() {
       {joinedRoomId.length > 0 && clearAllFilesReceivedButtonRendering}
       {joinedRoomId.length > 0 && fileSendingRendering}
       {joinedRoomId.length > 0 && fileReceivingRendering}
+
+      <button
+        onClick={onSendChatMessageClick}
+        className={style.button}
+      >
+        Send Message
+      </button>
     </div>
   );
 }

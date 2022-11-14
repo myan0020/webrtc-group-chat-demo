@@ -1,5 +1,7 @@
 /**
  * TODO:
+ * 
+ * Priority Level: Low
  *
  * 1. indexedDB persisting cannot work correctly when receiving buffer(chunk) size is higher than 32 * 1024 bytes;
  * 2. too frequent receiving buffer persisting, not good for performance;
