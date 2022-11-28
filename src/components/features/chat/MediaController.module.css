@@ -1,0 +1,44 @@
+.backgroundContainer {
+  display: flex;
+  flex-direction: row;
+  height: 75px;
+  margin-top: 16px;
+  justify-content: start;
+}
+
+.videoEnableBackgroundContainer {
+  width: 50px;
+  height: 50px;
+  border: 1px solid #c4c4c4;
+  border-radius: 10px;
+  margin-left: 269px;
+  margin-right: 8px;
+}
+
+.audioEnableBackgroundContainer {
+  width: 50px;
+  height: 50px;
+  border: 1px solid #c4c4c4;
+  border-radius: 10px;
+  margin-left: 8px;
+  margin-right: 8px;
+}
+
+.callingBackgroundContainer {
+  border: 1px solid #c4c4c4;
+  width: 183px;
+  height: 50px;
+  border-radius: 10px;
+  margin-left: 8px;
+  margin-right: 8px;
+
+  text-align: center;
+}
+
+.moreContainer {
+  width: 50px;
+  height: 50px;
+  border: 1px solid #c4c4c4;
+  border-radius: 10px;
+  margin-left: 8px;
+}

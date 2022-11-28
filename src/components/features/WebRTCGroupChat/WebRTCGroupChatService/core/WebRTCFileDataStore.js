@@ -1176,7 +1176,7 @@ export default {
   //
 
   get maxSendingChunkSize() {
-    return 32 * 1024;
+    return 16 * 1024;
   },
 
   //

@@ -11,16 +11,15 @@ const rooms = groupChatRoomController.rooms;
 const userRoomMap = groupChatRoomController.userRoomMap;
 
 exports.handleLogin = (req, res, next) => {
-  const username = req.body.username;
+  const userName = req.body.userName;
   const userId = uuidv4();
   req.session.userId = userId;
-  req.session.username = username;
+  req.session.username = userName;
   authenticatedUserIds.add(userId);
 
   sendSignalThroughResponse(res, signalTypeEnum.LOG_IN_SUCCESS, {
-    username: username,
+    userName: userName,
     userId: userId,
-    rooms: rooms,
   });
 };
 
@@ -61,9 +60,7 @@ exports.handleLogout = (req, res, next) => {
       authenticatedUserIds.delete(userId);
       const ws = sessionMap.get(userId);
       if (ws) {
-        console.log(
-          `[WebSocket] will close connection to the user named ${username}`
-        );
+        console.log(`[WebSocket] will close connection to the user named ${username}`);
         ws.close();
       }
       sessionMap.delete(userId);
@@ -71,5 +68,4 @@ exports.handleLogout = (req, res, next) => {
 
     sendSignalThroughResponse(res, signalTypeEnum.LOG_OUT_SUCCESS);
   });
-
 };

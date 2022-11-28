@@ -28,6 +28,39 @@ WebRTCSignalingManager.onWebRTCNewPeerArivalInternally(
 
 export default {
   /**
+   * start
+   * 
+   * note: please call 'start' when a user has already signed in
+   */
+
+  start: function () {
+    WebRTCSignalingManager.connect();
+  },
+
+  /**
+   * end
+   * 
+   * note: please call 'end' when a user is going to sign out
+   */
+
+  // end: function () {
+    //
+    // TODO:
+    //
+    // Priority Level: Middle
+    //
+    // a error is found when logout, then re-login + join room + start calling,
+    // react_devtools_backend.js:4026 WebRTCGroupChatController: Found an error with message of InvalidStateError: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote answer sdp: Called in wrong state: stable during 'setRemoteDescription' or 'setLocalDescription'
+    //
+
+    // WebRTCMediaCallingManager.hangUpCalling(true);
+    // WebRTCMediaCallingManager.clearAllPeerTransceivers();
+    // WebRTCPeerConnectionManager.closeALLPeerConnections();
+    // WebRTCDataChannelManager.clearAllReceivingFiles();
+    // WebRTCSignalingManager.disconnect();
+  // },
+
+  /**
    * Login && Logout
    */
 

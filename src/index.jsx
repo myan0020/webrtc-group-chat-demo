@@ -1,16 +1,19 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
+import { Provider } from "react-redux";
 // import ReactDOM from 'react-dom';
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 // For video.js
 import "video.js/dist/video-js.min.css";
 
+import store from "./store";
 import "./index.css";
-import AppLayout from "./components/generic/AppLayout/index.jsx";
-import Navbar from "./components/features/navigating/Navbar/index.jsx";
-import { TogglableThemeContextProvider } from "./components/contexts/theme-context.js";
-import VideoPlayer from "./components/features/VideoPlayer/VideoPlayer.jsx";
-import WebRTCGroupChat from "./components/features/WebRTCGroupChat/WebRTCGroupChat.jsx";
+// import { TogglableThemeContextProvider } from "./components/contexts/theme-context.js";
+// import VideoPlayer from "./components/features/VideoPlayer/VideoPlayer.jsx";
+import RequireAuth from "./components/features/require-auth/RequireAuth.jsx";
+import Signin from "./components/features/sign-in/Signin.jsx";
+import RoomList from "./components/features/room-list/RoomList.jsx";
+import ChatRoom from "./components/features/chat/ChatRoom.jsx";
 
 /**
  * Displaying the current environment ('development' or 'production')
@@ -27,25 +30,44 @@ function App() {
   const clipToInSeconds = 50; //  ignored for HLS
 
   return (
-    <TogglableThemeContextProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route element={<AppLayout />}>
+    <Provider store={store}>
+      {/* <TogglableThemeContextProvider> */}
+        <BrowserRouter>
+          <Routes>
             <Route
-              path="/"
+              path='/'
               element={
-                <VideoPlayer
-                  videoId={videoId}
-                  clipFromInSeconds={clipFromInSeconds}
-                  clipToInSeconds={clipToInSeconds}
+                <Navigate
+                  to='/signin'
+                  replace
                 />
               }
             />
-            <Route path="/WebSocket+WebRTC" element={<WebRTCGroupChat />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </TogglableThemeContextProvider>
+
+            <Route
+              path='/signin'
+              element={<Signin />}
+            />
+
+            <Route element={<RequireAuth />}>
+              <Route
+                path='/room-list'
+                element={<RoomList />}
+              />
+              <Route
+                path='/chat-room'
+                element={<ChatRoom />}
+              />
+            </Route>
+
+            <Route
+              path='*'
+              element={<Signin />}
+            />
+          </Routes>
+        </BrowserRouter>
+      {/* </TogglableThemeContextProvider> */}
+    </Provider>
   );
 }
 

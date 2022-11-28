@@ -1,0 +1,8 @@
+.container {
+  height: calc(100vh - 60px);
+  position: absolute;
+  top: 60px;
+  overflow: scroll;
+  width: 100%;
+  background-color: #ffffff
+}

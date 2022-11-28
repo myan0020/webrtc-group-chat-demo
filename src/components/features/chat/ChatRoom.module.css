@@ -1,0 +1,26 @@
+.mainContainer {
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+}
+
+.mediaSectionContainer {
+  flex: 1 0 989px;
+  display: flex;
+  flex-direction: column;
+}
+
+.mediaRendererContainer {
+  flex: 1 0 624px;
+}
+
+.mediaControllerContainer {
+  flex: 0 0 116px;
+  border-top: 1px solid #c4c4c4;
+}
+
+
+.messageSectionContainer {
+  flex: 0 0 291px;
+  
+}

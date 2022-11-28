@@ -16,10 +16,11 @@ const websocketController =
 const authenticationController = require('./controllers/authenticationController');
 const sessionController = require("./controllers/sessionController");
 const sessionParser = sessionController.sessionParser;
+const groupChatRoomController = require("./controllers/groupChatRoomController");
 
 const openMongDBConnection = false;
 // testing paths: setup the allowed url paths for webpack-dev-server proxy
-const paths = ["/hello", "/world", "/author", "/video", "/login", "/logout"];
+const paths = ["/hello", "/world", "/author", "/video", "/signin", "/signout", "/rooms"];
 
 /**
  * ??? middleware setup
@@ -45,8 +46,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
  * router setup
  */
 
+app.get("/rooms", groupChatRoomController.handleGetRooms);
 app.post("/login", authenticationController.handleLogin);
-
 app.post("/logout", authenticationController.handleLogout);
 
 // testing path

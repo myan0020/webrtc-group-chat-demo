@@ -4,7 +4,7 @@ const expressServerPort = 3002
 const webSocketServerPort = 3003
 
 const jsonServerPaths = ['/authors', '/profile'];
-const expressServerPaths = ['/hello', '/world', '/author', '/video', '/login', '/logout'];
+const expressServerPaths = ['/hello', '/world', '/author', '/video', '/login', '/logout', '/rooms'];
 
 module.exports = {
   devServerPort,

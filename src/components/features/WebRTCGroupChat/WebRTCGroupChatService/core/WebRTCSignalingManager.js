@@ -94,6 +94,44 @@ function _handleSocketNewWebRTCPeerLeave(payload) {
   }
 }
 
+function _connect() {
+  WebRTCSocketManager.createSocket(_webSocketUrl, _handleSocketOpen, _handleSocketClose);
+  WebRTCSocketManager.registerMessageEvent(
+    _webSocketUrl,
+    WebRTCSocketManager.typeEnum.UPDATE_ROOMS,
+    _handleSocketUpdateRooms
+  );
+  WebRTCSocketManager.registerMessageEvent(
+    _webSocketUrl,
+    WebRTCSocketManager.typeEnum.JOIN_ROOM_SUCCESS,
+    _handleSocketJoinRoomSuccess
+  );
+  WebRTCSocketManager.registerMessageEvent(
+    _webSocketUrl,
+    WebRTCSocketManager.typeEnum.LEAVE_ROOM_SUCCESS,
+    _handleSocketLeaveRoomSuccess
+  );
+  WebRTCSocketManager.registerMessageEvent(
+    _webSocketUrl,
+    WebRTCSocketManager.typeEnum.WEBRTC_NEW_PEER_ARIVAL,
+    _handleSocketNewWebRTCPeerArival
+  );
+  WebRTCSocketManager.registerMessageEvent(
+    _webSocketUrl,
+    WebRTCSocketManager.typeEnum.WEBRTC_NEW_PASSTHROUGH,
+    _handleSocketNewWebRTCPassthroughArival
+  );
+  WebRTCSocketManager.registerMessageEvent(
+    _webSocketUrl,
+    WebRTCSocketManager.typeEnum.WEBRTC_NEW_PEER_LEAVE,
+    _handleSocketNewWebRTCPeerLeave
+  );
+}
+
+function _disconnect() {
+  _leaveRoomSignaling();
+}
+
 function _loginSignaling(username) {
   const passChecking = _checkUserName(username);
   const config = {
@@ -230,6 +268,13 @@ function _checkUserId(id) {
 }
 
 export default {
+  connect: function () {
+    _connect();
+  },
+  disconnect: function () {
+    _disconnect();
+  },
+
   selfId: _selfId,
 
   /**
