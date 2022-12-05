@@ -32,6 +32,7 @@ function App() {
   return (
     <Provider store={store}>
       {/* <TogglableThemeContextProvider> */}
+      
         <BrowserRouter>
           <Routes>
             <Route

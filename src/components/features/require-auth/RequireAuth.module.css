@@ -1,7 +1,8 @@
 .container {
-  height: calc(100vh - 60px);
+  height: var(--require-auth-content-height);
+  width: var(--require-auth-content-width);
   position: absolute;
-  top: 60px;
+  top: var(--nav-bar-heght);
   overflow: scroll;
   width: 100%;
   background-color: #ffffff

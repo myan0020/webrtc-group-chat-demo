@@ -1,15 +1,17 @@
 /* background */
 
 .backgroundContainer {
+  --nav-bar-padding-right: 50px;
+
   background-color: #24292f;
-  height: 60px;
+  width: calc(var(--nav-bar-width) - var(--nav-bar-padding-right));
+  height: var(--nav-bar-heght);
   display: grid;
   grid-template-columns: repeat(16, 1fr);
-  grid-template-rows: 60px;
-  padding-right: 50px;
+  grid-template-rows: var(--nav-bar-heght);
+  padding-right: var(--nav-bar-padding-right);
   position: absolute;
   top: 0;
-  width: 100vw;
 }
 
 /* left part */

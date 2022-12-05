@@ -217,6 +217,36 @@ let _handleLocalVideoEnableAvaliableChanged;
 let _handleLocalAudioMuteAvaliableChanged;
 let _handleLocalVideoMuteAvaliableChanged;
 
+const _callingInputTypeEnum = {
+  CALLING_INPUT_TYPE_AUDIO_MICROPHONE: "microphone",
+  CALLING_INPUT_TYPE_VIDEO_CAMERA: "camera",
+  CALLING_INPUT_TYPE_VIDEO_SCREEN: "screen",
+};
+
+function _createCallingConstraints(withCallingInputTypeOfAudio, withCallingInputTypeOfVideo) {
+  const constraints = {};
+  switch (withCallingInputTypeOfAudio) {
+    default:
+      constraints["audio"] = "microphone";
+      break;
+  }
+  switch (withCallingInputTypeOfVideo) {
+    case _callingInputTypeEnum.CALLING_INPUT_TYPE_VIDEO_CAMERA:
+      {
+        constraints["video"] = "camera";
+      }
+      break;
+    case _callingInputTypeEnum.CALLING_INPUT_TYPE_VIDEO_SCREEN:
+      {
+        constraints["video"] = "screen";
+      }
+      break;
+    default:
+      break;
+  }
+  return constraints;
+}
+
 function _applyCallingConstraints(callingConstraints) {
   _callingConstraints = callingConstraints;
   let mediaStreamConstraints = { audio: true, video: true };
@@ -611,6 +641,8 @@ function _getReceiversOfKind(peerConnection, kind) {
 }
 
 export default {
+  callingInputTypeEnum: _callingInputTypeEnum,
+  createCallingConstraints: _createCallingConstraints,
   applyCallingConstraints: _applyCallingConstraints,
 
   startCalling: _startCalling,

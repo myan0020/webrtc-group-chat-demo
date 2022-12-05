@@ -1,26 +1,79 @@
 .mainContainer {
-  height: 100%;
+  --chat-height: var(--require-auth-content-height);
+  --chat-width: var(--require-auth-content-width);
+
+  --notification-width: 291px;
+  --notification-height: var(--chat-height);
+
+  --chat-media-height: var(--chat-height);
+  --controller-height: 116px;
+  --renderer-height: calc(var(--chat-media-height) - var(--controller-height));
+  --renderer-switcher-height: 54px;
+  --renderer-video-list-presenter-ratio: calc(16 / 9);
+  --renderer-video-list-bottom-height: 14px;
+  --renderer-video-list-presenter-height: calc(
+    var(--renderer-height) - var(--renderer-switcher-height) -
+      var(--renderer-video-list-bottom-height)
+  );
+  --renderer-video-list-height: calc(var(--renderer-video-list-presenter-height));
+  --renderer-video-list-conference-member-count: 4;
+  --renderer-video-list-conference-member-height: calc(
+    var(--renderer-video-list-presenter-height) / var(--renderer-video-list-conference-member-count)
+  );
+  --renderer-video-list-conference-member-ratio: calc(1 / 1);
+  --renderer-video-list-conference-member-width: calc(
+    var(--renderer-video-list-conference-member-height) *
+      var(--renderer-video-list-conference-member-ratio)
+  );
+  --renderer-video-list-presenter-width: calc(
+    var(--chat-width) - var(--notification-width) -
+      var(--renderer-video-list-conference-member-width)
+  );
+  --renderer-video-list-width: calc(
+    var(--renderer-video-list-presenter-width) + var(--renderer-video-list-conference-member-width)
+  );
+  --renderer-video-list-party-member-count-per-row: 2;
+  --renderer-video-list-party-member-count-per-col: 2;
+  --renderer-video-list-party-member-height: calc(
+    var(--renderer-video-list-height) / var(--renderer-video-list-party-member-count-per-row)
+  );
+  --renderer-video-list-party-member-width: calc(
+    var(--renderer-video-list-width) / var(--renderer-video-list-party-member-count-per-col)
+  );
+  --renderer-width: var(--renderer-video-list-width);
+  --renderer-switcher-width: var(--renderer-width);
+  --controller-width: var(--renderer-width);
+  --chat-media-width: var(--renderer-width);
+
   display: flex;
   flex-direction: row;
+  height: var(--chat-height);
+  width: var(--chat-width);
 }
 
-.mediaSectionContainer {
-  flex: 1 0 989px;
-  display: flex;
-  flex-direction: column;
+/* media */
+
+.mediaContainer {
+  flex: 0 0 var(--renderer-width);
+  width: var(--chat-media-width);
+  height: var(--chat-media-height);
 }
 
 .mediaRendererContainer {
-  flex: 1 0 624px;
+  width: var(--renderer-width);
+  height: var(--renderer-height);
 }
 
 .mediaControllerContainer {
-  flex: 0 0 116px;
+  width: var(--controller-width);
+  height: var(--controller-height);
   border-top: 1px solid #c4c4c4;
 }
 
+/* notification */
 
-.messageSectionContainer {
-  flex: 0 0 291px;
-  
+.notificationContainer {
+  flex: 0 0 var(--notification-width);
+  width: var(--notification-width);
+  height: var(--notification-height);
 }

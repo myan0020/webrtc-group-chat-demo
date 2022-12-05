@@ -137,6 +137,7 @@ module.exports = (env, argv) => {
         {
           test: /\.(png|svg|jpg|jpeg|gif)$/i,
           type: 'asset/resource',
+          include: /src\/components/,
           generator: {
             filename: 'images/[hash].[ext]'
           },

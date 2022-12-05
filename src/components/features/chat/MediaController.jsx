@@ -1,31 +1,35 @@
-import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import React from "react";
+import styled from "styled-components";
 
 import style from "./MediaController.module.css";
+import MediaConstrainCheckableSwitch from "./MediaConstrainCheckableSwitch.jsx";
+import CallingSwitch from "./CallingSwitch.jsx";
+import MediaAudioEnablingSwitch from "./MediaAudioEnablingSwitch.jsx";
+import MediaVideoEnablingSwitch from "./MediaVideoEnablingSwitch.jsx";
 
-export default function MediaController() {
+// const MediaControllerWrapper = styled.div``;
+
+const MediaEnablingSwitchWrapper = styled.div`
+  margin-left: 5px;
+  margin-right: 5px;
+  display: flex;
+  flex-direction: row;
+`;
+
+export const MediaControllerPropsBuilder = ({}) => {
+  return {};
+};
+
+export default function MediaController({}) {
   return (
-    <div className={style.backgroundContainer}>
-      <VideoEnableButton />
-      <AudioEnableButton />
-      <CallingButton />
-      <MoreButton />
+    <div className={style.background}>
+      <MediaConstrainCheckableSwitch />
+      <CallingSwitch />
+
+      <MediaEnablingSwitchWrapper>
+        <MediaVideoEnablingSwitch />
+        <MediaAudioEnablingSwitch />
+      </MediaEnablingSwitchWrapper>
     </div>
   );
-}
-
-function CallingButton() {
-  return <div className={style.callingBackgroundContainer}>Start Call</div>;
-}
-
-function AudioEnableButton() {
-  return <div className={style.audioEnableBackgroundContainer}>AudioEn</div>;
-}
-
-function VideoEnableButton() {
-  return <div className={style.videoEnableBackgroundContainer}>VideoEn</div>;
-}
-
-function MoreButton() {
-  return <div className={style.moreContainer}>More</div>;
 }

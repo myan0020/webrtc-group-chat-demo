@@ -1,5 +1,7 @@
 /* Global Styles */
 
+
+
 html {
   height: 100vh;
   overflow: hidden;
@@ -13,7 +15,15 @@ body {
 }
 
 #root {
-  height: 100vh;
+  --root-height: 100vh;
+  --root-width: 100vw;
+  --nav-bar-heght: 60px;
+  --nav-bar-width: var(--root-width);
+  --require-auth-content-height: calc(var(--root-height) - var(--nav-bar-heght));
+  --require-auth-content-width: var(--root-width);
+
+  height: var(--root-height);
+  width: var(--root-width);
   position: relative;
 }
 
