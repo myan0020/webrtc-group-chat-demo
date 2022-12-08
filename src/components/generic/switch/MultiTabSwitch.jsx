@@ -23,23 +23,46 @@ const TabWrapper = styled.div`
   flex-direction: row;
   align-items: center;
   background-color: ${(props) => props.backgroundColor};
+  background-image: url(${(props) => props.backgroundImageUrl});
+  background-position: center;
+  background-repeat: no-repeat;
   color: ${(props) => props.color};
   font-size: ${(props) => props.fontSize}px;
   text-align: center;
   height: 100%;
+
+  &:hover,
+  &:active {
+    opacity: ${(props) => (props.enabled ? 0.5 : 1)};
+  }
 `;
 
 const TabTextWrapper = styled.div`
   margin: auto;
 `;
 
-export const multiTabSwitchTabBuilder = (switchTabName, switchTabOnClick, switchTabSelected) => {
-  const tabName =
-    typeof switchTabName === "string" && switchTabName.length > 0 ? switchTabName : "TabName";
+export const multiTabSwitchTabBuilder = ({
+  switchTabName,
+  switchTabSelectedBackgroundImageUrl,
+  switchTabUnselectedBackgroundImageUrl,
+  switchTabOnClick,
+  switchTabSelected,
+}) => {
+  const tabName = typeof switchTabName === "string" ? switchTabName : "TabName";
+  const selectedBackgroundImageUrl =
+    typeof switchTabSelectedBackgroundImageUrl === "string"
+      ? switchTabSelectedBackgroundImageUrl
+      : "switchTabSelectedBackgroundImageUrl";
+  const unselectedBackgroundImageUrl =
+    typeof switchTabUnselectedBackgroundImageUrl === "string"
+      ? switchTabUnselectedBackgroundImageUrl
+      : "switchTabUnselectedBackgroundImageUrl";
   const onClick = typeof switchTabOnClick === "function" ? switchTabOnClick : null;
   const selected = typeof switchTabSelected === "boolean" ? switchTabSelected : false;
   return {
     name: tabName,
+    selectedBackgroundImageUrl: selectedBackgroundImageUrl,
+    unselectedBackgroundImageUrl: unselectedBackgroundImageUrl,
     onClick: onClick,
     selected: selected,
   };
@@ -86,6 +109,7 @@ export const multiTabSwitchPropsBuilder = ({
       typeof switchEnabledBackgroundColor === "string"
         ? switchEnabledBackgroundColor
         : "rgba(255, 255, 255, 0)";
+
     selectedBackgroundColor =
       typeof switchEnabledSelectedBackgroundColor === "string"
         ? switchEnabledSelectedBackgroundColor
@@ -165,6 +189,9 @@ export default function MultiTabSwitch({
       setSelectedTabIndex(index);
     };
 
+    const backgroundImageUrl = tab.selected
+      ? tab.selectedBackgroundImageUrl
+      : tab.unselectedBackgroundImageUrl;
     const backgroundColor = tab.selected
       ? switchSelectedBackgroundColor
       : switchUnselectedBackgroundColor;
@@ -173,10 +200,12 @@ export default function MultiTabSwitch({
     return (
       <TabWrapper
         key={index}
+        backgroundImageUrl={backgroundImageUrl}
         backgroundColor={backgroundColor}
         color={color}
         borderRadius={switchBorderRadius}
         fontSize={switchFontSize}
+        enabled={switchEnabled}
         onClick={handleTabSelected}
       >
         <TabTextWrapper>{tab.name}</TabTextWrapper>

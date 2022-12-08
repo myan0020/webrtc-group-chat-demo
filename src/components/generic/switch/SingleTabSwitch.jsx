@@ -14,6 +14,10 @@ const Wrapper = styled.div`
   height: 100%;
   box-sizing: border-box;
   overflow: hidden;
+  &:hover,
+  &:active {
+    opacity: ${(props) => (props.enabled ? 0.5 : 1)};
+  }
 `;
 
 const OptionWrapper = styled.div`
@@ -149,6 +153,7 @@ export default function SingleTabSwitch({
       borderRadius={switchBorderRadius}
       borderColor={switchBorderColor}
       backgroundImageUrl={switchBackgroundImageUrl}
+      enabled={switchEnabled}
     >
       <OptionWrapper
         display={oneOptionDisplay}

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 
-import checkMarkUrl from "./check_mark_1x.png";
+import checkMarkUrl from "./images/check_mark_1x.png";
 
 const Wrapper = styled.div`
   box-sizing: border-box;
@@ -10,6 +10,10 @@ const Wrapper = styled.div`
   border: ${(props) => props.borderWidth}px solid ${(props) => props.borderColor};
   border-radius: ${(props) => props.borderRadius}px;
   background-color: ${(props) => props.backgroundColor};
+  &:hover,
+  &:active {
+    opacity: ${(props) => (props.enabled ? 0.5 : 1)};
+  }
 `;
 
 const CheckMarkWrapper = styled.div`
@@ -130,6 +134,7 @@ export default function CheckBox({
       borderWidth={boxBorderWidth}
       borderColor={boxBorderColor}
       backgroundColor={boxBackgroundColor}
+      enabled={initialEnabled}
       onClick={handleBoxClick}
     >
       <CheckMarkWrapper

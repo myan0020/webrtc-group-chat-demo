@@ -24,6 +24,7 @@
     "@babel/preset-react": "^7.17.12",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.7",
     "babel-loader": "^8.2.5",
+    "babel-plugin-styled-components": "^2.0.7",
     "body-parser": "^1.20.0",
     "chalk": "^4.1.2",
     "core-js": "^3.22.7",
@@ -48,14 +49,12 @@
   "dependencies": {
     "@reduxjs/toolkit": "^1.9.0",
     "axios": "^0.27.2",
-    "hls.js": "^1.2.1",
     "react": "18.0",
     "react-dom": "18.0",
     "react-loader-spinner": "^5.3.4",
     "react-redux": "^8.0.5",
     "react-router-dom": "^6.4.3",
-    "styled-components": "^5.3.6",
-    "video.js": "^7.20.2"
+    "styled-components": "^5.3.6"
   },
   "babel": {
     "presets": [
@@ -69,6 +68,11 @@
       ],
       [
         "@babel/preset-react"
+      ]
+    ],
+    "plugins": [
+      [
+        "babel-plugin-styled-components"
       ]
     ]
   },
