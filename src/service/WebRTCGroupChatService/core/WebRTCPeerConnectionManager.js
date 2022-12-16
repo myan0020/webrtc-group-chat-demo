@@ -74,20 +74,20 @@ const _peerConnectionMap = {
 };
 
 function _handleNewPeerArivalInternally(payload) {
-  const { userId: peerId, userIdList: peerIdList, isPolite: isNewPeerPolite } = payload;
+  const { userId: peerId, userName: peerName, userContainer: peerContainer, isPolite: isNewPeerPolite } = payload;
   const peerIdValid = peerId && peerId.length > 0;
-  const peerIdListValid = peerIdList && peerIdList.length > 0;
+  const peerContainerValid = peerContainer && Object.keys(peerContainer).length > 0;
 
-  if (peerIdValid && peerIdListValid) {
+  if (peerIdValid && peerContainerValid) {
     console.log(
-      `WebRTCGroupChatController: unexpected peerId ( ${peerId} ) and peerIdList ( ${peerIdList} ) during '_handleNewPeerArivalInternally' method`
+      `WebRTCGroupChatController: unexpected peerId ( ${peerId} ) and peerContainerValid ( ${peerContainer} ) during '_handleNewPeerArivalInternally' method`
     );
     return;
   }
 
-  if (!peerIdValid && !peerIdListValid) {
+  if (!peerIdValid && !peerContainerValid) {
     console.log(
-      `WebRTCGroupChatController: unexpected peerId ( ${peerId} ) or peerIdList ( ${peerIdList} ) during '_handleNewPeerArivalInternally' method`
+      `WebRTCGroupChatController: unexpected peerId ( ${peerId} ) or peerContainer ( ${peerContainer} ) during '_handleNewPeerArivalInternally' method`
     );
     return;
   }
@@ -100,14 +100,14 @@ function _handleNewPeerArivalInternally(payload) {
   };
 
   if (peerIdValid) {
-    const peerConnection = _locatePeerConnection(peerId);
+    const peerConnection = _locatePeerConnection(peerId, peerName);
     peerConnectionOfferCollisionSetup(peerConnection, isNewPeerPolite);
     return;
   }
 
-  peerIdList.forEach((peerId) => {
+  Object.entries(peerContainer).forEach(([peerId, peerName]) => {
     if (peerId && peerId.length > 0) {
-      const peerConnection = _locatePeerConnection(peerId);
+      const peerConnection = _locatePeerConnection(peerId, peerName);
       peerConnectionOfferCollisionSetup(peerConnection, isNewPeerPolite);
     }
   });
@@ -267,7 +267,7 @@ function _handleNewPeerLeave(payload) {
   _closePeerConnection(peerId);
 }
 
-function _locatePeerConnection(peerId) {
+function _locatePeerConnection(peerId, peerName) {
   if (!peerId || peerId.length === 0) {
     console.log(
       `WebRTCGroupChatController: unexpected peerId ( ${peerId} ) during '_locatePeerConnection'`
@@ -276,7 +276,7 @@ function _locatePeerConnection(peerId) {
   }
   if (!_peerConnectionMap.has(peerId)) {
     const prevPeerIdsSize = _peerConnectionMap.size();
-    _addPeerConnection(peerId);
+    _addPeerConnection(peerId, peerName);
     console.log(
       `WebRTCGroupChatController: after '_addPeerConnection' method, peer connection count changed from ${prevPeerIdsSize} to ${_peerConnectionMap.size()}`
     );
@@ -284,7 +284,7 @@ function _locatePeerConnection(peerId) {
   return _peerConnectionMap.get(peerId);
 }
 
-function _addPeerConnection(peerId) {
+function _addPeerConnection(peerId, peerName) {
   if (!peerId || peerId.length === 0) {
     console.log(
       `WebRTCGroupChatController: unexpected peerId of ${peerId} during creating and adding a new peer connection`
@@ -294,6 +294,8 @@ function _addPeerConnection(peerId) {
   const peerConnection = new RTCPeerConnection(_peerConnectionConfig);
   console.log(`WebRTCGroupChatController: a new 'RTCPeerConnection' is created`);
 
+  peerConnection.peerName = peerName;
+
   _peerConnectionMap.set(peerId, peerConnection);
 
   peerConnection.onicecandidate = (event) => {
@@ -302,7 +304,7 @@ function _addPeerConnection(peerId) {
   peerConnection.oniceconnectionstatechange = _handlePeerConnectionICEConnectionStateChangeEvent;
   peerConnection.onnegotiationneeded = _handlePeerConnectionNegotiationEvent;
   peerConnection.ondatachannel = (event) => {
-    WebRTCDataChannelManager.handlePeerConnectionDataChannelEvent(event, peerId);
+    WebRTCDataChannelManager.handlePeerConnectionDataChannelEvent(event, peerId, peerName);
   };
 
   peerConnection.ontrack = (event) => {
@@ -429,6 +431,14 @@ function _checkPeerConnectionConfig(config) {
 export default {
   get peerConnectionMap() {
     return _peerConnectionMap;
+  },
+
+  getPeerNameById(peerId) {
+    const peerConnection = _peerConnectionMap.get(peerId);
+    if (!peerConnection || typeof peerConnection.peerName !== "string") {
+      return undefined;
+    }
+    return peerConnection.peerName;
   },
 
   /**

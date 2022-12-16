@@ -5,8 +5,10 @@ async function _getUniqueFiles(files) {
 
   const filesToAdd = {};
 
+  const timestampString = `${Date.parse(new Date())}`
+
   for (const file of Array.from(files)) {
-    const fileDataString = file.name + file.type + file.size + file.lastModified;
+    const fileDataString = file.name + file.type + file.size + file.lastModified + timestampString;
     const fileDataHash = await _getSHA256(fileDataString);
     filesToAdd[fileDataHash] = file;
   }

@@ -95,7 +95,7 @@ module.exports = (env, argv) => {
           // local styles should use modular css
           test: /\.css$/i,
           exclude: /node_modules|src\/index.css/,
-          include: /src\/components/,
+          include: /src\/component/,
           use: [
             {
               loader: 'style-loader'
@@ -137,7 +137,7 @@ module.exports = (env, argv) => {
         {
           test: /\.(png|svg|jpg|jpeg|gif)$/i,
           type: 'asset/resource',
-          include: /src\/components/,
+          include: /src\/component/,
           generator: {
             filename: 'images/[hash].[ext]'
           },

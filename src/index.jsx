@@ -4,12 +4,12 @@ import { Provider } from "react-redux";
 // import ReactDOM from 'react-dom';
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-import store from "./redux/store";
+import store from "./store/store";
 import "./index.css";
-import RequireAuth from "./components/feature/require-auth/RequireAuth.jsx";
-import Signin from "./components/feature/sign-in/Signin.jsx";
-import RoomList from "./components/feature/room-list/RoomList.jsx";
-import ChatRoom from "./components/feature/media-chat/ChatRoom.jsx";
+import RequireAuth from "./component/feature/require-auth/RequireAuth.jsx";
+import Signin from "./component/feature/sign-in/Signin.jsx";
+import RoomList from "./component/feature/room-list/RoomList.jsx";
+import ChatRoom from "./component/feature/chat/ChatRoom.jsx";
 
 /**
  * Displaying the current environment ('development' or 'production')

@@ -1,6 +1,6 @@
 /**
  * TODO:
- * 
+ *
  * Priority Level: Low
  *
  * 1. indexedDB persisting cannot work correctly when receiving buffer(chunk) size is higher than 32 * 1024 bytes;
@@ -111,7 +111,7 @@ const _receivingRelatedData = {
 let _sendingHashToMetaData = {};
 
 function _prepareSendingMetaData(hashToFile) {
-  _sendingHashToMetaData = {};
+  // _sendingHashToMetaData = { ..._sendingHashToMetaData };
 
   for (const [fileHash, file] of Object.entries(hashToFile)) {
     _sendingHashToMetaData[fileHash] = {

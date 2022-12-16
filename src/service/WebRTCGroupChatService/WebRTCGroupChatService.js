@@ -122,6 +122,14 @@ export default {
   },
 
   /**
+   * Peer Connection
+   */
+
+   getPeerNameById(peerId) {
+    return WebRTCPeerConnectionManager.getPeerNameById(peerId);
+   },
+
+  /**
    * Messaging
    */
 

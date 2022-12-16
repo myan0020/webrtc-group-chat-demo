@@ -194,10 +194,10 @@ const handleJoinRoom = (
     return;
   }
 
-  const otherParticipantUserIdList = [];
+  const otherParticipantUserContainer = {};
 
   // notify others who are already in the joined room
-  joinedRoom.participants.forEach((_, participantUserId) => {
+  joinedRoom.participants.forEach(({ name: participantUserName }, participantUserId) => {
     if (participantUserId !== sessionUserId) {
       const othersWebsocket = sessionMap.get(participantUserId);
       sendSerializedSignalThroughWebsocket(
@@ -205,10 +205,11 @@ const handleJoinRoom = (
         signalTypeEnum.WEBRTC_NEW_PEER_ARIVAL,
         {
           userId: sessionUserId,
+          userName: sessionUserName,
           isPolite: false,
         }
       );
-      otherParticipantUserIdList.push(participantUserId);
+      otherParticipantUserContainer[participantUserId] = participantUserName;
     }
   });
 
@@ -216,7 +217,7 @@ const handleJoinRoom = (
     ws,
     signalTypeEnum.WEBRTC_NEW_PEER_ARIVAL,
     {
-      userIdList: otherParticipantUserIdList,
+      userContainer: otherParticipantUserContainer,
       isPolite: true,
     }
   );
