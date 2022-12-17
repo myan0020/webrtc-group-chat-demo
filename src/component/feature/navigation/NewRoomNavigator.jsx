@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useContext } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 
+import { LocalizationContext } from "../../../context/localization-context.js";
 import { toggleNewRoomPopupVisibility, selectRoom } from "../../../store/roomSlice.js";
+import { localizableStringKeyEnum } from "../../../util/localizable-strings.js";
 
 const Wrapper = styled.div`
   width: 100%;
@@ -38,6 +40,7 @@ const Button = styled.button`
 
 export default function NewRoomNavigator() {
   const dispatch = useDispatch();
+  const { localizedStrings } = useContext(LocalizationContext);
   const { isNewRoomPopupVisible, joinedRoomId, joinedRoomName } = useSelector(selectRoom);
 
   const handleNewRoomPopupVisibilityToggled = () => {
@@ -45,7 +48,7 @@ export default function NewRoomNavigator() {
   };
 
   const hasJoinedRoom = joinedRoomId && joinedRoomId.length > 0;
-  const title = hasJoinedRoom ? joinedRoomName : "Avaliable Chat Rooms";
+  const title = hasJoinedRoom ? joinedRoomName : localizedStrings[localizableStringKeyEnum.NAVIGATION_ROOM_LIST_TITLE];
   const buttonVisibility = hasJoinedRoom ? "hidden" : "visible";
 
   return (
@@ -55,7 +58,7 @@ export default function NewRoomNavigator() {
         visibility={buttonVisibility}
         onClick={handleNewRoomPopupVisibilityToggled}
       >
-        New
+        {localizedStrings[localizableStringKeyEnum.NAVIGATION_CREATE_NEW_ROOM]}
       </Button>
     </Wrapper>
   );

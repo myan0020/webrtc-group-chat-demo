@@ -10,6 +10,7 @@ import RequireAuth from "./component/feature/require-auth/RequireAuth.jsx";
 import Signin from "./component/feature/sign-in/Signin.jsx";
 import RoomList from "./component/feature/room-list/RoomList.jsx";
 import ChatRoom from "./component/feature/chat/ChatRoom.jsx";
+import { LocalizationContextProvider } from "./context/localization-context.js";
 
 /**
  * Displaying the current environment ('development' or 'production')
@@ -22,40 +23,42 @@ console.log(`[In ${process.env.NODE_ENV} mode]`);
 function App() {
   return (
     <Provider store={store}>
-      <BrowserRouter>
-        <Routes>
-          <Route
-            path='/'
-            element={
-              <Navigate
-                to='/signin'
-                replace
+      <LocalizationContextProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route
+              path='/'
+              element={
+                <Navigate
+                  to='/signin'
+                  replace
+                />
+              }
+            />
+
+            <Route
+              path='/signin'
+              element={<Signin />}
+            />
+
+            <Route element={<RequireAuth />}>
+              <Route
+                path='/room-list'
+                element={<RoomList />}
               />
-            }
-          />
+              <Route
+                path='/chat-room'
+                element={<ChatRoom />}
+              />
+            </Route>
 
-          <Route
-            path='/signin'
-            element={<Signin />}
-          />
-
-          <Route element={<RequireAuth />}>
             <Route
-              path='/room-list'
-              element={<RoomList />}
+              path='*'
+              element={<Signin />}
             />
-            <Route
-              path='/chat-room'
-              element={<ChatRoom />}
-            />
-          </Route>
-
-          <Route
-            path='*'
-            element={<Signin />}
-          />
-        </Routes>
-      </BrowserRouter>
+          </Routes>
+        </BrowserRouter>
+      </LocalizationContextProvider>
     </Provider>
   );
 }

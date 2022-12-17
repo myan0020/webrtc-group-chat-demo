@@ -1,7 +1,9 @@
 import React, { useContext, useRef, useState } from "react";
 import styled from "styled-components";
+import { LocalizationContext } from "../../../../context/localization-context";
 
 import { MessageContext, messageTypeEnum } from "../../../../context/message-context";
+import { localizableStringKeyEnum } from "../../../../util/localizable-strings";
 import messageSendBubbleImageUrl from "./images/send_message_bubble_3x.png";
 import messageSendPlaneImageUrl from "./images/send_message_plane_3x.png";
 
@@ -122,6 +124,7 @@ export const MessageSenderPropsBuilder = ({}) => {
 };
 
 export default function MessageSender({}) {
+  const { localizedStrings } = useContext(LocalizationContext);
   const { inputFiles, sendFiles, updateInputFiles, visibleMessageType, sendTextToAllPeer } =
     useContext(MessageContext);
   const messageInputRef = useRef(null);
@@ -136,7 +139,8 @@ export default function MessageSender({}) {
   let messageInputType = messageInputTypeEnum.MESSAGE_INPUT_TYPE_TEXT;
 
   const messageInputTextAligment = "start";
-  const messageInputPlaceholder = "Write text here ...";
+  const messageInputPlaceholder =
+    localizedStrings[localizableStringKeyEnum.CHAT_ROOM_MESSAGE_TEXT_INPUT_PLACEHOLDER];
 
   if (visibleMessageType === messageTypeEnum.MESSAGE_TYPE_TEXT) {
     contentBorderStyle = "solid";
@@ -147,8 +151,18 @@ export default function MessageSender({}) {
     contentBorderStyle = "dashed";
     messageInputWrapperText =
       inputFilesCount === 0
-        ? "Click here to add files"
-        : `${inputFilesCount} ${inputFilesCount === 1 ? "file" : "files"} added`;
+        ? localizedStrings[localizableStringKeyEnum.CHAT_ROOM_MESSAGE_FILE_INPUT_PLACEHOLDER_IDLE]
+        : `${inputFilesCount} ${
+            inputFilesCount === 1
+              ? localizedStrings[
+                  localizableStringKeyEnum.CHAT_ROOM_MESSAGE_FILE_INPUT_PLACEHOLDER_FILE
+                ]
+              : localizedStrings[
+                  localizableStringKeyEnum.CHAT_ROOM_MESSAGE_FILE_INPUT_PLACEHOLDER_FILE
+                ] + localizedStrings[
+                  localizableStringKeyEnum.CHAT_ROOM_MESSAGE_FILE_INPUT_PLACEHOLDER_FILE_PLURAL
+                ]
+          } ${localizedStrings[localizableStringKeyEnum.CHAT_ROOM_MESSAGE_FILE_INPUT_PLACEHOLDER_ADDED]}`;
     messageInputDisplayment = "none";
     messageInputType = messageInputTypeEnum.MESSAGE_INPUT_TYPE_FILE;
   }

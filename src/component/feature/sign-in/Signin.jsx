@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import styled from "styled-components";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate } from "react-router-dom";
 import { RotatingLines } from "react-loader-spinner";
 
 import { requestToSignin, selectAuth, requestStatus } from "../../../store/authSlice.js";
+import { LocalizationContext } from "../../../context/localization-context.js";
+import { localizableStringKeyEnum } from "../../../util/localizable-strings.js";
 
 const Wrapper = styled.div`
   width: 100%;
@@ -84,6 +86,7 @@ const FormButton = styled.button`
 
 export default function Signin() {
   const dispatch = useDispatch();
+  const { localizedStrings } = useContext(LocalizationContext);
   const { requestStatus: loadingStatus, authenticated } = useSelector(selectAuth);
   const [inputUserName, setInputUserName] = useState("");
 
@@ -104,12 +107,14 @@ export default function Signin() {
     <Wrapper>
       <ContentWrapper>
         <HeadingWrapper>
-          <Heading>WebRTC Group Chat</Heading>
-          <HeadingDescription>Make P2P features possible</HeadingDescription>
+          <Heading>{localizedStrings[localizableStringKeyEnum.SIGN_IN_TITLE]}</Heading>
+          <HeadingDescription>
+            {localizedStrings[localizableStringKeyEnum.SIGN_IN_TITLE_DESC]}
+          </HeadingDescription>
         </HeadingWrapper>
         <FormWrapper>
           <FormInput
-            placeholder='Enter your username ...'
+            placeholder={`${localizedStrings[localizableStringKeyEnum.SIGN_IN_INPUT_PLACEHOLDER]}`}
             onChange={onInputNewUserNameChange}
             value={inputUserName}
             onKeyDown={onKeyDown}
@@ -119,7 +124,7 @@ export default function Signin() {
             type='button'
             onClick={onSigninClick}
           >
-            Sign in
+            {localizedStrings[localizableStringKeyEnum.SIGN_IN_COMFIRM]}
           </FormButton>
         </FormWrapper>
       </ContentWrapper>

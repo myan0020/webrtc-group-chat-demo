@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import styled from "styled-components";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate } from "react-router-dom";
@@ -12,6 +12,8 @@ import {
   createRoom,
 } from "../../../store/roomSlice.js";
 import closeImageUrl from "./images/close_3x.png";
+import { LocalizationContext } from "../../../context/localization-context.js";
+import { localizableStringKeyEnum } from "../../../util/localizable-strings.js";
 
 const Wrapper = styled.div`
   width: 100%;
@@ -169,6 +171,7 @@ const RoomItemButton = styled.button`
 
 export default function RoomList() {
   const dispatch = useDispatch();
+  const { localizedStrings } = useContext(LocalizationContext);
   const {
     roomList,
     requestStatus: loadingStatus,
@@ -244,9 +247,13 @@ export default function RoomList() {
         opacity={newRoomPopupContentOpacity}
       >
         <PopupContentCloseButton onClick={handleNewRoomPopupVisibilityToggled} />
-        <PopupContentTitle>Create New Room</PopupContentTitle>
+        <PopupContentTitle>
+          {localizedStrings[localizableStringKeyEnum.ROOM_LIST_CREATE_NEW_ROOM_TITLE]}
+        </PopupContentTitle>
         <PopupContentInput
-          placeholder='Enter your new room name ...'
+          placeholder={
+            localizedStrings[localizableStringKeyEnum.ROOM_LIST_CREATE_NEW_ROOM_INPUT_PLACEHOLDER]
+          }
           onChange={handleNewRoomNameInputChanged}
           onKeyDown={handleNewRoomNameInputKeyDown}
           value={newRoomNameInputValue}
@@ -255,7 +262,7 @@ export default function RoomList() {
           }}
         />
         <PopupContentConfirmButton onClick={handleNewRoomNameConfirmed}>
-          Confirm
+          {localizedStrings[localizableStringKeyEnum.ROOM_LIST_CREATE_NEW_ROOM_COMFIRM]}
         </PopupContentConfirmButton>
       </PopupContentWrapper>
 
@@ -270,7 +277,7 @@ export default function RoomList() {
                 handleRoomJoined(roomId);
               }}
             >
-              Join
+              {localizedStrings[localizableStringKeyEnum.ROOM_LIST_JOIN_ROOM]}
             </RoomItemButton>
           </RoomItemWrapper>
         ))}

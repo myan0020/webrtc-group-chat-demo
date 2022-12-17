@@ -1,27 +1,20 @@
-import React from "react";
-import { useDispatch, useSelector } from "react-redux";
+import React, { useContext } from "react";
+import { useDispatch } from "react-redux";
 import styled from "styled-components";
 
-import { requestToSignout, selectAuth } from "../../../store/authSlice.js";
+import { LocalizationContext } from "../../../context/localization-context.js";
+import { requestToSignout } from "../../../store/authSlice.js";
+import { localizableStringKeyEnum } from "../../../util/localizable-strings.js";
 
 const SignoutNavigatorWrapper = styled.div`
   width: 100%;
   height: 100%;
-  display: flex;
-  flex-direction: row;
-  justify-content: end;
-  align-items: center;
-`;
-
-const SignoutNavigatorUserNameWrapper = styled.div`
-  flex: 1 0 200px;
-  text-align: end;
-  color: rgb(255, 255, 255);
-  margin-right: 10px;
 `;
 
 const SignoutNavigatorButton = styled.button`
-  flex: 0 0 100px;
+  width: 100%;
+  height: 100%;
+
   box-sizing: border-box;
   border: 1px solid #ffffff;
   border-radius: 10px;
@@ -29,14 +22,11 @@ const SignoutNavigatorButton = styled.button`
   text-align: center;
   font-size: 16px;
   background-color: transparent;
-  height: 38px;
-  margin-left: 10px;
-  margin-right: 16px;
 `;
 
 export default function SignoutNavigator() {
   const dispatch = useDispatch();
-  const { authenticatedUserName } = useSelector(selectAuth);
+  const { localizedStrings } = useContext(LocalizationContext);
 
   const handleSignoutClicked = () => {
     dispatch(requestToSignout());
@@ -44,8 +34,9 @@ export default function SignoutNavigator() {
 
   return (
     <SignoutNavigatorWrapper>
-      <SignoutNavigatorUserNameWrapper>Hi, {authenticatedUserName}</SignoutNavigatorUserNameWrapper>
-      <SignoutNavigatorButton onClick={handleSignoutClicked}>Sign out</SignoutNavigatorButton>
+      <SignoutNavigatorButton onClick={handleSignoutClicked}>
+        {localizedStrings[localizableStringKeyEnum.NAVIGATION_SIGN_OUT]}
+      </SignoutNavigatorButton>
     </SignoutNavigatorWrapper>
   );
 }

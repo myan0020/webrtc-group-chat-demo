@@ -1,7 +1,9 @@
 import React, { useContext, useEffect } from "react";
 import styled from "styled-components";
 
+import { LocalizationContext } from "../../../../context/localization-context";
 import { messageTypeEnum, MessageContext } from "../../../../context/message-context";
+import { localizableStringKeyEnum } from "../../../../util/localizable-strings";
 import MultiTabSwitch, {
   multiTabSwitchPropsBuilder,
   multiTabSwitchTabBuilder,
@@ -32,6 +34,7 @@ export const MessageTypeSwitchPropsBuilder = ({}) => {
 };
 
 export default function MessageTypeSwitch({}) {
+  const { localizedStrings } = useContext(LocalizationContext);
   const {
     visibleMessageType,
     updateVisibleMessageType,
@@ -53,7 +56,7 @@ export default function MessageTypeSwitch({}) {
   const fileMessageTabBadgeText = unreadFileMessageCount > 0 ? `${unreadFileMessageCount}` : "";
 
   const textMessageTab = multiTabSwitchTabBuilder({
-    switchTabName: "Text Message",
+    switchTabName: localizedStrings[localizableStringKeyEnum.CHAT_ROOM_MESSAGE_TYPE_TEXT],
     switchTabBorderRadius: 5,
     switchTabBadgeText: textMessageTabBadgeText,
     switchTabBadgeBackgroundImageUrl: badgeBackgroundImageUrl,
@@ -63,7 +66,7 @@ export default function MessageTypeSwitch({}) {
     switchTabSelected: textMessageTabSelected,
   });
   const fileMessageTab = multiTabSwitchTabBuilder({
-    switchTabName: "File Message",
+    switchTabName: localizedStrings[localizableStringKeyEnum.CHAT_ROOM_MESSAGE_TYPE_FILE],
     switchTabBorderRadius: 5,
     switchTabBadgeText: fileMessageTabBadgeText,
     switchTabBadgeBackgroundImageUrl: badgeBackgroundImageUrl,

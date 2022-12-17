@@ -1,9 +1,19 @@
-import React from "react";
+import React, { useContext } from "react";
+import { useSelector } from "react-redux";
 import styled from "styled-components";
 
+import { LocalizationContext } from "../../../context/localization-context.js";
+import { selectAuth } from "../../../store/authSlice.js";
 import GoBackNavigator from "./GoBackNavigator.jsx";
 import NewRoomNavigator from "./NewRoomNavigator.jsx";
 import SignoutNavigator from "./SignoutNavigator.jsx";
+import { localizableStringKeyEnum } from "../../../util/localizable-strings.js";
+import LocalizationSwitch from "./LocalizationSwitch.jsx";
+
+const sharedStyleValues = {
+  rightContainerInnerHorizontalMargin: 8,
+  welcomeUserWrapperMarginRight: 20,
+};
 
 const Wrapper = styled.div`
   width: 100%;
@@ -14,35 +24,77 @@ const Wrapper = styled.div`
   align-items: center;
 `;
 
-const GoBackContainer = styled.div`
+const LeftContainer = styled.div`
   flex: 0 0 49px;
   height: 100%;
   margin-right: 15px;
 `;
 
-const NewRoomContainer = styled.div`
+const MiddleContainer = styled.div`
   flex: 1 0 400px;
   height: 100%;
   margin-left: 15px;
 `;
 
-const SignoutContainer = styled.div`
+const RightContainer = styled.div`
   flex: 1 0 200px;
   height: 100%;
+
+  display: flex;
+  flex-direction: row;
+  justify-content: end;
+  align-items: center;
+`;
+
+const WelcomeUserWrapper = styled.div`
+  flex: 1 0 200px;
+  text-align: end;
+  color: rgb(255, 255, 255);
+  margin-right: ${sharedStyleValues.welcomeUserWrapperMarginRight}px;
+`;
+
+const LocalizationSwitchContainer = styled.div`
+  flex: 0 0 80px;
+  height: 35px;
+  margin-left: ${sharedStyleValues.rightContainerInnerHorizontalMargin}px;
+  margin-right: ${sharedStyleValues.rightContainerInnerHorizontalMargin}px;
+`;
+
+const SignoutNavigatorContainer = styled.div`
+  flex: 0 0 100px;
+  box-sizing: border-box;
+  height: 38px;
+
+  margin-left: ${sharedStyleValues.rightContainerInnerHorizontalMargin}px;
+  margin-right: ${sharedStyleValues.rightContainerInnerHorizontalMargin * 2}px;
 `;
 
 export default function NavigationBar() {
+  const { localizedStrings } = useContext(LocalizationContext);
+  const { authenticatedUserName } = useSelector(selectAuth);
+
+  const welcomeUserMessage = `${
+    localizedStrings[localizableStringKeyEnum.NAVIGATION_WELCOME]
+  }, ${authenticatedUserName}`;
+
   return (
     <Wrapper>
-      <GoBackContainer>
+      <LeftContainer>
         <GoBackNavigator />
-      </GoBackContainer>
-      <NewRoomContainer>
+      </LeftContainer>
+      <MiddleContainer>
         <NewRoomNavigator />
-      </NewRoomContainer>
-      <SignoutContainer>
-        <SignoutNavigator />
-      </SignoutContainer>
+      </MiddleContainer>
+      <RightContainer>
+        <WelcomeUserWrapper>{welcomeUserMessage}</WelcomeUserWrapper>
+        <LocalizationSwitchContainer>
+          <LocalizationSwitch />
+        </LocalizationSwitchContainer>
+
+        <SignoutNavigatorContainer>
+          <SignoutNavigator />
+        </SignoutNavigatorContainer>
+      </RightContainer>
     </Wrapper>
   );
 }

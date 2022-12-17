@@ -1,7 +1,6 @@
 import React, { useContext } from "react";
 import styled from "styled-components";
 
-import { MessageContext } from "../../../../context/message-context";
 import { timeSince } from "../../../../util/time-since";
 
 const sharedStyleValues = {
@@ -68,7 +67,7 @@ const TextContentWrapper = styled.div`
   box-sizing: border-box;
 `;
 
-export const textMessagePropsBuilder = (isParentVisible, messageItem) => {
+export const textMessagePropsBuilder = (isParentVisible, messageItem, localizedStrings) => {
   const defaultMessage = {
     id: "unknown id",
     userId: "unknown user id",
@@ -96,7 +95,7 @@ export const textMessagePropsBuilder = (isParentVisible, messageItem) => {
     defaultMessage.userName = messageItem.userName;
   }
   if (typeof messageItem.timestamp === "number") {
-    defaultMessage.time = timeSince(messageItem.timestamp);
+    defaultMessage.time = timeSince(messageItem.timestamp, localizedStrings);
   }
   if (typeof messageItem.isLocalSender === "boolean") {
     defaultMessage.userNameVisibility = messageItem.isLocalSender
@@ -129,8 +128,6 @@ function TextMessage({
   alignTextToRight,
   content,
 }, ref) {
-  const {} = useContext(MessageContext);
-
   return (
     <Wrapper ref={ref}>
       <TitleWrapper>

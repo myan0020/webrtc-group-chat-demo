@@ -4,6 +4,7 @@ import styled from "styled-components";
 import TextMessage, { textMessagePropsBuilder } from "./TextMessage.jsx";
 import FileMessage, { fileMessagePropsBuilder } from "./FileMessage.jsx";
 import { messageTypeEnum, MessageContext } from "../../../../context/message-context";
+import { LocalizationContext } from "../../../../context/localization-context.js";
 
 const sharedStyleValues = {
   // autoScrollingThredhold: 300,
@@ -54,6 +55,7 @@ const autoScrollToBottomIfNecessary = (scrollableContainer, autoScrollingThresho
 };
 
 export default function MessageBox({}) {
+  const { localizedStrings } = useContext(LocalizationContext);
   const {
     visibleMessageType,
     orderedTextMessageList,
@@ -106,20 +108,10 @@ export default function MessageBox({}) {
       >
         {orderedTextMessageList.map((messageItem, index) => {
           if (messageItem.type === messageTypeEnum.MESSAGE_TYPE_TEXT) {
-            const isLastOne = index === orderedTextMessageList.length - 1;
-            if (isLastOne) {
-              return (
-                <TextMessage
-                  key={index}
-                  {...textMessagePropsBuilder(isTextMessageVisible, messageItem)}
-                />
-              );
-            }
-
             return (
               <TextMessage
                 key={index}
-                {...textMessagePropsBuilder(isTextMessageVisible, messageItem)}
+                {...textMessagePropsBuilder(isTextMessageVisible, messageItem, localizedStrings)}
               />
             );
           }
@@ -133,20 +125,10 @@ export default function MessageBox({}) {
       >
         {orderedFileMessageList.map((messageItem, index) => {
           if (messageItem.type === messageTypeEnum.MESSAGE_TYPE_FILE) {
-            const isLastOne = index === orderedFileMessageList.length - 1;
-            if (isLastOne) {
-              return (
-                <FileMessage
-                  key={index}
-                  {...fileMessagePropsBuilder(isFileMessageVisible, messageItem)}
-                />
-              );
-            }
-
             return (
               <FileMessage
                 key={index}
-                {...fileMessagePropsBuilder(isFileMessageVisible, messageItem)}
+                {...fileMessagePropsBuilder(isFileMessageVisible, messageItem, localizedStrings)}
               />
             );
           }

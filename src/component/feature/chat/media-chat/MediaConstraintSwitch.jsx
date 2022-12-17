@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 
@@ -11,6 +11,8 @@ import {
   updateVideoCallingInputType,
   videoCallingInputTypeEnum,
 } from "../../../../store/mediaChatSlice.js";
+import { LocalizationContext } from "../../../../context/localization-context.js";
+import { localizableStringKeyEnum } from "../../../../util/localizable-strings.js";
 
 const Wrapper = styled.div`
   width: 146px;
@@ -23,12 +25,13 @@ export const MediaConstraintSwitchPropsBuilder = ({}) => {
 
 export default function MediaConstraintSwitch({}) {
   const dispatch = useDispatch();
+  const { localizedStrings } = useContext(LocalizationContext);
   const { enableVideoCallingInput, videoCallingInputType, isCalling } =
     useSelector(selectMediaChat);
 
   const switchEnabled = !isCalling && enableVideoCallingInput;
   const cameraTab = multiTabSwitchTabBuilder({
-    switchTabName: "Camera",
+    switchTabName: localizedStrings[localizableStringKeyEnum.CHAT_ROOM_MEDIA_CONSTRAINT_CAMERA],
     switchTabOnClick: () => {
       dispatch(
         updateVideoCallingInputType(videoCallingInputTypeEnum.VIDEO_CALLING_INPUT_TYPE_CAMERA)
@@ -38,7 +41,7 @@ export default function MediaConstraintSwitch({}) {
       videoCallingInputType === videoCallingInputTypeEnum.VIDEO_CALLING_INPUT_TYPE_CAMERA,
   });
   const screenTab = multiTabSwitchTabBuilder({
-    switchTabName: "Screen",
+    switchTabName: localizedStrings[localizableStringKeyEnum.CHAT_ROOM_MEDIA_CONSTRAINT_SCREEN],
     switchTabOnClick: () => {
       dispatch(
         updateVideoCallingInputType(videoCallingInputTypeEnum.VIDEO_CALLING_INPUT_TYPE_SCREEN)

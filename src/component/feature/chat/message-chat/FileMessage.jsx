@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import styled from "styled-components";
 
 import { formatBytes } from "../../../../util/format-bytes";
@@ -164,7 +164,7 @@ const FileAvaliableOperation = styled.div`
   }
 `;
 
-export const fileMessagePropsBuilder = (isParentVisible, messageItem) => {
+export const fileMessagePropsBuilder = (isParentVisible, messageItem, localizedStrings) => {
   const defaultMessage = {
     id: "unknown id",
     userId: "unknown user id",
@@ -201,7 +201,7 @@ export const fileMessagePropsBuilder = (isParentVisible, messageItem) => {
     defaultMessage.userName = messageItem.userName;
   }
   if (typeof messageItem.timestamp === "number") {
-    defaultMessage.time = timeSince(messageItem.timestamp);
+    defaultMessage.time = timeSince(messageItem.timestamp, localizedStrings);
   }
 
   if (typeof messageItem.fileName === "string" && messageItem.fileName.length > 0) {
