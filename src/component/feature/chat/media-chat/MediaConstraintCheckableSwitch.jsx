@@ -2,9 +2,9 @@ import React from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
 
-import { selectMediaChat } from "../../../../store/mediaChatSlice.js";
-import MediaConstraintCheckBox from "./MediaConstraintCheckBox.jsx";
-import MediaConstraintSwitch from "./MediaConstraintSwitch.jsx";
+import { selectMediaChat } from "store/mediaChatSlice";
+import MediaConstraintCheckBox from "./MediaConstraintCheckBox";
+import MediaConstraintSwitch from "./MediaConstraintSwitch";
 
 const Wrapper = styled.div`
   display: flex;

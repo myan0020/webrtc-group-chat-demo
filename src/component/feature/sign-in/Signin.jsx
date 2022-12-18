@@ -4,9 +4,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { Navigate } from "react-router-dom";
 import { RotatingLines } from "react-loader-spinner";
 
-import { requestToSignin, selectAuth, requestStatus } from "../../../store/authSlice.js";
-import { LocalizationContext } from "../../../context/localization-context.js";
-import { localizableStringKeyEnum } from "../../../util/localizable-strings.js";
+import { requestToSignin, selectAuth, requestStatus } from "store/authSlice";
+import { LocalizationContext } from "context/localization-context";
+import { localizableStringKeyEnum } from "resource/string/localizable-strings";
 
 const Wrapper = styled.div`
   width: 100%;

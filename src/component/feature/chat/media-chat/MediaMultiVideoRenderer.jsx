@@ -1,8 +1,8 @@
 import React, { useContext } from "react";
 import styled from "styled-components";
 
-import { MediaRenderingContext } from "../../../../context/media-rendering-context";
-import MediaVideoRenderer from "./MediaVideoRenderer.jsx";
+import { MediaRenderingContext } from "context/media-rendering-context";
+import MediaVideoRenderer from "./MediaVideoRenderer";
 
 const sharedStyleValues = {
   bottomSpaceHeight: 14,

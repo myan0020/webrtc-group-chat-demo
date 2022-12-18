@@ -1,14 +1,14 @@
 import React, { useContext, useEffect } from "react";
 import styled from "styled-components";
 
-import { LocalizationContext } from "../../../../context/localization-context";
-import { messageTypeEnum, MessageContext } from "../../../../context/message-context";
-import { localizableStringKeyEnum } from "../../../../util/localizable-strings";
+import { LocalizationContext } from "context/localization-context";
+import { messageTypeEnum, MessageContext } from "context/message-context";
+import { localizableStringKeyEnum } from "resource/string/localizable-strings";
 import MultiTabSwitch, {
   multiTabSwitchPropsBuilder,
   multiTabSwitchTabBuilder,
-} from "../../../generic/switch/MultiTabSwitch.jsx";
-import badgeBackgroundImageUrl from "./images/badge_3x.png";
+} from "../../../generic/switch/MultiTabSwitch";
+import badgeBackgroundImageUrl from "resource/image/badge_3x.png";
 
 const sharedStyleValues = {
   switchPaddingTop: 10,

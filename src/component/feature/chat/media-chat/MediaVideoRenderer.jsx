@@ -1,9 +1,9 @@
 import React, { useContext } from "react";
 import styled from "styled-components";
 
-import MediaUserTag from "./MediaUserTag.jsx";
-import { MediaRenderingContext } from "../../../../context/media-rendering-context.js";
-import cancelImageUrl from "./images/cancel_media_presenting_3x.png";
+import MediaUserTag from "./MediaUserTag";
+import { MediaRenderingContext } from "context/media-rendering-context";
+import cancelImageUrl from "resource/image/cancel_media_presenting_3x.png";
 
 const Wrapper = styled.div`
   box-sizing: border-box;

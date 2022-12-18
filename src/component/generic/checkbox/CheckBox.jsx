@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 
-import checkMarkUrl from "./images/check_mark_3x.png";
+import checkMarkUrl from "resource/image/check_mark_3x.png";
 
 const Wrapper = styled.div`
   box-sizing: border-box;

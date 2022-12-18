@@ -1,11 +1,11 @@
 import React, { useContext, useRef, useState } from "react";
 import styled from "styled-components";
-import { LocalizationContext } from "../../../../context/localization-context";
+import { LocalizationContext } from "context/localization-context";
 
-import { MessageContext, messageTypeEnum } from "../../../../context/message-context";
-import { localizableStringKeyEnum } from "../../../../util/localizable-strings";
-import messageSendBubbleImageUrl from "./images/send_message_bubble_3x.png";
-import messageSendPlaneImageUrl from "./images/send_message_plane_3x.png";
+import { MessageContext, messageTypeEnum } from "context/message-context";
+import { localizableStringKeyEnum } from "resource/string/localizable-strings";
+import messageSendBubbleImageUrl from "resource/image/send_message_bubble_3x.png";
+import messageSendPlaneImageUrl from "resource/image/send_message_plane_3x.png";
 
 const sharedStyleValues = {
   contentHeight: 48,

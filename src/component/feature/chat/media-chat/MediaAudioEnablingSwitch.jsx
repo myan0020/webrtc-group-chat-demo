@@ -5,11 +5,11 @@ import { useDispatch, useSelector } from "react-redux";
 import SingleTabSwitch, {
   singleTabSwitchOptionBuilder,
   singleTabSwitchPropsBuilder,
-} from "../../../generic/switch/SingleTabSwitch.jsx";
-import { selectMediaChat, toggleAudioEnabling } from "../../../../store/mediaChatSlice";
-import enableAudioUrl from "./images/enable_audio_3x.png";
-import disableAudioUrl from "./images/disable_audio_3x.png";
-import audioEnablingDisabledUrl from "./images/audio_enabling_disabled_3x.png";
+} from "../../../generic/switch/SingleTabSwitch";
+import { selectMediaChat, toggleAudioEnabling } from "store/mediaChatSlice";
+import enableAudioUrl from "resource/image/enable_audio_3x.png";
+import disableAudioUrl from "resource/image/disable_audio_3x.png";
+import audioEnablingDisabledUrl from "resource/image/audio_enabling_disabled_3x.png";
 
 const Wrapper = styled.div`
   width: 55px;

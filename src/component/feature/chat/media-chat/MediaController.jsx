@@ -1,10 +1,10 @@
 import React from "react";
 import styled from "styled-components";
 
-import MediaConstraintCheckableSwitch from "./MediaConstraintCheckableSwitch.jsx";
-import CallingSwitch from "./CallingSwitch.jsx";
-import MediaAudioEnablingSwitch from "./MediaAudioEnablingSwitch.jsx";
-import MediaVideoEnablingSwitch from "./MediaVideoEnablingSwitch.jsx";
+import MediaConstraintCheckableSwitch from "./MediaConstraintCheckableSwitch";
+import CallingSwitch from "./CallingSwitch";
+import MediaAudioEnablingSwitch from "./MediaAudioEnablingSwitch";
+import MediaVideoEnablingSwitch from "./MediaVideoEnablingSwitch";
 
 const Wrapper = styled.div`
   margin-bottom: 15px;

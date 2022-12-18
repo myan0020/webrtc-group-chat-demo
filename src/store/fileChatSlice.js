@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import WebRTCGroupChatService from "../service/WebRTCGroupChatService/WebRTCGroupChatService";
+import WebRTCGroupChatService from "service/WebRTCGroupChatService/WebRTCGroupChatService";
 
 export const requestStatus = {
   idle: "idle",

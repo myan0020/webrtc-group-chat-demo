@@ -2,9 +2,9 @@ import React, { useContext } from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
 
-import { LocalizationContext } from "../../../context/localization-context.js";
-import { requestToSignout } from "../../../store/authSlice.js";
-import { localizableStringKeyEnum } from "../../../util/localizable-strings.js";
+import { LocalizationContext } from "context/localization-context";
+import { requestToSignout } from "store/authSlice";
+import { localizableStringKeyEnum } from "resource/string/localizable-strings";
 
 const SignoutNavigatorWrapper = styled.div`
   width: 100%;

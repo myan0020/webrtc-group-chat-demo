@@ -6,8 +6,8 @@ import {
   sendTextMessage,
   readAllTextMessages,
   selectUnreadTextMessageCount,
-} from "../store/textChatSlice";
-import { FileMessageContext, FileMessageContextProvider } from "../context/file-message-context";
+} from "store/textChatSlice";
+import { FileMessageContext, FileMessageContextProvider } from "context/file-message-context";
 
 export const messageTypeEnum = {
   MESSAGE_TYPE_TEXT: 1,

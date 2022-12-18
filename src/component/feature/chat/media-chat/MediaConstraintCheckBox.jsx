@@ -2,8 +2,8 @@ import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 
-import CheckBox, { checkBoxPropsBuilder } from "../../../generic/checkbox/CheckBox.jsx";
-import { selectMediaChat, updateVideoCallingInputEnabling } from "../../../../store/mediaChatSlice.js";
+import CheckBox, { checkBoxPropsBuilder } from "component/generic/checkbox/CheckBox";
+import { selectMediaChat, updateVideoCallingInputEnabling } from "store/mediaChatSlice";
 
 const Wrapper = styled.div`
   width: 20px;

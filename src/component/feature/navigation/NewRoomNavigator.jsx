@@ -2,9 +2,9 @@ import React, { useContext } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 
-import { LocalizationContext } from "../../../context/localization-context.js";
-import { toggleNewRoomPopupVisibility, selectRoom } from "../../../store/roomSlice.js";
-import { localizableStringKeyEnum } from "../../../util/localizable-strings.js";
+import { LocalizationContext } from "context/localization-context";
+import { toggleNewRoomPopupVisibility, selectRoom } from "store/roomSlice";
+import { localizableStringKeyEnum } from "resource/string/localizable-strings";
 
 const Wrapper = styled.div`
   width: 100%;

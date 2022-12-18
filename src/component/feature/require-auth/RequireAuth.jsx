@@ -3,8 +3,8 @@ import { useSelector } from "react-redux";
 import { Navigate, Outlet } from "react-router-dom";
 import styled from "styled-components";
 
-import { selectAuth } from "../../../store/authSlice.js";
-import NavigationBar from "../navigation/NavigationBar.jsx";
+import { selectAuth } from "store/authSlice";
+import NavigationBar from "../navigation/NavigationBar";
 
 const Wrapper = styled.div`
   width: 100%;

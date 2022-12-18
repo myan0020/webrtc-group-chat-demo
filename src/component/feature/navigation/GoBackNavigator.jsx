@@ -2,8 +2,8 @@ import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 
-import { selectRoom, leaveRoom } from "../../../store/roomSlice.js";
-import goBackImageUrl from "./images/go_back_3x.png";
+import { selectRoom, leaveRoom } from "store/roomSlice";
+import goBackImageUrl from "resource/image/go_back_3x.png";
 
 const Wrapper = styled.button`
   width: 100%;

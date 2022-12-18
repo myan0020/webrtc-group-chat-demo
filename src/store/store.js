@@ -15,7 +15,7 @@ import mediaChatReducer, {
 } from "./mediaChatSlice";
 import textChatReducer, { receiveTextMessage } from "./textChatSlice";
 import fileChatReducer from "./fileChatSlice";
-import WebRTCGroupChatService from "../service/WebRTCGroupChatService/WebRTCGroupChatService";
+import WebRTCGroupChatService from "service/WebRTCGroupChatService/WebRTCGroupChatService";
 
 const store = configureStore({
   reducer: {

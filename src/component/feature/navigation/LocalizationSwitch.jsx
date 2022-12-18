@@ -1,13 +1,13 @@
 import React, { useContext } from "react";
 import styled from "styled-components";
 
-import { LocalizationContext } from "../../../context/localization-context.js";
-import { localeTypeEnum, localizableStringKeyEnum } from "../../../util/localizable-strings.js";
+import { LocalizationContext } from "context/localization-context";
+import { localeTypeEnum, localizableStringKeyEnum } from "resource/string/localizable-strings";
 import DropdownSwitch, {
   dropdownSwitchOptionBuilder,
   dropdownSwitchPropsBuilder,
-} from "./../../generic/switch/DropdownSwitch.jsx";
-import globalImageUrl from "./images/gobal_3x.png";
+} from "./../../generic/switch/DropdownSwitch";
+import globalImageUrl from "resource/image/gobal_3x.png";
 
 const Wrapper = styled.div`
   width: 100%;

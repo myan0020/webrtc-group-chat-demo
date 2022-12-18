@@ -189,18 +189,10 @@ export const multiTabSwitchPropsBuilder = ({
         : "rgb(33, 150, 243)";
   }
 
-  // let selectedIndex = undefined;
-  // tabs.forEach((tab, index) => {
-  //   if (tab.selected) {
-  //     selectedIndex = index;
-  //   }
-  // });
-
   return {
     switchEnabled: enabled,
 
     switchTabs: tabs,
-    // switchSelectedIndex: selectedIndex,
 
     switchBorderRadius: borderRadius,
     switchOuterMostBorderWidth: outerMostBorderWidth,
@@ -218,7 +210,6 @@ export default function MultiTabSwitch({
   switchEnabled,
 
   switchTabs,
-  // switchSelectedIndex,
 
   switchBorderRadius,
   switchOuterMostBorderWidth,
@@ -230,9 +221,6 @@ export default function MultiTabSwitch({
   switchUnselectedBackgroundColor,
   switchUnselectedColor,
 }) {
-  // const [tabs, setTabs] = useState(switchTabs);
-  // const [selectedTabIndex, setSelectedTabIndex] = useState(switchSelectedIndex);
-
   const tabWrappersRender = switchTabs.map((tab, index) => {
     const handleTabSelected = () => {
       if (!switchEnabled) {
@@ -241,20 +229,6 @@ export default function MultiTabSwitch({
       if (tab.onClick) {
         tab.onClick();
       }
-      // const newTabs = [...tabs];
-      // newTabs[index].selected = true;
-      // newTabs[index].badgeVisibility = "hidden";
-      // if (selectedTabIndex !== undefined && selectedTabIndex !== index) {
-      //   newTabs[selectedTabIndex].selected = false;
-      //   const hasBadgeTextOnSelectedIndex =
-      //     typeof newTabs[selectedTabIndex].badgeText === "string" &&
-      //     newTabs[selectedTabIndex].badgeText.length > 0;
-      //   newTabs[selectedTabIndex].badgeVisibility = hasBadgeTextOnSelectedIndex
-      //     ? "visible"
-      //     : "hidden";
-      // }
-      // setTabs(newTabs);
-      // setSelectedTabIndex(index);
     };
 
     const borderRadius = tab.borderRadius;

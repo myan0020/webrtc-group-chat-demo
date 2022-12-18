@@ -1,10 +1,10 @@
 import React, { useContext, useEffect, useRef } from "react";
 import styled from "styled-components";
 
-import TextMessage, { textMessagePropsBuilder } from "./TextMessage.jsx";
-import FileMessage, { fileMessagePropsBuilder } from "./FileMessage.jsx";
-import { messageTypeEnum, MessageContext } from "../../../../context/message-context";
-import { LocalizationContext } from "../../../../context/localization-context.js";
+import TextMessage, { textMessagePropsBuilder } from "./TextMessage";
+import FileMessage, { fileMessagePropsBuilder } from "./FileMessage";
+import { messageTypeEnum, MessageContext } from "context/message-context";
+import { LocalizationContext } from "context/localization-context";
 
 const sharedStyleValues = {
   // autoScrollingThredhold: 300,

@@ -2,7 +2,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 
 import { fetchInitialRoomList, leaveRoom, selectRoom } from "./roomSlice";
-import WebRTCGroupChatService from "../service/WebRTCGroupChatService/WebRTCGroupChatService";
+import WebRTCGroupChatService from "service/WebRTCGroupChatService/WebRTCGroupChatService";
 import { clearTextMessage } from "./textChatSlice";
 
 export const requestStatus = {

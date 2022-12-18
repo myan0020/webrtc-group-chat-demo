@@ -1,7 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 
-import personSpeakImageUrl from "./images/person_speak_3x.png";
+import personSpeakImageUrl from "resource/image/person_speak_3x.png";
 
 const Wrapper = styled.div`
   max-width: 100%;

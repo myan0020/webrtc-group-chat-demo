@@ -3,14 +3,14 @@ import styled from "styled-components";
 import { Navigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 
-import { selectRoom } from "../../../store/roomSlice";
-import MediaController from "./media-chat/MediaController.jsx";
-import MediaRenderer from "./media-chat/MediaRenderer.jsx";
-import { MediaRenderingContextProvider } from "../../../context/media-rendering-context";
-import MessageTypeSwitch from "./message-chat/MessageTypeSwitch.jsx";
-import MessageBox from "./message-chat/MessageBox.jsx";
-import MessageSender from "./message-chat/MessageSender.jsx";
-import { MessageContextProvider } from "../../../context/message-context";
+import { selectRoom } from "store/roomSlice";
+import MediaController from "./media-chat/MediaController";
+import MediaRenderer from "./media-chat/MediaRenderer";
+import { MediaRenderingContextProvider } from "context/media-rendering-context";
+import MessageTypeSwitch from "./message-chat/MessageTypeSwitch";
+import MessageBox from "./message-chat/MessageBox";
+import MessageSender from "./message-chat/MessageSender";
+import { MessageContextProvider } from "context/message-context";
 
 const sharedStyleValues = {
   mediaControllerContainerHeight: 116,

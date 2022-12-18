@@ -5,14 +5,14 @@ import styled from "styled-components";
 import MultiTabSwitch, {
   multiTabSwitchTabBuilder,
   multiTabSwitchPropsBuilder,
-} from "../../../generic/switch/MultiTabSwitch.jsx";
+} from "component/generic/switch/MultiTabSwitch";
 import {
   selectMediaChat,
   updateVideoCallingInputType,
   videoCallingInputTypeEnum,
-} from "../../../../store/mediaChatSlice.js";
-import { LocalizationContext } from "../../../../context/localization-context.js";
-import { localizableStringKeyEnum } from "../../../../util/localizable-strings.js";
+} from "store/mediaChatSlice";
+import { LocalizationContext } from "context/localization-context";
+import { localizableStringKeyEnum } from "resource/string/localizable-strings";
 
 const Wrapper = styled.div`
   width: 146px;

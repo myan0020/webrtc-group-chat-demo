@@ -1,6 +1,6 @@
 import React from "react";
 
-import SingleTabSwitch from "../../../generic/switch/SingleTabSwitch.jsx";
+import SingleTabSwitch from "../../../generic/switch/SingleTabSwitch";
 
 export const MediaVideoMutingSwitchPropsBuilder = ({}) => {
   return {};

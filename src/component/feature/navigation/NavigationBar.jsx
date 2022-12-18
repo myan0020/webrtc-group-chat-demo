@@ -2,13 +2,13 @@ import React, { useContext } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
 
-import { LocalizationContext } from "../../../context/localization-context.js";
-import { selectAuth } from "../../../store/authSlice.js";
-import GoBackNavigator from "./GoBackNavigator.jsx";
-import NewRoomNavigator from "./NewRoomNavigator.jsx";
-import SignoutNavigator from "./SignoutNavigator.jsx";
-import { localizableStringKeyEnum } from "../../../util/localizable-strings.js";
-import LocalizationSwitch from "./LocalizationSwitch.jsx";
+import { LocalizationContext } from "context/localization-context";
+import { selectAuth } from "store/authSlice";
+import GoBackNavigator from "./GoBackNavigator";
+import NewRoomNavigator from "./NewRoomNavigator";
+import SignoutNavigator from "./SignoutNavigator";
+import { localizableStringKeyEnum } from "resource/string/localizable-strings";
+import LocalizationSwitch from "./LocalizationSwitch";
 
 const sharedStyleValues = {
   rightContainerInnerHorizontalMargin: 8,
@@ -90,7 +90,6 @@ export default function NavigationBar() {
         <LocalizationSwitchContainer>
           <LocalizationSwitch />
         </LocalizationSwitchContainer>
-
         <SignoutNavigatorContainer>
           <SignoutNavigator />
         </SignoutNavigatorContainer>

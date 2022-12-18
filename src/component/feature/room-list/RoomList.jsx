@@ -10,10 +10,10 @@ import {
   toggleNewRoomPopupVisibility,
   joinRoom,
   createRoom,
-} from "../../../store/roomSlice.js";
-import closeImageUrl from "./images/close_3x.png";
-import { LocalizationContext } from "../../../context/localization-context.js";
-import { localizableStringKeyEnum } from "../../../util/localizable-strings.js";
+} from "store/roomSlice";
+import closeImageUrl from "resource/image/close_3x.png";
+import { LocalizationContext } from "context/localization-context";
+import { localizableStringKeyEnum } from "resource/string/localizable-strings";
 
 const Wrapper = styled.div`
   width: 100%;

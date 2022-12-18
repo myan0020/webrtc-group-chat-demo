@@ -1,8 +1,8 @@
 import React from "react";
 import styled from "styled-components";
 
-import MediaRenderingStyleSwitch from "./MediaRenderingStyleSwitch.jsx";
-import MediaMultiVideoRenderer from "./MediaMultiVideoRenderer.jsx";
+import MediaRenderingStyleSwitch from "./MediaRenderingStyleSwitch";
+import MediaMultiVideoRenderer from "./MediaMultiVideoRenderer";
 
 const sharedStyleValues = {
   mediaRenderingStyleSwitchContainerHeight: 54,

@@ -4,12 +4,12 @@ import styled from "styled-components";
 import MultiTabSwitch, {
   multiTabSwitchTabBuilder,
   multiTabSwitchPropsBuilder,
-} from "../../../generic/switch/MultiTabSwitch.jsx";
-import presentationEnabledUrl from "./images/presentation_enabled_3x.png";
-import presentationDisabledUrl from "./images/presentation_disabled_3x.png";
-import equalityEnabledUrl from "./images/equality_enabled_3x.png";
-import equalityDisabledUrl from "./images/equality_disabled_3x.png";
-import { MediaRenderingContext } from "../../../../context/media-rendering-context.js";
+} from "../../../generic/switch/MultiTabSwitch";
+import presentationEnabledUrl from "resource/image/presentation_enabled_3x.png";
+import presentationDisabledUrl from "resource/image/presentation_disabled_3x.png";
+import equalityEnabledUrl from "resource/image/equality_enabled_3x.png";
+import equalityDisabledUrl from "resource/image/equality_disabled_3x.png";
+import { MediaRenderingContext } from "context/media-rendering-context";
 
 const Wrapper = styled.div`
   width: 80px;
