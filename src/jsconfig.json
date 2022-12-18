@@ -1,0 +1,14 @@
+{
+  "include": ["**/*"],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "component/*": ["component/*"],
+      "context/*": ["context/*"],
+      "store/*": ["store/*"],
+      "util/*": ["util/*"],
+      "service/*": ["service/*"],
+      "resource/*": ["resource/*"],
+    }
+  },
+}
