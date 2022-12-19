@@ -8,11 +8,12 @@ import GoBackNavigator from "./GoBackNavigator";
 import NewRoomNavigator from "./NewRoomNavigator";
 import SignoutNavigator from "./SignoutNavigator";
 import { localizableStringKeyEnum } from "resource/string/localizable-strings";
-import LocalizationSwitch from "./LocalizationSwitch";
+import LocalizationSwitch from "../localization/LocalizationSwitch";
+import globalWhiteImageUrl from "resource/image/gobal_white_3x.png";
 
 const sharedStyleValues = {
   rightContainerInnerHorizontalMargin: 8,
-  welcomeUserWrapperMarginRight: 20,
+  welcomeUserWrapperMarginRight: 25,
 };
 
 const Wrapper = styled.div`
@@ -37,7 +38,7 @@ const MiddleContainer = styled.div`
 `;
 
 const RightContainer = styled.div`
-  flex: 1 0 200px;
+  flex: 1 0 250px;
   height: 100%;
 
   display: flex;
@@ -47,7 +48,7 @@ const RightContainer = styled.div`
 `;
 
 const WelcomeUserWrapper = styled.div`
-  flex: 1 0 200px;
+  flex: 1 0 250px;
   text-align: end;
   color: rgb(255, 255, 255);
   margin-right: ${sharedStyleValues.welcomeUserWrapperMarginRight}px;
@@ -58,12 +59,13 @@ const LocalizationSwitchContainer = styled.div`
   height: 35px;
   margin-left: ${sharedStyleValues.rightContainerInnerHorizontalMargin}px;
   margin-right: ${sharedStyleValues.rightContainerInnerHorizontalMargin}px;
+  box-sizing: border-box;
 `;
 
 const SignoutNavigatorContainer = styled.div`
-  flex: 0 0 100px;
+  flex: 0 0 80px;
   box-sizing: border-box;
-  height: 38px;
+  height: 34px;
 
   margin-left: ${sharedStyleValues.rightContainerInnerHorizontalMargin}px;
   margin-right: ${sharedStyleValues.rightContainerInnerHorizontalMargin * 2}px;
@@ -88,7 +90,10 @@ export default function NavigationBar() {
       <RightContainer>
         <WelcomeUserWrapper>{welcomeUserMessage}</WelcomeUserWrapper>
         <LocalizationSwitchContainer>
-          <LocalizationSwitch />
+          <LocalizationSwitch
+            iconImageUrl={globalWhiteImageUrl}
+            isSelectedTextKeyVisible={false}
+          />
         </LocalizationSwitchContainer>
         <SignoutNavigatorContainer>
           <SignoutNavigator />

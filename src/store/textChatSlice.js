@@ -59,7 +59,7 @@ export const sendTextMessage = createAsyncThunk(
     WebRTCGroupChatService.sendChatMessageToAllPeer(text);
 
     const { authenticatedUserId, authenticatedUserName } = selectAuth(thunkAPI.getState());
-    const timestamp = Date.parse(new Date());
+    const timestamp = (new Date()).getTime();
     const id = `${authenticatedUserId}-${timestamp}`;
     const textMessage = {
       id,
@@ -94,7 +94,7 @@ export const receiveTextMessage = createAsyncThunk(
       defaultMessage.text = message.text;
     }
 
-    const timestamp = Date.parse(new Date());
+    const timestamp = (new Date()).getTime();
     const id = `${defaultMessage.userId}-${timestamp}`;
     const textMessage = {
       id,

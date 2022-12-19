@@ -6,20 +6,23 @@ import { localeTypeEnum, localizableStringKeyEnum } from "resource/string/locali
 import DropdownSwitch, {
   dropdownSwitchOptionBuilder,
   dropdownSwitchPropsBuilder,
-} from "./../../generic/switch/DropdownSwitch";
-import globalImageUrl from "resource/image/gobal_3x.png";
+} from "../../generic/switch/DropdownSwitch";
 
 const Wrapper = styled.div`
   width: 100%;
   height: 100%;
 `;
 
-export default function LocalizationSwitch({}) {
+export default function LocalizationSwitch({
+  iconImageUrl,
+  selectedTextColor,
+  isSelectedTextKeyVisible,
+}) {
   const { localizedStrings, changeLocalization } = useContext(LocalizationContext);
 
   const EnglishOption = dropdownSwitchOptionBuilder({
     dropdownOptionName:
-      localizedStrings[localizableStringKeyEnum.NAVIGATION_LOCALIZATION_ENGLISH_ITEM_TEXT],
+      localizedStrings[localizableStringKeyEnum.LOCALIZATION_ENGLISH_ITEM_TEXT],
     dropdownOptionSelected: true,
     dropdownOptionOnClick: () => {
       changeLocalization(localeTypeEnum.ENGLISH);
@@ -27,7 +30,7 @@ export default function LocalizationSwitch({}) {
   });
   const ChineseOption = dropdownSwitchOptionBuilder({
     dropdownOptionName:
-      localizedStrings[localizableStringKeyEnum.NAVIGATION_LOCALIZATION_CHINESE_ITEM_TEXT],
+      localizedStrings[localizableStringKeyEnum.LOCALIZATION_CHINESE_ITEM_TEXT],
     dropdownOptionSelected: false,
     dropdownOptionOnClick: () => {
       changeLocalization(localeTypeEnum.CHINESE);
@@ -38,10 +41,14 @@ export default function LocalizationSwitch({}) {
     <Wrapper>
       <DropdownSwitch
         {...dropdownSwitchPropsBuilder({
-          dropdownSwitchIconImageUrl: globalImageUrl,
-          dropdownSwitchIconImageWidth: 35,
-          dropdownSwitchSelectedOptionText:
-            localizedStrings[localizableStringKeyEnum.NAVIGATION_LOCALIZATION_SELECTED_TEXT],
+          dropdownSwitchIconImageUrl: iconImageUrl,
+          dropdownSwitchIconImageWidth: 25,
+          dropdownSwitchSelectedOptionTextKey:
+            localizedStrings[localizableStringKeyEnum.LOCALIZATION_SELECTED_TEXT_KEY],
+          dropdownSwitchSelectedOptionTextValue:
+            localizedStrings[localizableStringKeyEnum.LOCALIZATION_SELECTED_TEXT_VALUE],
+          dropdownSwitchSelectedOptionTextColor: selectedTextColor,
+          dropdownSwitchSelectedTextKeyVisible: isSelectedTextKeyVisible,
           dropdownSwitchOptions: [EnglishOption, ChineseOption],
         })}
       />

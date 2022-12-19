@@ -7,6 +7,12 @@ import { RotatingLines } from "react-loader-spinner";
 import { requestToSignin, selectAuth, requestStatus } from "store/authSlice";
 import { LocalizationContext } from "context/localization-context";
 import { localizableStringKeyEnum } from "resource/string/localizable-strings";
+import LocalizationSwitch from "../localization/LocalizationSwitch";
+import globalGreyImageUrl from "resource/image/global_grey_3x.png";
+
+const sharedStyleValues = {
+  formInputVerticalMargin: 40,
+};
 
 const Wrapper = styled.div`
   width: 100%;
@@ -16,10 +22,10 @@ const Wrapper = styled.div`
 
 const ContentWrapper = styled.div`
   position: relative;
-  top: 25%;
+  top: 26%;
   margin-left: 50px;
   margin-right: 117px;
-  height: calc(217 / 800 * 100%);
+  height: calc(300 / 800 * 100%);
   display: flex;
   flex-direction: row;
   justify-content: center;
@@ -47,19 +53,25 @@ const FormWrapper = styled.form`
   flex-basis: 404px;
   display: flex;
   flex-direction: column;
-  justify-content: space-around;
+`;
+
+const FormInputWrapper = styled.div`
+  padding: 10px;
+  border: 1px solid #c4c4c4;
+  border-radius: 10px;
+  padding-left: 12px;
+  border-width: 1px;
+  margin-top: ${sharedStyleValues.formInputVerticalMargin}px;
+  margin-bottom: ${sharedStyleValues.formInputVerticalMargin}px;
 `;
 
 const FormInput = styled.input`
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border-color: transparent;
   font-size: 28px;
-  padding: 10px;
-  border-radius: 10px;
-  border-color: #c4c4c4;
-  border-width: 1px;
-  padding-left: 12px;
-  border-width: 1px;
   color: #808080;
-
   &::placeholder {
     /* Chrome, Firefox, Opera, Safari 10.1+ */
     color: #c4c4c4;
@@ -82,6 +94,13 @@ const FormButton = styled.button`
   border-radius: 10px;
   border-width: 1px;
   border-color: aliceblue;
+`;
+
+const FormLanguageSwitchContainer = styled.div`
+  width: 200px;
+  height: 40px;
+  margin-top: 15px;
+  font-size: 20px;
 `;
 
 export default function Signin() {
@@ -112,20 +131,32 @@ export default function Signin() {
             {localizedStrings[localizableStringKeyEnum.SIGN_IN_TITLE_DESC]}
           </HeadingDescription>
         </HeadingWrapper>
+
         <FormWrapper>
-          <FormInput
-            placeholder={`${localizedStrings[localizableStringKeyEnum.SIGN_IN_INPUT_PLACEHOLDER]}`}
-            onChange={onInputNewUserNameChange}
-            value={inputUserName}
-            onKeyDown={onKeyDown}
-            autoFocus
-          />
+          <FormInputWrapper>
+            <FormInput
+              placeholder={`${
+                localizedStrings[localizableStringKeyEnum.SIGN_IN_INPUT_PLACEHOLDER]
+              }`}
+              onChange={onInputNewUserNameChange}
+              value={inputUserName}
+              onKeyDown={onKeyDown}
+              autoFocus
+            />
+          </FormInputWrapper>
           <FormButton
             type='button'
             onClick={onSigninClick}
           >
             {localizedStrings[localizableStringKeyEnum.SIGN_IN_COMFIRM]}
           </FormButton>
+          <FormLanguageSwitchContainer>
+            <LocalizationSwitch
+              iconImageUrl={globalGreyImageUrl}
+              selectedTextColor={"#808080"}
+              isSelectedTextKeyVisible={true}
+            />
+          </FormLanguageSwitchContainer>
         </FormWrapper>
       </ContentWrapper>
 

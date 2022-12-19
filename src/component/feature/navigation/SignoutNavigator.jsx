@@ -20,7 +20,7 @@ const SignoutNavigatorButton = styled.button`
   border-radius: 10px;
   color: rgb(255, 255, 255);
   text-align: center;
-  font-size: 16px;
+  font-size: 14px;
   background-color: transparent;
 `;
 

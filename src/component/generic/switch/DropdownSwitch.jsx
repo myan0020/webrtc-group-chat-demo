@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import styled from "styled-components";
 
 const sharedStyleValues = {
-  // rightContainerInnerHorizontalMargin: 8,
+  dropdownOptionHorizontalMargin: 5,
+  dropdownOptionVerticalMargin: 5,
 };
 
 const Wrapper = styled.div`
@@ -10,14 +11,26 @@ const Wrapper = styled.div`
   width: 100%;
   height: 100%;
 
-  display: flex;
-  flex-direction: row;
-  justify-content: start;
-
   position: relative;
 `;
 
-const IconWrapper = styled.div`
+const SelectedOptionWrapper = styled.div`
+  box-sizing: border-box;
+  max-width: 100%;
+  height: 100%;
+
+  display: flex;
+  flex-direction: row;
+  justify-content: start;
+  align-items: center;
+
+  &:hover,
+  &:active {
+    opacity: 0.5;
+  }
+`;
+
+const SelectedOptionIconWrapper = styled.div`
   box-sizing: border-box;
   flex: 0 0 ${(props) => props.width}px;
   height: ${(props) => props.width}px;
@@ -26,11 +39,6 @@ const IconWrapper = styled.div`
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
-
-  &:hover,
-  &:active {
-    opacity: 0.5;
-  }
 `;
 
 const SelectedOptionTextWrapper = styled.div`
@@ -41,10 +49,21 @@ const SelectedOptionTextWrapper = styled.div`
 
   display: flex;
   align-items: center;
-  color: rgb(255, 255, 255);
+  color: ${(props) => props.color};
 `;
 
-const DropdownWrapper = styled.ul`
+const DropdownBackgroundWrapper = styled.div`
+  display: ${(props) => props.display};
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+
+  z-index: 1;
+`;
+
+const DropdownContentWrapper = styled.ul`
   display: ${(props) => props.display};
 
   box-sizing: border-box;
@@ -54,11 +73,11 @@ const DropdownWrapper = styled.ul`
   padding-bottom: 3px;
   margin: 0;
   border: 1.5px solid #808080;
-  border-radius: 5px;
+  border-radius: 10px;
 
   position: absolute;
   top: 120%;
-  left: -8px;
+  left: -5px;
   z-index: 1;
 
   background-color: rgb(36, 41, 47);
@@ -72,7 +91,16 @@ const DropdownOptionWrapper = styled.li`
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
+  width: calc(100% - ${sharedStyleValues.dropdownOptionHorizontalMargin * 2}px);
+  border-radius: 10px;
+  margin-left: ${sharedStyleValues.dropdownOptionHorizontalMargin}px;
+  margin-right: ${sharedStyleValues.dropdownOptionHorizontalMargin}px;
+  margin-top: ${sharedStyleValues.dropdownOptionVerticalMargin}px;
+  margin-bottom: ${sharedStyleValues.dropdownOptionVerticalMargin}px;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+  }
 `;
 
 export const dropdownSwitchOptionBuilder = ({
@@ -93,7 +121,10 @@ export const dropdownSwitchOptionBuilder = ({
 export const dropdownSwitchPropsBuilder = ({
   dropdownSwitchIconImageUrl,
   dropdownSwitchIconImageWidth,
-  dropdownSwitchSelectedOptionText,
+  dropdownSwitchSelectedOptionTextKey,
+  dropdownSwitchSelectedOptionTextValue,
+  dropdownSwitchSelectedOptionTextColor,
+  dropdownSwitchSelectedTextKeyVisible,
   dropdownSwitchOptions,
 }) => {
   const iconImageUrl =
@@ -102,8 +133,22 @@ export const dropdownSwitchPropsBuilder = ({
     typeof dropdownSwitchIconImageWidth === "number" && dropdownSwitchIconImageWidth > 0
       ? dropdownSwitchIconImageWidth
       : 0;
-  const selectedOptionText =
-    typeof dropdownSwitchSelectedOptionText === "string" ? dropdownSwitchSelectedOptionText : "";
+  const selectedOptionTextKey =
+    typeof dropdownSwitchSelectedOptionTextKey === "string"
+      ? dropdownSwitchSelectedOptionTextKey
+      : "";
+  const selectedOptionTextValue =
+    typeof dropdownSwitchSelectedOptionTextValue === "string"
+      ? dropdownSwitchSelectedOptionTextValue
+      : "";
+  const selectedOptionTextColor =
+    typeof dropdownSwitchSelectedOptionTextColor === "string"
+      ? dropdownSwitchSelectedOptionTextColor
+      : "rgb(255, 255, 255)";
+  const isSelectedOptionTextKeyVisible =
+    typeof dropdownSwitchSelectedTextKeyVisible === "boolean"
+      ? dropdownSwitchSelectedTextKeyVisible
+      : true;
   const options =
     dropdownSwitchOptions &&
     dropdownSwitchOptions instanceof Array &&
@@ -114,7 +159,10 @@ export const dropdownSwitchPropsBuilder = ({
   return {
     iconImageUrl,
     iconImageWidth,
-    selectedOptionText,
+    selectedOptionTextKey,
+    selectedOptionTextValue,
+    selectedOptionTextColor,
+    isSelectedOptionTextKeyVisible,
     options,
   };
 };
@@ -122,7 +170,10 @@ export const dropdownSwitchPropsBuilder = ({
 export default function DropdownSwitch({
   iconImageUrl,
   iconImageWidth,
-  selectedOptionText,
+  selectedOptionTextKey,
+  selectedOptionTextValue,
+  selectedOptionTextColor,
+  isSelectedOptionTextKeyVisible,
   options,
 }) {
   const [dropdownOptionsDisplay, setDropdownOptionsDisplay] = useState("none");
@@ -137,12 +188,19 @@ export default function DropdownSwitch({
 
   return (
     <Wrapper onClick={toggleDropdownOptionsDisplay}>
-      <IconWrapper
-        backgroundImageUrl={iconImageUrl}
-        width={iconImageWidth}
-      />
-      <SelectedOptionTextWrapper>{selectedOptionText}</SelectedOptionTextWrapper>
-      <DropdownWrapper display={dropdownOptionsDisplay}>
+      <SelectedOptionWrapper>
+        <SelectedOptionIconWrapper
+          backgroundImageUrl={iconImageUrl}
+          width={iconImageWidth}
+        />
+        <SelectedOptionTextWrapper color={selectedOptionTextColor}>
+          {`${
+            isSelectedOptionTextKeyVisible ? `${selectedOptionTextKey}: ` : ""
+          }${selectedOptionTextValue}`}
+        </SelectedOptionTextWrapper>
+      </SelectedOptionWrapper>
+      <DropdownBackgroundWrapper display={dropdownOptionsDisplay} />
+      <DropdownContentWrapper display={dropdownOptionsDisplay}>
         {options.map((option) => {
           const handleDropdownOptionClick = () => {
             if (option.onClick) {
@@ -158,7 +216,7 @@ export default function DropdownSwitch({
             </DropdownOptionWrapper>
           );
         })}
-      </DropdownWrapper>
+      </DropdownContentWrapper>
     </Wrapper>
   );
 }

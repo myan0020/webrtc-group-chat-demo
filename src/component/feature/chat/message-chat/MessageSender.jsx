@@ -61,10 +61,20 @@ const MessageInputWrapper = styled.div`
   height: calc(100% - ${sharedStyleValues.messageInputVerticalMargin * 2}px);
   margin: ${sharedStyleValues.messageInputVerticalMargin}px 0
     ${sharedStyleValues.messageInputVerticalMargin}px ${sharedStyleValues.messageInputMarginLeft}px;
+`;
+
+const FileInputInfoWrapper = styled.div`
+  &:hover,
+  &:active {
+    opacity: 0.6;
+  }
+
+  width: 100%;
+  height: 100%;
+  color: rgb(128, 128, 128);
   display: flex;
   justify-content: center;
   align-items: center;
-  color: rgb(128, 128, 128);
 `;
 
 const MessageInput = styled.input.attrs((props) => {
@@ -134,7 +144,7 @@ export default function MessageSender({}) {
   const inputFilesCount = inputFiles ? inputFiles.length : 0;
 
   let contentBorderStyle = "solid";
-  let messageInputWrapperText = undefined;
+  let fileInputInfoText = undefined;
   let messageInputDisplayment = "block";
   let messageInputType = messageInputTypeEnum.MESSAGE_INPUT_TYPE_TEXT;
 
@@ -144,12 +154,12 @@ export default function MessageSender({}) {
 
   if (visibleMessageType === messageTypeEnum.MESSAGE_TYPE_TEXT) {
     contentBorderStyle = "solid";
-    messageInputWrapperText = undefined;
+    fileInputInfoText = undefined;
     messageInputDisplayment = "block";
     messageInputType = messageInputTypeEnum.MESSAGE_INPUT_TYPE_TEXT;
   } else if (visibleMessageType === messageTypeEnum.MESSAGE_TYPE_FILE) {
     contentBorderStyle = "dashed";
-    messageInputWrapperText =
+    fileInputInfoText =
       inputFilesCount === 0
         ? localizedStrings[localizableStringKeyEnum.CHAT_ROOM_MESSAGE_FILE_INPUT_PLACEHOLDER_IDLE]
         : `${inputFilesCount} ${
@@ -159,10 +169,15 @@ export default function MessageSender({}) {
                 ]
               : localizedStrings[
                   localizableStringKeyEnum.CHAT_ROOM_MESSAGE_FILE_INPUT_PLACEHOLDER_FILE
-                ] + localizedStrings[
+                ] +
+                localizedStrings[
                   localizableStringKeyEnum.CHAT_ROOM_MESSAGE_FILE_INPUT_PLACEHOLDER_FILE_PLURAL
                 ]
-          } ${localizedStrings[localizableStringKeyEnum.CHAT_ROOM_MESSAGE_FILE_INPUT_PLACEHOLDER_ADDED]}`;
+          } ${
+            localizedStrings[
+              localizableStringKeyEnum.CHAT_ROOM_MESSAGE_FILE_INPUT_PLACEHOLDER_ADDED
+            ]
+          }`;
     messageInputDisplayment = "none";
     messageInputType = messageInputTypeEnum.MESSAGE_INPUT_TYPE_FILE;
   }
@@ -206,7 +221,9 @@ export default function MessageSender({}) {
     <Wrapper>
       <ContentWrapper borderStyle={contentBorderStyle}>
         <MessageInputWrapper onClick={handleMessageInputWrapperClick}>
-          {messageInputWrapperText && messageInputWrapperText}
+          {fileInputInfoText && (
+            <FileInputInfoWrapper>{fileInputInfoText}</FileInputInfoWrapper>
+          )}
           <MessageInput
             display={messageInputDisplayment}
             ref={messageInputRef}

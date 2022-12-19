@@ -55,6 +55,9 @@ export const authSlice = createSlice({
 export const requestToSignin = createAsyncThunk(
   "auth/requestToSignin",
   async (userName, thunkAPI) => {
+    if (typeof userName !== "string" || userName.length === 0) {
+      return
+    }
     const config = {
       url: "/login",
       method: "POST",

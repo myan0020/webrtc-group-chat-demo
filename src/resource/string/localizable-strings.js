@@ -5,6 +5,14 @@ export const localeTypeEnum = Object.freeze({
 
 export const localizableStringKeyEnum = Object.freeze({
   /**
+   * Localization
+   */
+  LOCALIZATION_SELECTED_TEXT_KEY: "LOCALIZATION_SELECTED_TEXT_KEY",
+  LOCALIZATION_SELECTED_TEXT_VALUE: "LOCALIZATION_SELECTED_TEXT_VALUE",
+  LOCALIZATION_ENGLISH_ITEM_TEXT: "LOCALIZATION_ENGLISH_ITEM_TEXT",
+  LOCALIZATION_CHINESE_ITEM_TEXT: "LOCALIZATION_CHINESE_ITEM_TEXT",
+
+  /**
    * Sign in
    */
   SIGN_IN_TITLE: "SIGN_IN_TITLE",
@@ -24,9 +32,6 @@ export const localizableStringKeyEnum = Object.freeze({
   NAVIGATION_ROOM_LIST_TITLE: "NAVIGATION_ROOM_LIST_TITLE",
   NAVIGATION_CREATE_NEW_ROOM: "NAVIGATION_CREATE_NEW_ROOM",
   NAVIGATION_WELCOME: "NAVIGATION_WELCOME",
-  NAVIGATION_LOCALIZATION_SELECTED_TEXT: "NAVIGATION_LOCALIZATION_SELECTED_TEXT",
-  NAVIGATION_LOCALIZATION_ENGLISH_ITEM_TEXT: "NAVIGATION_LOCALIZATION_ENGLISH_ITEM_TEXT",
-  NAVIGATION_LOCALIZATION_CHINESE_ITEM_TEXT: "NAVIGATION_LOCALIZATION_CHINESE_ITEM_TEXT",
   NAVIGATION_SIGN_OUT: "NAVIGATION_SIGN_OUT",
   /**
    * Chat room
@@ -55,10 +60,17 @@ export const localizableStringKeyEnum = Object.freeze({
 export const localizableStrings = Object.freeze({
   [localeTypeEnum.ENGLISH]: {
     /**
+     * Localization
+     */
+    [localizableStringKeyEnum.LOCALIZATION_SELECTED_TEXT_KEY]: "Language",
+    [localizableStringKeyEnum.LOCALIZATION_SELECTED_TEXT_VALUE]: "EN",
+    [localizableStringKeyEnum.LOCALIZATION_ENGLISH_ITEM_TEXT]: "English",
+    [localizableStringKeyEnum.LOCALIZATION_CHINESE_ITEM_TEXT]: "中文",
+    /**
      * Sign in
      */
     [localizableStringKeyEnum.SIGN_IN_TITLE]: "WebRTC Group Chat",
-    [localizableStringKeyEnum.SIGN_IN_TITLE_DESC]: "Make P2P features possible",
+    [localizableStringKeyEnum.SIGN_IN_TITLE_DESC]: "Make P2P Group Chatting possible",
     [localizableStringKeyEnum.SIGN_IN_INPUT_PLACEHOLDER]: "Enter your username ...",
     [localizableStringKeyEnum.SIGN_IN_COMFIRM]: "Sign in",
     /**
@@ -75,9 +87,6 @@ export const localizableStrings = Object.freeze({
     [localizableStringKeyEnum.NAVIGATION_ROOM_LIST_TITLE]: "Avaliable Chat Rooms",
     [localizableStringKeyEnum.NAVIGATION_CREATE_NEW_ROOM]: "New",
     [localizableStringKeyEnum.NAVIGATION_WELCOME]: "Hi",
-    [localizableStringKeyEnum.NAVIGATION_LOCALIZATION_SELECTED_TEXT]: "EN",
-    [localizableStringKeyEnum.NAVIGATION_LOCALIZATION_ENGLISH_ITEM_TEXT]: "English",
-    [localizableStringKeyEnum.NAVIGATION_LOCALIZATION_CHINESE_ITEM_TEXT]: "中文",
     [localizableStringKeyEnum.NAVIGATION_SIGN_OUT]: "Sign out",
     /**
      * Chat room
@@ -104,10 +113,17 @@ export const localizableStrings = Object.freeze({
   },
   [localeTypeEnum.CHINESE]: {
     /**
+     * 本地化
+     */
+    [localizableStringKeyEnum.LOCALIZATION_SELECTED_TEXT_KEY]: "语言",
+    [localizableStringKeyEnum.LOCALIZATION_SELECTED_TEXT_VALUE]: "中文",
+    [localizableStringKeyEnum.LOCALIZATION_ENGLISH_ITEM_TEXT]: "English",
+    [localizableStringKeyEnum.LOCALIZATION_CHINESE_ITEM_TEXT]: "中文",
+    /**
      * 登陆
      */
     [localizableStringKeyEnum.SIGN_IN_TITLE]: "WebRTC聊天室",
-    [localizableStringKeyEnum.SIGN_IN_TITLE_DESC]: "让去中心化的功能成为可能",
+    [localizableStringKeyEnum.SIGN_IN_TITLE_DESC]: "让去中心化群聊成为可能",
     [localizableStringKeyEnum.SIGN_IN_INPUT_PLACEHOLDER]: "请输入用户名 ...",
     [localizableStringKeyEnum.SIGN_IN_COMFIRM]: "登陆",
     /**
@@ -123,9 +139,6 @@ export const localizableStrings = Object.freeze({
     [localizableStringKeyEnum.NAVIGATION_ROOM_LIST_TITLE]: "房间列表",
     [localizableStringKeyEnum.NAVIGATION_CREATE_NEW_ROOM]: "新建",
     [localizableStringKeyEnum.NAVIGATION_WELCOME]: "你好",
-    [localizableStringKeyEnum.NAVIGATION_LOCALIZATION_SELECTED_TEXT]: "中文",
-    [localizableStringKeyEnum.NAVIGATION_LOCALIZATION_ENGLISH_ITEM_TEXT]: "English",
-    [localizableStringKeyEnum.NAVIGATION_LOCALIZATION_CHINESE_ITEM_TEXT]: "中文",
     [localizableStringKeyEnum.NAVIGATION_SIGN_OUT]: "注销",
     /**
      * 聊天室

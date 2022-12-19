@@ -184,20 +184,26 @@ export default function RoomList() {
     setNewRoomNameInputValue("");
     dispatch(toggleNewRoomPopupVisibility(!isNewRoomPopupVisible));
   };
+
   const handleNewRoomNameInputChanged = (e) => {
     setNewRoomNameInputValue(e.target.value);
   };
+
   const handleNewRoomNameConfirmed = (e) => {
     handleNewRoomPopupVisibilityToggled();
     dispatch(createRoom(newRoomNameInputValue));
   };
+
   const handleNewRoomNameInputKeyDown = (e) => {
     if (e.key !== "Enter") return;
+    if (!isNewRoomPopupVisible) return;
     handleNewRoomNameConfirmed();
   };
+
   const handleRoomJoined = (roomId) => {
     dispatch(joinRoom(roomId));
   };
+  
   const focusDOM = (someDOM) => {
     if (someDOM && someDOM.focus) {
       someDOM.focus();

@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React from "react";
 import styled from "styled-components";
 
 import { formatBytes } from "util/format-bytes";
@@ -135,6 +135,7 @@ const TransceivingFileName = styled.div`
 const TransceivingProgressText = styled.div`
   flex: 0 0 content;
   height: 15px;
+  margin-left: 3px;
   font-size: 12px;
   font-weight: 300;
   text-align: right;

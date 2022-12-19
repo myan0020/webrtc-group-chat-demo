@@ -2,7 +2,7 @@
  *
  * This service provides a number of group chat features
  * including chat messaging, media calling and file transceiving
- * using WebRTC mesh architecture.
+ * using W3C WebRTC API and simple mesh architecture
  *
  */
 

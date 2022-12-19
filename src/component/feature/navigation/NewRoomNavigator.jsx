@@ -20,22 +20,23 @@ const Title = styled.h4`
   font-size: 24px;
   font-weight: bold;
   margin: 0;
-  margin-right: 40px;
+  margin-right: 20px;
 `;
 
 const Button = styled.button`
-  flex: 0 0 80px;
+  flex: 0 0 60px;
   border: 1px solid rgb(255, 255, 255);
   border-radius: 10px;
   color: rgb(255, 255, 255);
   text-align: center;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: bold;
   background-color: transparent;
   display: inline-block;
-  width: 80px;
-  height: 35px;
+  width: 60px;
+  height: 30px;
   visibility: ${(props) => props.visibility};
+  margin-top: 2px;
 `;
 
 export default function NewRoomNavigator() {
