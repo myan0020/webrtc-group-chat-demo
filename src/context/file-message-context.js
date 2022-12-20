@@ -21,7 +21,8 @@ const fileMessageContainerBuilder = (
 
     Object.entries(newSendingFileHashToConcatData).forEach(([fileHash, newConcatData]) => {
       const id = `${authenticatedUserId}-${fileHash}`;
-      const oldFileMessage = oldFileMessageContainer[id];
+
+      const oldFileMessage = oldFileMessageContainer ? oldFileMessageContainer[id] : null;
 
       let newFileMessage;
 
@@ -65,7 +66,7 @@ const fileMessageContainerBuilder = (
   newReceivingPeerMap.forEach((hashToConcatData, peerId) => {
     Object.entries(hashToConcatData).forEach(([fileHash, receivingConcatData]) => {
       const id = `${peerId}-${fileHash}`;
-      const oldFileMessage = oldFileMessageContainer[id];
+      const oldFileMessage = oldFileMessageContainer ? oldFileMessageContainer[id] : null;
 
       let newFileMessage;
 
@@ -162,9 +163,12 @@ function FileMessageContextProvider({ children }) {
     );
   }, []);
 
-  const unreadMessageCount = Object.values(messageContainer).filter(
-    (message) => !message.isRead
-  ).length;
+  let unreadMessageCount = 0;
+  if (messageContainer) {
+    unreadMessageCount = Object.values(messageContainer).filter(
+      (message) => !message.isRead
+    ).length;
+  }
 
   // config
   const readAllMessage = () => {
@@ -184,6 +188,9 @@ function FileMessageContextProvider({ children }) {
   const updateInputFiles = (files) => {
     setInputFiles(files);
   };
+  const clearAllFileInput = () => {
+    setInputFiles(null);
+  };
   const sendFiles = () => {
     if (inputFiles) {
       WebRTCGroupChatService.sendFileToAllPeer(inputFiles);
@@ -192,12 +199,15 @@ function FileMessageContextProvider({ children }) {
   const cancelAllFileSending = () => {
     WebRTCGroupChatService.cancelAllFileSending();
   };
-  const resetAllFileBuffersReceived = () => {
-    WebRTCGroupChatService.resetAllFileBuffersReceived();
+  const clearAllFileBuffersReceived = () => {
+    WebRTCGroupChatService.clearAllFileBuffersReceived();
   };
   const clearAllFileReceived = () => {
     WebRTCGroupChatService.clearAllFilesReceived();
   };
+  const clearMessageContext = () => {
+    setMessageContainer(null);
+  }
 
   const contextValue = {
     messageContainer,
@@ -207,9 +217,11 @@ function FileMessageContextProvider({ children }) {
     readAllMessage,
     inputFiles,
     updateInputFiles,
+    clearAllFileInput,
+    clearMessageContext,
     sendFiles,
     cancelAllFileSending,
-    resetAllFileBuffersReceived,
+    clearAllFileBuffersReceived,
     clearAllFileReceived,
   };
 

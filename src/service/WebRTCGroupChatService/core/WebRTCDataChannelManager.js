@@ -590,8 +590,16 @@ function _clearAllReceivingFiles() {
   WebRTCFileDataStore.resetAllReceivingBufferMergedFiles();
 }
 
-function _resetAllFileBuffersReceived() {
+function _clearAllFileBuffersReceived() {
   WebRTCFileDataStore.resetAllReceivingBuffers();
+}
+
+function _clearSendingRelatedData() {
+  WebRTCFileDataStore.clearSendingRelatedData();
+}
+
+function _clearReceivingRelatedData() {
+  WebRTCFileDataStore.clearReceivingRelatedData();
 }
 
 export default {
@@ -604,7 +612,10 @@ export default {
   cancelSenderAllFileSending: _cancelSenderAllFileSending,
   cancelSenderFileSendingToAllPeer: _cancelSenderFileSendingToAllPeer,
   clearAllReceivingFiles: _clearAllReceivingFiles,
-  resetAllFileBuffersReceived: _resetAllFileBuffersReceived,
+  clearAllFileBuffersReceived: _clearAllFileBuffersReceived,
+
+  clearSendingRelatedData: _clearSendingRelatedData,
+  clearReceivingRelatedData: _clearReceivingRelatedData,
 
   formatBytes: WebRTCFileDataUtil.formatBytes,
 

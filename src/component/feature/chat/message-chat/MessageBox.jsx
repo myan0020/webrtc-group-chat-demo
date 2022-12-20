@@ -3,8 +3,8 @@ import styled from "styled-components";
 
 import TextMessage, { textMessagePropsBuilder } from "./TextMessage";
 import FileMessage, { fileMessagePropsBuilder } from "./FileMessage";
-import { messageTypeEnum, MessageContext } from "context/message-context";
-import { LocalizationContext } from "context/localization-context";
+import { messageTypeEnum } from "context/message-context";
+import { GlobalContext } from "context/global-context";
 
 const sharedStyleValues = {
   // autoScrollingThredhold: 300,
@@ -54,16 +54,14 @@ const autoScrollToBottomIfNecessary = (scrollableContainer, autoScrollingThresho
   }
 };
 
-export default function MessageBox({}) {
-  const { localizedStrings } = useContext(LocalizationContext);
-  const {
-    visibleMessageType,
-    orderedTextMessageList,
-    orderedFileMessageList,
-    readAllTextMessages,
-    readAllFileMessage,
-  } = useContext(MessageContext);
-
+function MessageBoxToMemo({
+  localizedStrings,
+  visibleMessageType,
+  orderedTextMessageList,
+  orderedFileMessageList,
+  readAllTextMessages,
+  readAllFileMessage,
+}) {
   const textBoxWrapperRef = useRef(null);
   const fileBoxWrapperRef = useRef(null);
 
@@ -137,5 +135,60 @@ export default function MessageBox({}) {
         })}
       </FileMessageWrapper>
     </Wrapper>
+  );
+}
+
+const arePropsEqual = (prevProps, nextProps) => {
+  const isLocalizedStringEqual = Object.is(prevProps.localizedStrings, nextProps.localizedStrings);
+  const isVisibleMessageTypeEqual = Object.is(
+    prevProps.visibleMessageType,
+    nextProps.visibleMessageType
+  );
+  const isOrderedTextMessageListEqual = Object.is(
+    prevProps.orderedTextMessageList,
+    nextProps.orderedTextMessageList
+  );
+  const isOrderedFileMessageListEqual = Object.is(
+    prevProps.orderedFileMessageList,
+    nextProps.orderedFileMessageList
+  );
+  const isReadAllTextMessagesEqual = Object.is(
+    prevProps.readAllTextMessages,
+    nextProps.readAllTextMessages
+  );
+  const isReadAllFileMessageEqual = Object.is(
+    prevProps.readAllFileMessage,
+    nextProps.readAllFileMessage
+  );
+  return (
+    isLocalizedStringEqual &&
+    isVisibleMessageTypeEqual &&
+    isOrderedTextMessageListEqual &&
+    isOrderedFileMessageListEqual &&
+    isReadAllTextMessagesEqual &&
+    isReadAllFileMessageEqual
+  );
+};
+
+const MemorizedMessageBox = React.memo(MessageBoxToMemo, arePropsEqual);
+
+export default function MessageBox({}) {
+  const {
+    localizedStrings,
+    visibleMessageType,
+    orderedTextMessageList,
+    orderedFileMessageList,
+    readAllTextMessages,
+    readAllFileMessage,
+  } = useContext(GlobalContext);
+  return (
+    <MemorizedMessageBox
+      localizedStrings={localizedStrings}
+      visibleMessageType={visibleMessageType}
+      orderedTextMessageList={orderedTextMessageList}
+      orderedFileMessageList={orderedFileMessageList}
+      readAllTextMessages={readAllTextMessages}
+      readAllFileMessage={readAllFileMessage}
+    />
   );
 }

@@ -6,11 +6,9 @@ import { useSelector } from "react-redux";
 import { selectRoom } from "store/roomSlice";
 import MediaController from "./media-chat/MediaController";
 import MediaRenderer from "./media-chat/MediaRenderer";
-import { MediaRenderingContextProvider } from "context/media-rendering-context";
 import MessageTypeSwitch from "./message-chat/MessageTypeSwitch";
 import MessageBox from "./message-chat/MessageBox";
 import MessageSender from "./message-chat/MessageSender";
-import { MessageContextProvider } from "context/message-context";
 
 const sharedStyleValues = {
   mediaControllerContainerHeight: 116,
@@ -78,28 +76,27 @@ export default function ChatRoom() {
 
   return (
     <Wrapper>
+      {/* media chat */}
       <MediaContainer>
-        <MediaRenderingContextProvider>
-          <MediaRendererContainer>
-            <MediaRenderer />
-          </MediaRendererContainer>
-          <MediaControllerContainer>
-            <MediaController />
-          </MediaControllerContainer>
-        </MediaRenderingContextProvider>
+        <MediaRendererContainer>
+          <MediaRenderer />
+        </MediaRendererContainer>
+        <MediaControllerContainer>
+          <MediaController />
+        </MediaControllerContainer>
       </MediaContainer>
+
+      {/* message chat */}
       <MessageContainer>
-        <MessageContextProvider>
-          <MessageTypeSwitchContainer>
-            <MessageTypeSwitch />
-          </MessageTypeSwitchContainer>
-          <MessageBoxContainer>
-            <MessageBox />
-          </MessageBoxContainer>
-          <MessageSenderContainer>
-            <MessageSender />
-          </MessageSenderContainer>
-        </MessageContextProvider>
+        <MessageTypeSwitchContainer>
+          <MessageTypeSwitch />
+        </MessageTypeSwitchContainer>
+        <MessageBoxContainer>
+          <MessageBox />
+        </MessageBoxContainer>
+        <MessageSenderContainer>
+          <MessageSender />
+        </MessageSenderContainer>
       </MessageContainer>
     </Wrapper>
   );

@@ -6,6 +6,7 @@ import {
   sendTextMessage,
   readAllTextMessages,
   selectUnreadTextMessageCount,
+  clearTextMessage,
 } from "store/textChatSlice";
 import { FileMessageContext, FileMessageContextProvider } from "context/file-message-context";
 
@@ -39,7 +40,9 @@ function MessageContextProviderContent({ children }) {
     updateInputFiles,
     sendFiles,
     cancelAllFileSending,
-    resetAllFileBuffersReceived,
+    clearAllFileInput,
+    clearMessageContext: clearFileMessageContext,
+    clearAllFileBuffersReceived,
     clearAllFileReceived,
   } = useContext(FileMessageContext);
   const textMessageContainer = useSelector(selectAllTextMessages);
@@ -82,11 +85,16 @@ function MessageContextProviderContent({ children }) {
     orderedTextMessageList,
     unreadTextMessageCount,
     sendTextToAllPeer,
+
+    // Incorrect: should not dispatch redux actions inside a react context provider
     readAllTextMessages: () => {
       if (unreadTextMessageCount === 0) {
         return;
       }
       dispatch(readAllTextMessages());
+    },
+    clearTextMessageContext: () => {
+      dispatch(clearTextMessage());
     },
 
     orderedFileMessageList,
@@ -97,7 +105,9 @@ function MessageContextProviderContent({ children }) {
     updateInputFiles,
     sendFiles,
     cancelAllFileSending,
-    resetAllFileBuffersReceived,
+    clearAllFileInput,
+    clearFileMessageContext,
+    clearAllFileBuffersReceived,
     clearAllFileReceived,
   };
 

@@ -289,7 +289,7 @@ export default function WebRTCGroupChat() {
   // click to reset all file buffers received
   const onResetAllFileBuffersReceivedClick = (e) => {
     if (joinedRoomId.length > 0) {
-      WebRTCGroupChatService.resetAllFileBuffersReceived();
+      WebRTCGroupChatService.clearAllFileBuffersReceived();
     }
   };
   // click to clear all files received
@@ -528,7 +528,7 @@ export default function WebRTCGroupChat() {
       Cancel Sending All Files To All Peers
     </button>
   );
-  const resetAllFileBuffersReceivedButtonRendering = (
+  const clearAllFileBuffersReceivedButtonRendering = (
     <button
       className={style.button}
       onClick={onResetAllFileBuffersReceivedClick}
@@ -578,7 +578,7 @@ export default function WebRTCGroupChat() {
       {joinedRoomId.length > 0 && fileInputBlockRendering}
       {joinedRoomId.length > 0 && sendFileButtonRendering}
       {joinedRoomId.length > 0 && cancelSendingAllFileButtonRendering}
-      {joinedRoomId.length > 0 && resetAllFileBuffersReceivedButtonRendering}
+      {joinedRoomId.length > 0 && clearAllFileBuffersReceivedButtonRendering}
       {joinedRoomId.length > 0 && clearAllFilesReceivedButtonRendering}
       {joinedRoomId.length > 0 && fileSendingRendering}
       {joinedRoomId.length > 0 && fileReceivingRendering}

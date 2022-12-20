@@ -1,4 +1,5 @@
-import { configureStore } from "@reduxjs/toolkit";
+import { combineReducers, configureStore } from "@reduxjs/toolkit";
+
 
 import authReducer from "./authSlice";
 import roomReducer, { updateJoinedRoomId, updateRoomList } from "./roomSlice";
@@ -17,14 +18,23 @@ import textChatReducer, { receiveTextMessage } from "./textChatSlice";
 import fileChatReducer from "./fileChatSlice";
 import WebRTCGroupChatService from "service/WebRTCGroupChatService/WebRTCGroupChatService";
 
+const combinedReducer = combineReducers({
+  auth: authReducer,
+  room: roomReducer,
+  mediaChat: mediaChatReducer,
+  textChat: textChatReducer,
+  fileChat: fileChatReducer,
+},);
+
+const rootReducer = (state, action) => {
+  if (action.type === 'RESET') {
+    state = undefined;
+  }
+  return combinedReducer(state, action);
+};
+
 const store = configureStore({
-  reducer: {
-    auth: authReducer,
-    room: roomReducer,
-    mediaChat: mediaChatReducer,
-    textChat: textChatReducer,
-    fileChat: fileChatReducer,
-  },
+  reducer: rootReducer,
 });
 
 WebRTCGroupChatService.onRoomsInfoUpdated((payload) => {

@@ -2,9 +2,10 @@ import React, { useContext } from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
 
-import { LocalizationContext } from "context/localization-context";
 import { requestToSignout } from "store/authSlice";
 import { localizableStringKeyEnum } from "resource/string/localizable-strings";
+import { leaveRoom } from "store/roomSlice";
+import { GlobalContext } from "context/global-context";
 
 const SignoutNavigatorWrapper = styled.div`
   width: 100%;
@@ -24,12 +25,22 @@ const SignoutNavigatorButton = styled.button`
   background-color: transparent;
 `;
 
-export default function SignoutNavigator() {
+function SignoutNavigatorToMemo({
+  localizedStrings,
+  clearTextMessageContext,
+  clearAllFileInput,
+  clearFileMessageContext,
+}) {
   const dispatch = useDispatch();
-  const { localizedStrings } = useContext(LocalizationContext);
 
   const handleSignoutClicked = () => {
+    clearTextMessageContext();
+    clearAllFileInput();
+    clearFileMessageContext();
+
+    dispatch(leaveRoom());
     dispatch(requestToSignout());
+    // dispatch(leaveRoom())
   };
 
   return (
@@ -38,5 +49,43 @@ export default function SignoutNavigator() {
         {localizedStrings[localizableStringKeyEnum.NAVIGATION_SIGN_OUT]}
       </SignoutNavigatorButton>
     </SignoutNavigatorWrapper>
+  );
+}
+
+const arePropsEqual = (prevProps, nextProps) => {
+  const isLocalizedStringEqual = Object.is(prevProps.localizedStrings, nextProps.localizedStrings);
+  const isClearTextMessageContextEqual = Object.is(
+    prevProps.clearTextMessageContext,
+    nextProps.clearTextMessageContext
+  );
+  const isClearAllFileInputEqual = Object.is(
+    prevProps.clearAllFileInput,
+    nextProps.clearAllFileInput
+  );
+  const isClearFileMessageContextEqual = Object.is(
+    prevProps.clearFileMessageContext,
+    nextProps.clearFileMessageContext
+  );
+  return (
+    isLocalizedStringEqual &&
+    isClearTextMessageContextEqual &&
+    isClearAllFileInputEqual &&
+    isClearFileMessageContextEqual
+  );
+};
+
+const MemorizedSignoutNavigator = React.memo(SignoutNavigatorToMemo, arePropsEqual);
+
+export default function SignoutNavigator() {
+  const { localizedStrings, clearTextMessageContext, clearAllFileInput, clearFileMessageContext } =
+    useContext(GlobalContext);
+
+  return (
+    <MemorizedSignoutNavigator
+      localizedStrings={localizedStrings}
+      clearTextMessageContext={clearTextMessageContext}
+      clearAllFileInput={clearAllFileInput}
+      clearFileMessageContext={clearFileMessageContext}
+    />
   );
 }

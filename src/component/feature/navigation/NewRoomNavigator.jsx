@@ -5,6 +5,7 @@ import styled from "styled-components";
 import { LocalizationContext } from "context/localization-context";
 import { toggleNewRoomPopupVisibility, selectRoom } from "store/roomSlice";
 import { localizableStringKeyEnum } from "resource/string/localizable-strings";
+import { GlobalContext } from "context/global-context";
 
 const Wrapper = styled.div`
   width: 100%;
@@ -39,9 +40,8 @@ const Button = styled.button`
   margin-top: 2px;
 `;
 
-export default function NewRoomNavigator() {
+function NewRoomNavigatorToMemo({ localizedStrings }) {
   const dispatch = useDispatch();
-  const { localizedStrings } = useContext(LocalizationContext);
   const { isNewRoomPopupVisible, joinedRoomId, joinedRoomName } = useSelector(selectRoom);
 
   const handleNewRoomPopupVisibilityToggled = () => {
@@ -49,7 +49,9 @@ export default function NewRoomNavigator() {
   };
 
   const hasJoinedRoom = joinedRoomId && joinedRoomId.length > 0;
-  const title = hasJoinedRoom ? joinedRoomName : localizedStrings[localizableStringKeyEnum.NAVIGATION_ROOM_LIST_TITLE];
+  const title = hasJoinedRoom
+    ? joinedRoomName
+    : localizedStrings[localizableStringKeyEnum.NAVIGATION_ROOM_LIST_TITLE];
   const buttonVisibility = hasJoinedRoom ? "hidden" : "visible";
 
   return (
@@ -63,4 +65,15 @@ export default function NewRoomNavigator() {
       </Button>
     </Wrapper>
   );
+}
+
+const arePropsEqual = (prevProps, nextProps) => {
+  return Object.is(prevProps.localizedStrings, nextProps.localizedStrings);
+};
+
+const MemorizedNewRoomNavigator = React.memo(NewRoomNavigatorToMemo, arePropsEqual);
+
+export default function NewRoomNavigator() {
+  const { localizedStrings } = useContext(GlobalContext);
+  return <MemorizedNewRoomNavigator localizedStrings={localizedStrings} />;
 }

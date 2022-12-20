@@ -12,8 +12,8 @@ import {
   createRoom,
 } from "store/roomSlice";
 import closeImageUrl from "resource/image/close_3x.png";
-import { LocalizationContext } from "context/localization-context";
 import { localizableStringKeyEnum } from "resource/string/localizable-strings";
+import { GlobalContext } from "context/global-context";
 
 const Wrapper = styled.div`
   width: 100%;
@@ -169,16 +169,16 @@ const RoomItemButton = styled.button`
   margin-right: 38px;
 `;
 
-export default function RoomList() {
+function RoomListToMemo({ localizedStrings, newRoomNameInputValue, setNewRoomNameInputValue }) {
   const dispatch = useDispatch();
-  const { localizedStrings } = useContext(LocalizationContext);
-  const {
-    roomList,
-    requestStatus: loadingStatus,
-    isNewRoomPopupVisible,
-    joinedRoomId,
-  } = useSelector(selectRoom);
-  const [newRoomNameInputValue, setNewRoomNameInputValue] = useState("");
+  const { roomList, isNewRoomPopupVisible } = useSelector(selectRoom);
+
+  const newRoomPopupBackgroundVisibility = isNewRoomPopupVisible ? "visible" : "hidden";
+  const newRoomPopupBackgroundOpacity = isNewRoomPopupVisible ? 1 : 0;
+  const newRoomPopupBackgroundTransformScale = isNewRoomPopupVisible ? 1 : 1.1;
+
+  const newRoomPopupContentVisibility = isNewRoomPopupVisible ? "visible" : "hidden";
+  const newRoomPopupContentOpacity = isNewRoomPopupVisible ? 1 : 0;
 
   const handleNewRoomPopupVisibilityToggled = () => {
     setNewRoomNameInputValue("");
@@ -203,38 +203,13 @@ export default function RoomList() {
   const handleRoomJoined = (roomId) => {
     dispatch(joinRoom(roomId));
   };
-  
+
   const focusDOM = (someDOM) => {
     if (someDOM && someDOM.focus) {
       someDOM.focus();
     }
   };
 
-  if (loadingStatus === requestStatus.loading) {
-    return (
-      <RotatingLines
-        strokeColor='grey'
-        strokeWidth='5'
-        animationDuration='0.75'
-        width='20'
-        height='20'
-        visible={true}
-      />
-    );
-  }
-
-  const hasJoinedRoom = joinedRoomId && joinedRoomId.length > 0;
-
-  const newRoomPopupBackgroundVisibility = isNewRoomPopupVisible ? "visible" : "hidden";
-  const newRoomPopupBackgroundOpacity = isNewRoomPopupVisible ? 1 : 0;
-  const newRoomPopupBackgroundTransformScale = isNewRoomPopupVisible ? 1 : 1.1;
-
-  const newRoomPopupContentVisibility = isNewRoomPopupVisible ? "visible" : "hidden";
-  const newRoomPopupContentOpacity = isNewRoomPopupVisible ? 1 : 0;
-
-  if (hasJoinedRoom) {
-    return <Navigate to={"/chat-room"} />;
-  }
   return (
     <Wrapper>
       {/* popup background */}
@@ -289,5 +264,52 @@ export default function RoomList() {
         ))}
       </RoomListWrapper>
     </Wrapper>
+  );
+}
+
+const arePropsEqual = (prevProps, nextProps) => {
+  const isLocalizedStringEqual = Object.is(prevProps.localizedStrings, nextProps.localizedStrings);
+  const isNewRoomNameInputValueEqual = Object.is(
+    prevProps.newRoomNameInputValue,
+    nextProps.newRoomNameInputValue
+  );
+  const isSetNewRoomNameInputValueEqual = Object.is(
+    prevProps.setNewRoomNameInputValue,
+    nextProps.setNewRoomNameInputValue
+  );
+  return isLocalizedStringEqual && isNewRoomNameInputValueEqual && isSetNewRoomNameInputValueEqual;
+};
+
+const MemorizedRoomList = React.memo(RoomListToMemo, arePropsEqual);
+
+export default function RoomList() {
+  const { requestStatus: loadingStatus, joinedRoomId } = useSelector(selectRoom);
+  const { localizedStrings } = useContext(GlobalContext);
+  const [newRoomNameInputValue, setNewRoomNameInputValue] = useState("");
+
+  if (loadingStatus === requestStatus.loading) {
+    return (
+      <RotatingLines
+        strokeColor='grey'
+        strokeWidth='5'
+        animationDuration='0.75'
+        width='20'
+        height='20'
+        visible={true}
+      />
+    );
+  }
+
+  const hasJoinedRoom = joinedRoomId && joinedRoomId.length > 0;
+  if (hasJoinedRoom) {
+    return <Navigate to={"/chat-room"} />;
+  }
+
+  return (
+    <MemorizedRoomList
+      localizedStrings={localizedStrings}
+      newRoomNameInputValue={newRoomNameInputValue}
+      setNewRoomNameInputValue={setNewRoomNameInputValue}
+    />
   );
 }

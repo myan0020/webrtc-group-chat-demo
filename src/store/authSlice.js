@@ -3,7 +3,6 @@ import axios from "axios";
 
 import { fetchInitialRoomList, leaveRoom, selectRoom } from "./roomSlice";
 import WebRTCGroupChatService from "service/WebRTCGroupChatService/WebRTCGroupChatService";
-import { clearTextMessage } from "./textChatSlice";
 
 export const requestStatus = {
   idle: "idle",
@@ -83,12 +82,11 @@ export const requestToSignin = createAsyncThunk(
 );
 
 export const requestToSignout = createAsyncThunk("auth/requestToSignout", async (_, thunkAPI) => {
-  const joinedRoomId = selectRoom(thunkAPI.getState()).joinedRoomId;
-  const hasJoinedRoom = joinedRoomId && joinedRoomId.length > 0;
-  if (hasJoinedRoom) {
-    thunkAPI.dispatch(clearTextMessage());
-    thunkAPI.dispatch(leaveRoom());
-  }
+  // const joinedRoomId = selectRoom(thunkAPI.getState()).joinedRoomId;
+  // const hasJoinedRoom = joinedRoomId && joinedRoomId.length > 0;
+  // if (hasJoinedRoom) {
+  //   thunkAPI.dispatch(leaveRoom());
+  // }
 
   const config = {
     url: "/logout",

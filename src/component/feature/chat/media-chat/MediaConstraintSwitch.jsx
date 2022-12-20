@@ -13,19 +13,15 @@ import {
 } from "store/mediaChatSlice";
 import { LocalizationContext } from "context/localization-context";
 import { localizableStringKeyEnum } from "resource/string/localizable-strings";
+import { GlobalContext } from "context/global-context";
 
 const Wrapper = styled.div`
   width: 146px;
   height: 40px;
 `;
 
-export const MediaConstraintSwitchPropsBuilder = ({}) => {
-  return {};
-};
-
-export default function MediaConstraintSwitch({}) {
+function MediaConstraintSwitchToMemo({ localizedStrings }) {
   const dispatch = useDispatch();
-  const { localizedStrings } = useContext(LocalizationContext);
   const { enableVideoCallingInput, videoCallingInputType, isCalling } =
     useSelector(selectMediaChat);
 
@@ -61,4 +57,19 @@ export default function MediaConstraintSwitch({}) {
       />
     </Wrapper>
   );
+}
+
+const arePropsEqual = (prevProps, nextProps) => {
+  return Object.is(prevProps.localizedStrings, nextProps.localizedStrings);
+};
+
+const MemorizedMediaConstraintSwitch = React.memo(MediaConstraintSwitchToMemo, arePropsEqual);
+
+export const MediaConstraintSwitchPropsBuilder = ({}) => {
+  return {};
+};
+
+export default function MediaConstraintSwitch({}) {
+  const { localizedStrings } = useContext(GlobalContext);
+  return <MemorizedMediaConstraintSwitch localizedStrings={localizedStrings} />;
 }

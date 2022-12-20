@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useMemo, useState } from "react";
 import styled from "styled-components";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate } from "react-router-dom";
@@ -9,6 +9,7 @@ import { LocalizationContext } from "context/localization-context";
 import { localizableStringKeyEnum } from "resource/string/localizable-strings";
 import LocalizationSwitch from "../localization/LocalizationSwitch";
 import globalGreyImageUrl from "resource/image/global_grey_3x.png";
+import { GlobalContext } from "context/global-context";
 
 const sharedStyleValues = {
   formInputVerticalMargin: 40,
@@ -103,26 +104,14 @@ const FormLanguageSwitchContainer = styled.div`
   font-size: 20px;
 `;
 
-export default function Signin() {
-  const dispatch = useDispatch();
-  const { localizedStrings } = useContext(LocalizationContext);
-  const { requestStatus: loadingStatus, authenticated } = useSelector(selectAuth);
-  const [inputUserName, setInputUserName] = useState("");
-
-  const onInputNewUserNameChange = (e) => {
-    setInputUserName(e.target.value);
-  };
-  const onSigninClick = (e) => {
-    e.preventDefault();
-    dispatch(requestToSignin(inputUserName));
-  };
-  const onKeyDown = (e) => {
-    if (e.key !== "Enter") return;
-    if (inputUserName.length === 0) return;
-    onSigninClick(e);
-  };
-
-  const render = (
+function SigninToMemo({
+  localizedStrings,
+  inputUserName,
+  onInputNewUserNameChange,
+  onKeyDown,
+  onSigninClick,
+}) {
+  const renderingResult = (
     <Wrapper>
       <ContentWrapper>
         <HeadingWrapper>
@@ -159,22 +148,50 @@ export default function Signin() {
           </FormLanguageSwitchContainer>
         </FormWrapper>
       </ContentWrapper>
-
-      {/* {loadingStatus === requestStatus.loading && (
-        <RotatingLines
-          strokeColor='grey'
-          strokeWidth='5'
-          animationDuration='0.75'
-          width='20'
-          height='20'
-          visible={true}
-        />
-      )} */}
     </Wrapper>
   );
+
+  return renderingResult;
+}
+
+const arePropsEqual = (prevProps, nextProps) => {
+  const isLocalizedStringEqual = Object.is(prevProps.localizedStrings, nextProps.localizedStrings);
+  const isInputUserNameEqual = Object.is(prevProps.inputUserName, nextProps.inputUserName);
+  return isLocalizedStringEqual && isInputUserNameEqual;
+};
+
+const MemorizedSignin = React.memo(SigninToMemo, arePropsEqual);
+
+export default function Signin() {
+  const dispatch = useDispatch();
+
+  const { localizedStrings } = useContext(GlobalContext);
+  const { authenticated } = useSelector(selectAuth);
+  const [inputUserName, setInputUserName] = useState("");
+
+  const onInputNewUserNameChange = (e) => {
+    setInputUserName(e.target.value);
+  };
+  const onSigninClick = (e) => {
+    e.preventDefault();
+    dispatch(requestToSignin(inputUserName));
+  };
+  const onKeyDown = (e) => {
+    if (e.key !== "Enter") return;
+    if (inputUserName.length === 0) return;
+    onSigninClick(e);
+  };
 
   if (authenticated) {
     return <Navigate to={"/room-list"} />;
   }
-  return render;
+  return (
+    <MemorizedSignin
+      localizedStrings={localizedStrings}
+      inputUserName={inputUserName}
+      onInputNewUserNameChange={onInputNewUserNameChange}
+      onKeyDown={onKeyDown}
+      onSigninClick={onSigninClick}
+    />
+  );
 }

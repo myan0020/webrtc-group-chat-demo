@@ -62,6 +62,13 @@ const _sendingRelatedData = {
       _handleSendingRelatedDataChange(_shadowCopy(this));
     }
   },
+  clear() {
+    this.hashToConcatData = {};
+    // listener
+    if (_handleSendingRelatedDataChange) {
+      _handleSendingRelatedDataChange(_shadowCopy(this));
+    }
+  }
 };
 
 const _receivingRelatedData = {
@@ -94,6 +101,13 @@ const _receivingRelatedData = {
       slicePeerMap
     );
 
+    // listener
+    if (_handleReceivingRelatedDataChange) {
+      _handleReceivingRelatedDataChange(_shadowCopy(this));
+    }
+  },
+  clear() {
+    this.peerMap.clear();
     // listener
     if (_handleReceivingRelatedDataChange) {
       _handleReceivingRelatedDataChange(_shadowCopy(this));
@@ -1252,5 +1266,16 @@ export default {
   },
   resetAllReceivingBufferMergedFiles() {
     _resetAllReceivingBufferMergedFiles();
+  },
+
+  //
+  //
+  //
+
+  clearSendingRelatedData() {
+    _sendingRelatedData.clear();
+  },
+  clearReceivingRelatedData() {
+    _receivingRelatedData.clear();
   },
 };

@@ -9,17 +9,18 @@ import presentationEnabledUrl from "resource/image/presentation_enabled_3x.png";
 import presentationDisabledUrl from "resource/image/presentation_disabled_3x.png";
 import equalityEnabledUrl from "resource/image/equality_enabled_3x.png";
 import equalityDisabledUrl from "resource/image/equality_disabled_3x.png";
-import { MediaRenderingContext } from "context/media-rendering-context";
+import { GlobalContext } from "context/global-context";
 
 const Wrapper = styled.div`
   width: 80px;
   height: 40px;
 `;
 
-export default function MediaRenderingStyleSwitch({}) {
-  const { mediaAccessibilityTypeEnum, updateMediaAccessibilityType, mediaAccessibilityType } =
-    useContext(MediaRenderingContext);
-
+function MediaRenderingStyleSwitchToMemo({
+  mediaAccessibilityTypeEnum,
+  updateMediaAccessibilityType,
+  mediaAccessibilityType,
+}) {
   const presentationStyleTab = multiTabSwitchTabBuilder({
     switchTabName: "",
     switchTabBorderRadius: 20,
@@ -45,10 +46,11 @@ export default function MediaRenderingStyleSwitch({}) {
     switchTabOnClick: () => {
       updateMediaAccessibilityType(mediaAccessibilityTypeEnum.MEDIA_ACCESSIBILITY_TYPE_EQUALITY);
     },
-    switchTabSelected: mediaAccessibilityType === mediaAccessibilityTypeEnum.MEDIA_ACCESSIBILITY_TYPE_EQUALITY,
+    switchTabSelected:
+      mediaAccessibilityType === mediaAccessibilityTypeEnum.MEDIA_ACCESSIBILITY_TYPE_EQUALITY,
   });
 
-  return (
+  const renderingResult = (
     <Wrapper>
       <MultiTabSwitch
         {...multiTabSwitchPropsBuilder({
@@ -59,5 +61,44 @@ export default function MediaRenderingStyleSwitch({}) {
         })}
       />
     </Wrapper>
+  );
+
+  return renderingResult;
+}
+
+const arePropsEqual = (prevProps, nextProps) => {
+  const isMediaAccessibilityTypeEnumEqual = Object.is(
+    prevProps.mediaAccessibilityTypeEnum,
+    nextProps.mediaAccessibilityTypeEnum
+  );
+  const isUpdateMediaAccessibilityTypeEqual = Object.is(
+    prevProps.updateMediaAccessibilityType,
+    nextProps.updateMediaAccessibilityType
+  );
+  const isMediaAccessibilityTypeEqual = Object.is(
+    prevProps.mediaAccessibilityType,
+    nextProps.mediaAccessibilityType
+  );
+  return (
+    isMediaAccessibilityTypeEnumEqual &&
+    isUpdateMediaAccessibilityTypeEqual &&
+    isMediaAccessibilityTypeEqual
+  );
+};
+
+const MemorizedMediaRenderingStyleSwitch = React.memo(
+  MediaRenderingStyleSwitchToMemo,
+  arePropsEqual
+);
+
+export default function MediaRenderingStyleSwitch({}) {
+  const { mediaAccessibilityTypeEnum, updateMediaAccessibilityType, mediaAccessibilityType } =
+    useContext(GlobalContext);
+  return (
+    <MemorizedMediaRenderingStyleSwitch
+      mediaAccessibilityTypeEnum={mediaAccessibilityTypeEnum}
+      updateMediaAccessibilityType={updateMediaAccessibilityType}
+      mediaAccessibilityType={mediaAccessibilityType}
+    />
   );
 }

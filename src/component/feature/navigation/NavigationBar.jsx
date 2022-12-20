@@ -2,7 +2,6 @@ import React, { useContext } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
 
-import { LocalizationContext } from "context/localization-context";
 import { selectAuth } from "store/authSlice";
 import GoBackNavigator from "./GoBackNavigator";
 import NewRoomNavigator from "./NewRoomNavigator";
@@ -10,6 +9,7 @@ import SignoutNavigator from "./SignoutNavigator";
 import { localizableStringKeyEnum } from "resource/string/localizable-strings";
 import LocalizationSwitch from "../localization/LocalizationSwitch";
 import globalWhiteImageUrl from "resource/image/gobal_white_3x.png";
+import { GlobalContext } from "context/global-context";
 
 const sharedStyleValues = {
   rightContainerInnerHorizontalMargin: 8,
@@ -71,15 +71,12 @@ const SignoutNavigatorContainer = styled.div`
   margin-right: ${sharedStyleValues.rightContainerInnerHorizontalMargin * 2}px;
 `;
 
-export default function NavigationBar() {
-  const { localizedStrings } = useContext(LocalizationContext);
-  const { authenticatedUserName } = useSelector(selectAuth);
-
+function NavigationBarToMemo({ localizedStrings, authenticatedUserName }) {
   const welcomeUserMessage = `${
     localizedStrings[localizableStringKeyEnum.NAVIGATION_WELCOME]
   }, ${authenticatedUserName}`;
 
-  return (
+  const renderingResult = (
     <Wrapper>
       <LeftContainer>
         <GoBackNavigator />
@@ -100,5 +97,29 @@ export default function NavigationBar() {
         </SignoutNavigatorContainer>
       </RightContainer>
     </Wrapper>
+  );
+
+  return renderingResult;
+}
+
+const arePropsEqual = (prevProps, nextProps) => {
+  const isLocalizedStringEqual = Object.is(prevProps.localizedStrings, nextProps.localizedStrings);
+  const isAuthenticatedUserNameEqual = Object.is(
+    prevProps.authenticatedUserName,
+    nextProps.authenticatedUserName
+  );
+  return isLocalizedStringEqual && isAuthenticatedUserNameEqual;
+};
+
+const MemorizedNavigationBar = React.memo(NavigationBarToMemo, arePropsEqual);
+
+export default function NavigationBar() {
+  const { localizedStrings } = useContext(GlobalContext);
+  const { authenticatedUserName } = useSelector(selectAuth);
+  return (
+    <MemorizedNavigationBar
+      localizedStrings={localizedStrings}
+      authenticatedUserName={authenticatedUserName}
+    />
   );
 }

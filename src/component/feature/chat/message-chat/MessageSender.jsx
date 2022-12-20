@@ -1,11 +1,11 @@
 import React, { useContext, useRef, useState } from "react";
 import styled from "styled-components";
-import { LocalizationContext } from "context/localization-context";
 
-import { MessageContext, messageTypeEnum } from "context/message-context";
+import { messageTypeEnum } from "context/message-context";
 import { localizableStringKeyEnum } from "resource/string/localizable-strings";
 import messageSendBubbleImageUrl from "resource/image/send_message_bubble_3x.png";
 import messageSendPlaneImageUrl from "resource/image/send_message_plane_3x.png";
+import { GlobalContext } from "context/global-context";
 
 const sharedStyleValues = {
   contentHeight: 48,
@@ -129,14 +129,14 @@ const MessageSendButton = styled.button`
   background-color: transparent;
 `;
 
-export const MessageSenderPropsBuilder = ({}) => {
-  return {};
-};
-
-export default function MessageSender({}) {
-  const { localizedStrings } = useContext(LocalizationContext);
-  const { inputFiles, sendFiles, updateInputFiles, visibleMessageType, sendTextToAllPeer } =
-    useContext(MessageContext);
+function MessageSenderToMemo({
+  localizedStrings,
+  inputFiles,
+  sendFiles,
+  updateInputFiles,
+  visibleMessageType,
+  sendTextToAllPeer,
+}) {
   const messageInputRef = useRef(null);
   const messageSendRef = useRef(null);
   const [inputText, setInputText] = useState("");
@@ -221,9 +221,7 @@ export default function MessageSender({}) {
     <Wrapper>
       <ContentWrapper borderStyle={contentBorderStyle}>
         <MessageInputWrapper onClick={handleMessageInputWrapperClick}>
-          {fileInputInfoText && (
-            <FileInputInfoWrapper>{fileInputInfoText}</FileInputInfoWrapper>
-          )}
+          {fileInputInfoText && <FileInputInfoWrapper>{fileInputInfoText}</FileInputInfoWrapper>}
           <MessageInput
             display={messageInputDisplayment}
             ref={messageInputRef}
@@ -242,5 +240,55 @@ export default function MessageSender({}) {
         />
       </ContentWrapper>
     </Wrapper>
+  );
+}
+
+const arePropsEqual = (prevProps, nextProps) => {
+  const isLocalizedStringEqual = Object.is(prevProps.localizedStrings, nextProps.localizedStrings);
+  const isInputFilesEqual = Object.is(prevProps.inputFiles, nextProps.inputFiles);
+  const isSendFilesEqual = Object.is(prevProps.sendFiles, nextProps.sendFiles);
+  const isUpdateInputFilesEqual = Object.is(prevProps.updateInputFiles, nextProps.updateInputFiles);
+  const isVisibleMessageTypeEqual = Object.is(
+    prevProps.visibleMessageType,
+    nextProps.visibleMessageType
+  );
+  const isSendTextToAllPeerEqual = Object.is(
+    prevProps.sendTextToAllPeer,
+    nextProps.sendTextToAllPeer
+  );
+  return (
+    isLocalizedStringEqual &&
+    isInputFilesEqual &&
+    isSendFilesEqual &&
+    isUpdateInputFilesEqual &&
+    isVisibleMessageTypeEqual &&
+    isSendTextToAllPeerEqual
+  );
+};
+
+const MemorizedMessageSender = React.memo(MessageSenderToMemo, arePropsEqual);
+
+export const MessageSenderPropsBuilder = ({}) => {
+  return {};
+};
+
+export default function MessageSender({}) {
+  const {
+    localizedStrings,
+    inputFiles,
+    sendFiles,
+    updateInputFiles,
+    visibleMessageType,
+    sendTextToAllPeer,
+  } = useContext(GlobalContext);
+  return (
+    <MemorizedMessageSender
+      localizedStrings={localizedStrings}
+      inputFiles={inputFiles}
+      sendFiles={sendFiles}
+      updateInputFiles={updateInputFiles}
+      visibleMessageType={visibleMessageType}
+      sendTextToAllPeer={sendTextToAllPeer}
+    />
   );
 }

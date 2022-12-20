@@ -112,7 +112,7 @@ export const receiveTextMessage = createAsyncThunk(
 );
 
 /* Reducer */
-
+window.reducer = textChatSlice.reducer;
 export default textChatSlice.reducer;
 
 /* Action Creator */

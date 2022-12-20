@@ -1,8 +1,8 @@
 import React, { useContext } from "react";
 import styled from "styled-components";
 
-import { MediaRenderingContext } from "context/media-rendering-context";
 import MediaVideoRenderer from "./MediaVideoRenderer";
+import { GlobalContext } from "context/global-context";
 
 const sharedStyleValues = {
   bottomSpaceHeight: 14,
@@ -56,15 +56,13 @@ const EqualityTypeMemberRendererContainer = styled.div`
     );
 `;
 
-export default function MediaMultiVideoRenderer({}) {
-  const {
-    numberOfInitialVisibleMediaMembers,
-    mediaRenderingDataSourceList,
-    mediaRenderingDataSourceForPresenter,
-    mediaAccessibilityTypeEnum,
-    mediaAccessibilityType,
-  } = useContext(MediaRenderingContext);
-
+function MediaMultiVideoRendererToMemo({
+  numberOfInitialVisibleMediaMembers,
+  mediaRenderingDataSourceList,
+  mediaRenderingDataSourceForPresenter,
+  mediaAccessibilityTypeEnum,
+  mediaAccessibilityType,
+}) {
   let shouldDisplayForEquality;
   let shouldDisplayForPresentation;
 
@@ -127,5 +125,57 @@ export default function MediaMultiVideoRenderer({}) {
         })}
       </PresentationTypeMembersRendererContainer>
     </Wrapper>
+  );
+}
+
+const arePropsEqual = (prevProps, nextProps) => {
+  const isNumberOfInitialVisibleMediaMembersEqual = Object.is(
+    prevProps.numberOfInitialVisibleMediaMembers,
+    nextProps.numberOfInitialVisibleMediaMembers
+  );
+  const isMediaRenderingDataSourceListEqual = Object.is(
+    prevProps.mediaRenderingDataSourceList,
+    nextProps.mediaRenderingDataSourceList
+  );
+  const isMediaRenderingDataSourceForPresenterEqual = Object.is(
+    prevProps.mediaRenderingDataSourceForPresenter,
+    nextProps.mediaRenderingDataSourceForPresenter
+  );
+  const isMediaAccessibilityTypeEnumEqual = Object.is(
+    prevProps.mediaAccessibilityTypeEnum,
+    nextProps.mediaAccessibilityTypeEnum
+  );
+  const isMediaAccessibilityTypeEqual = Object.is(
+    prevProps.mediaAccessibilityType,
+    nextProps.mediaAccessibilityType
+  );
+  return (
+    isNumberOfInitialVisibleMediaMembersEqual &&
+    isMediaRenderingDataSourceListEqual &&
+    isMediaRenderingDataSourceForPresenterEqual &&
+    isMediaAccessibilityTypeEnumEqual &&
+    isMediaAccessibilityTypeEqual
+  );
+};
+
+const MemorizedMediaMultiVideoRenderer = React.memo(MediaMultiVideoRendererToMemo, arePropsEqual);
+
+export default function MediaMultiVideoRenderer({}) {
+  const {
+    numberOfInitialVisibleMediaMembers,
+    mediaRenderingDataSourceList,
+    mediaRenderingDataSourceForPresenter,
+    mediaAccessibilityTypeEnum,
+    mediaAccessibilityType,
+  } = useContext(GlobalContext);
+
+  return (
+    <MemorizedMediaMultiVideoRenderer
+      numberOfInitialVisibleMediaMembers={numberOfInitialVisibleMediaMembers}
+      mediaRenderingDataSourceList={mediaRenderingDataSourceList}
+      mediaRenderingDataSourceForPresenter={mediaRenderingDataSourceForPresenter}
+      mediaAccessibilityTypeEnum={mediaAccessibilityTypeEnum}
+      mediaAccessibilityType={mediaAccessibilityType}
+    />
   );
 }

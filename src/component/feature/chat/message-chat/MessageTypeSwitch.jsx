@@ -1,14 +1,14 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext } from "react";
 import styled from "styled-components";
 
-import { LocalizationContext } from "context/localization-context";
-import { messageTypeEnum, MessageContext } from "context/message-context";
+import { messageTypeEnum } from "context/message-context";
 import { localizableStringKeyEnum } from "resource/string/localizable-strings";
 import MultiTabSwitch, {
   multiTabSwitchPropsBuilder,
   multiTabSwitchTabBuilder,
 } from "../../../generic/switch/MultiTabSwitch";
 import badgeBackgroundImageUrl from "resource/image/badge_3x.png";
+import { GlobalContext } from "context/global-context";
 
 const sharedStyleValues = {
   switchPaddingTop: 10,
@@ -29,32 +29,14 @@ const SwitchContainer = styled.div`
   padding-bottom: ${sharedStyleValues.switchPaddingBottom}px;
 `;
 
-export const MessageTypeSwitchPropsBuilder = ({}) => {
-  return {};
-};
-
-export default function MessageTypeSwitch({}) {
-  const { localizedStrings } = useContext(LocalizationContext);
-  const {
-    visibleMessageType,
-    updateVisibleMessageType,
-    unreadTextMessageCount,
-    unreadFileMessageCount,
-  } = useContext(MessageContext);
-
-  let textMessageTabSelected = true;
-  let fileMessageTabSelected = false;
-  if (visibleMessageType === messageTypeEnum.MESSAGE_TYPE_TEXT) {
-    textMessageTabSelected = true;
-    fileMessageTabSelected = false;
-  } else if (visibleMessageType === messageTypeEnum.MESSAGE_TYPE_FILE) {
-    textMessageTabSelected = false;
-    fileMessageTabSelected = true;
-  }
-
-  const textMessageTabBadgeText = unreadTextMessageCount > 0 ? `${unreadTextMessageCount}` : "";
-  const fileMessageTabBadgeText = unreadFileMessageCount > 0 ? `${unreadFileMessageCount}` : "";
-
+function MessageTypeSwitchToMemo({
+  localizedStrings,
+  updateVisibleMessageType,
+  textMessageTabSelected,
+  textMessageTabBadgeText,
+  fileMessageTabSelected,
+  fileMessageTabBadgeText,
+}) {
   const textMessageTab = multiTabSwitchTabBuilder({
     switchTabName: localizedStrings[localizableStringKeyEnum.CHAT_ROOM_MESSAGE_TYPE_TEXT],
     switchTabBorderRadius: 5,
@@ -94,5 +76,77 @@ export default function MessageTypeSwitch({}) {
         />
       </SwitchContainer>
     </Wrapper>
+  );
+}
+
+const arePropsEqual = (prevProps, nextProps) => {
+  const isLocalizedStringEqual = Object.is(prevProps.localizedStrings, nextProps.localizedStrings);
+  const isUpdateVisibleMessageTypeEqual = Object.is(
+    prevProps.updateVisibleMessageType,
+    nextProps.updateVisibleMessageType
+  );
+  const isTextMessageTabSelectedEqual = Object.is(
+    prevProps.textMessageTabSelected,
+    nextProps.textMessageTabSelected
+  );
+  const isTextMessageTabBadgeTextEqual = Object.is(
+    prevProps.textMessageTabBadgeText,
+    nextProps.textMessageTabBadgeText
+  );
+  const isFileMessageTabSelectedEqual = Object.is(
+    prevProps.fileMessageTabSelected,
+    nextProps.fileMessageTabSelected
+  );
+  const isFileMessageTabBadgeTextEqual = Object.is(
+    prevProps.fileMessageTabBadgeText,
+    nextProps.fileMessageTabBadgeText
+  );
+  return (
+    isLocalizedStringEqual &&
+    isUpdateVisibleMessageTypeEqual &&
+    isTextMessageTabSelectedEqual &&
+    isTextMessageTabBadgeTextEqual &&
+    isFileMessageTabSelectedEqual &&
+    isFileMessageTabBadgeTextEqual
+  );
+};
+
+const MemorizedMessageTypeSwitch = React.memo(MessageTypeSwitchToMemo, arePropsEqual);
+
+export const MessageTypeSwitchPropsBuilder = ({}) => {
+  return {};
+};
+
+export default function MessageTypeSwitch({}) {
+  const {
+    localizedStrings,
+    visibleMessageType,
+    updateVisibleMessageType,
+    unreadTextMessageCount,
+    unreadFileMessageCount,
+  } = useContext(GlobalContext);
+
+  let textMessageTabSelected = true;
+  let fileMessageTabSelected = false;
+  if (visibleMessageType === messageTypeEnum.MESSAGE_TYPE_TEXT) {
+    textMessageTabSelected = true;
+    fileMessageTabSelected = false;
+  } else if (visibleMessageType === messageTypeEnum.MESSAGE_TYPE_FILE) {
+    textMessageTabSelected = false;
+    fileMessageTabSelected = true;
+  }
+
+  const textMessageTabBadgeText = unreadTextMessageCount > 0 ? `${unreadTextMessageCount}` : "";
+  const fileMessageTabBadgeText = unreadFileMessageCount > 0 ? `${unreadFileMessageCount}` : "";
+
+  return (
+    <MemorizedMessageTypeSwitch
+      localizedStrings={localizedStrings}
+      updateVisibleMessageType={updateVisibleMessageType}
+      textMessageTabSelected={textMessageTabSelected}
+      textMessageTabBadgeText={textMessageTabBadgeText}
+      fileMessageTabSelected={fileMessageTabSelected}
+      fileMessageTabBadgeText={fileMessageTabBadgeText}
+    />
   );
 }

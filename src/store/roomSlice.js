@@ -84,7 +84,7 @@ export const joinRoom = createAsyncThunk("room/joinRoom", async (roomId) => {
 });
 
 export const leaveRoom = createAsyncThunk("room/leaveRoom", async (_, thunkAPI) => {
-  thunkAPI.dispatch(clearTextMessage());
+  // thunkAPI.dispatch(clearTextMessage());
 
   WebRTCGroupChatService.leaveRoom();
 });

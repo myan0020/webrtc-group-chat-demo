@@ -107,7 +107,14 @@ export default {
     WebRTCMediaCallingManager.hangUpCalling(true);
     WebRTCMediaCallingManager.clearAllPeerTransceivers();
     WebRTCPeerConnectionManager.closeALLPeerConnections();
+    WebRTCDataChannelManager.cancelSenderAllFileSending();
+    WebRTCDataChannelManager.clearAllFileBuffersReceived();
     WebRTCDataChannelManager.clearAllReceivingFiles();
+    
+    // TODO: need to clear sending&&receiving related data
+    WebRTCDataChannelManager.clearSendingRelatedData();
+    WebRTCDataChannelManager.clearReceivingRelatedData();
+
     WebRTCSignalingManager.leaveRoomSignaling();
   },
   // listeners
@@ -165,8 +172,8 @@ export default {
     WebRTCDataChannelManager.cancelSenderFileSendingToAllPeer(fileHash);
   },
   // receiving resetting (all buffers / downloadable files, will be deleted)
-  resetAllFileBuffersReceived() {
-    WebRTCDataChannelManager.resetAllFileBuffersReceived();
+  clearAllFileBuffersReceived() {
+    WebRTCDataChannelManager.clearAllFileBuffersReceived();
   },
   clearAllFilesReceived() {
     WebRTCDataChannelManager.clearAllReceivingFiles();

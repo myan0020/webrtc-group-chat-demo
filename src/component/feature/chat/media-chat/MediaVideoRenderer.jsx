@@ -4,6 +4,7 @@ import styled from "styled-components";
 import MediaUserTag from "./MediaUserTag";
 import { MediaRenderingContext } from "context/media-rendering-context";
 import cancelImageUrl from "resource/image/cancel_media_presenting_3x.png";
+import { GlobalContext } from "context/global-context";
 
 const Wrapper = styled.div`
   box-sizing: border-box;
@@ -57,14 +58,13 @@ const Video = styled.video`
   }
 `;
 
-export default function MediaVideoRenderer(props) {
+function MediaVideoRendererToMemo(props) {
   const userId = props.userId;
   const userName = props.userName;
   const mediaStream = props.mediaStream;
   const isCancellable = props.isCancellable;
   const isVideoClickable = props.isVideoClickable;
-
-  const { updatePresenterId } = useContext(MediaRenderingContext);
+  const updatePresenterId = props.updatePresenterId;
 
   const addMediaStreamToVideoDOM = (videoDOM, mediaStream) => {
     if (!videoDOM) return;
@@ -100,5 +100,48 @@ export default function MediaVideoRenderer(props) {
         onClick={handleCancelClick}
       />
     </Wrapper>
+  );
+}
+
+const arePropsEqual = (prevProps, nextProps) => {
+  const isUserIdEqual = Object.is(prevProps.userId, nextProps.userId);
+  const isUserNameEqual = Object.is(prevProps.userName, nextProps.userName);
+  const isMediaStreamEqual = Object.is(prevProps.mediaStream, nextProps.mediaStream);
+  const isIsCancellableEqual = Object.is(prevProps.isCancellable, nextProps.isCancellable);
+  const isIsVideoClickableEqual = Object.is(prevProps.isVideoClickable, nextProps.isVideoClickable);
+  const isUpdatePresenterIdEqual = Object.is(
+    prevProps.updatePresenterId,
+    nextProps.updatePresenterId
+  );
+  return (
+    isUserIdEqual &&
+    isUserNameEqual &&
+    isMediaStreamEqual &&
+    isIsCancellableEqual &&
+    isIsVideoClickableEqual &&
+    isUpdatePresenterIdEqual
+  );
+};
+
+const MemorizedMediaVideoRenderer = React.memo(MediaVideoRendererToMemo, arePropsEqual);
+
+export default function MediaVideoRenderer(props) {
+  const userId = props.userId;
+  const userName = props.userName;
+  const mediaStream = props.mediaStream;
+  const isCancellable = props.isCancellable;
+  const isVideoClickable = props.isVideoClickable;
+
+  const { updatePresenterId } = useContext(GlobalContext);
+
+  return (
+    <MemorizedMediaVideoRenderer
+      userId={userId}
+      userName={userName}
+      mediaStream={mediaStream}
+      isCancellable={isCancellable}
+      isVideoClickable={isVideoClickable}
+      updatePresenterId={updatePresenterId}
+    />
   );
 }

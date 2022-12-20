@@ -10,7 +10,7 @@ import RequireAuth from "component/feature/require-auth/RequireAuth";
 import Signin from "component/feature/sign-in/Signin";
 import RoomList from "component/feature/room-list/RoomList";
 import ChatRoom from "component/feature/chat/ChatRoom";
-import { LocalizationContextProvider } from "context/localization-context";
+import { GlobalContextProvider } from "context/global-context";
 
 /**
  * Displaying the current environment ('development' or 'production')
@@ -23,7 +23,7 @@ console.log(`[In ${process.env.NODE_ENV} mode]`);
 function App() {
   return (
     <Provider store={store}>
-      <LocalizationContextProvider>
+      <GlobalContextProvider>
         <BrowserRouter>
           <Routes>
             <Route
@@ -58,7 +58,7 @@ function App() {
             />
           </Routes>
         </BrowserRouter>
-      </LocalizationContextProvider>
+      </GlobalContextProvider>
     </Provider>
   );
 }

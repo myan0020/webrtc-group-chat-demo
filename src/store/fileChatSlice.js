@@ -1,17 +1,11 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import WebRTCGroupChatService from "service/WebRTCGroupChatService/WebRTCGroupChatService";
 
-export const requestStatus = {
-  idle: "idle",
-  loading: "loading",
-  succeeded: "succeeded",
-  failed: "failed",
-};
+import WebRTCGroupChatService from "service/WebRTCGroupChatService/WebRTCGroupChatService";
 
 export const fileChatSlice = createSlice({
   name: "fileChat",
   initialState: {
-    requestStatus: requestStatus.idle,
+    // requestStatus: requestStatus.idle,
   },
   // reducers: {
   //   updateRoomList: {
@@ -36,10 +30,17 @@ export const fileChatSlice = createSlice({
 
 /* Thunk action creator */
 
-// export const createRoom = createAsyncThunk("room/createRoom", async (roomName) => {
-//   if (!roomName || roomName.length === 0) return;
-//   WebRTCGroupChatService.createNewRoom(roomName);
-// });
+// export const clearFileMessage = createAsyncThunk(
+//   "fileChat/clearFileMessage",
+//   async (_, thunkAPI) => {
+//     WebRTCGroupChatService.clear(text);
+
+//     const { authenticatedUserId, authenticatedUserName } = selectAuth(thunkAPI.getState());
+  
+
+//     thunkAPI.dispatch(addTextMessage(textMessage));
+//   }
+// );
 
 /* Reducer */
 
