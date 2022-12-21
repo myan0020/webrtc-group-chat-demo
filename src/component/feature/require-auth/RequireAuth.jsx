@@ -1,10 +1,12 @@
 import React from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Navigate, Outlet } from "react-router-dom";
 import styled from "styled-components";
 
-import { selectAuth } from "store/authSlice";
+import { requestToSignout, selectAuth } from "store/authSlice";
 import NavigationBar from "../navigation/NavigationBar";
+import useBeforeunload from "hook/useBeforeUnload";
+import { leaveRoom } from "store/roomSlice";
 
 const Wrapper = styled.div`
   width: 100%;
@@ -24,7 +26,13 @@ const OutletContainer = styled.div`
 `;
 
 export default function RequireAuth({ children, redirectTo }) {
+  const dispatch = useDispatch();
   const auth = useSelector(selectAuth);
+  useBeforeunload(() => {
+    dispatch(leaveRoom());
+    dispatch(requestToSignout());
+  });
+
   if (!auth.authenticated) {
     // Redirect them to the /login page, but save the current location they were
     // trying to go to when they were redirected. This allows us to send them
@@ -37,6 +45,7 @@ export default function RequireAuth({ children, redirectTo }) {
       />
     );
   }
+
   return (
     <Wrapper>
       <NavigationContainer>

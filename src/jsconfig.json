@@ -9,6 +9,7 @@
       "util/*": ["util/*"],
       "service/*": ["service/*"],
       "resource/*": ["resource/*"],
+      "hook/*": ["hook/*"],
     }
   },
 }

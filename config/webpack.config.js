@@ -174,6 +174,7 @@ module.exports = (env, argv) => {
         util: path.resolve(process.cwd(), "./src/util/"),
         service: path.resolve(process.cwd(), "./src/service/"),
         resource: path.resolve(process.cwd(), "./src/resource/"),
+        hook: path.resolve(process.cwd(), "./src/hook/"),
       },
     },
   };
