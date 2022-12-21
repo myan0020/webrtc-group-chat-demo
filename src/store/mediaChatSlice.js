@@ -8,28 +8,30 @@ export const videoCallingInputTypeEnum = {
   VIDEO_CALLING_INPUT_TYPE_SCREEN: "screen",
 };
 
+const initialState = {
+  enableVideoCallingInput: true,
+  videoCallingInputType: videoCallingInputTypeEnum.VIDEO_CALLING_INPUT_TYPE_NONE,
+
+  isCalling: false,
+
+  audioRelated: {
+    isAudioEnablingAvaliable: false,
+    isAudioEnabled: false,
+    isAudioMutingAvaliable: false,
+    isAudioMuted: true,
+  },
+
+  videoRelated: {
+    isVideoEnablingAvaliable: false,
+    isVideoEnabled: false,
+    isVideoMutingAvaliable: false,
+    isVideoMuted: true,
+  },
+};
+
 export const mediaChatSlice = createSlice({
   name: "mediaChat",
-  initialState: {
-    enableVideoCallingInput: true,
-    videoCallingInputType: videoCallingInputTypeEnum.VIDEO_CALLING_INPUT_TYPE_NONE,
-
-    isCalling: false,
-
-    audioRelated: {
-      isAudioEnablingAvaliable: false,
-      isAudioEnabled: false,
-      isAudioMutingAvaliable: false,
-      isAudioMuted: true,
-    },
-
-    videoRelated: {
-      isVideoEnablingAvaliable: false,
-      isVideoEnabled: false,
-      isVideoMutingAvaliable: false,
-      isVideoMuted: true,
-    },
-  },
+  initialState,
   reducers: {
     updateVideoCallingInputEnabling: {
       reducer(sliceState, action) {
@@ -90,6 +92,13 @@ export const mediaChatSlice = createSlice({
     updateVideoMuting: {
       reducer(sliceState, action) {
         sliceState.videoRelated.isVideoMuted = action.payload;
+      },
+    },
+
+    //reset
+    reset: {
+      reducer(sliceState, action) {
+        return initialState;
       },
     },
 
@@ -227,6 +236,7 @@ export const {
   updateVideoEnabling,
   updateVideoMutingAvaliable,
   updateVideoMuting,
+  reset,
 } = mediaChatSlice.actions;
 
 /* Selector */

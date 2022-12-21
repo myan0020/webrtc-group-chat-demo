@@ -50,7 +50,7 @@ function MediaRenderingStyleSwitchToMemo({
       mediaAccessibilityType === mediaAccessibilityTypeEnum.MEDIA_ACCESSIBILITY_TYPE_EQUALITY,
   });
 
-  const renderingResult = (
+  return (
     <Wrapper>
       <MultiTabSwitch
         {...multiTabSwitchPropsBuilder({
@@ -62,8 +62,6 @@ function MediaRenderingStyleSwitchToMemo({
       />
     </Wrapper>
   );
-
-  return renderingResult;
 }
 
 const arePropsEqual = (prevProps, nextProps) => {

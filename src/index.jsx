@@ -1,6 +1,6 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { Provider } from "react-redux";
+import { Provider as ReduxProvider } from "react-redux";
 // import ReactDOM from 'react-dom';
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
@@ -22,7 +22,7 @@ console.log(`[In ${process.env.NODE_ENV} mode]`);
  */
 function App() {
   return (
-    <Provider store={store}>
+    <ReduxProvider store={store}>
       <GlobalContextProvider>
         <BrowserRouter>
           <Routes>
@@ -59,7 +59,7 @@ function App() {
           </Routes>
         </BrowserRouter>
       </GlobalContextProvider>
-    </Provider>
+    </ReduxProvider>
   );
 }
 

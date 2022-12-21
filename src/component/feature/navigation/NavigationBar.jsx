@@ -76,7 +76,7 @@ function NavigationBarToMemo({ localizedStrings, authenticatedUserName }) {
     localizedStrings[localizableStringKeyEnum.NAVIGATION_WELCOME]
   }, ${authenticatedUserName}`;
 
-  const renderingResult = (
+  return (
     <Wrapper>
       <LeftContainer>
         <GoBackNavigator />
@@ -98,8 +98,6 @@ function NavigationBarToMemo({ localizedStrings, authenticatedUserName }) {
       </RightContainer>
     </Wrapper>
   );
-
-  return renderingResult;
 }
 
 const arePropsEqual = (prevProps, nextProps) => {

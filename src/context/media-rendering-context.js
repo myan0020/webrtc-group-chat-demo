@@ -84,6 +84,13 @@ function MediaRenderingContextProvider({ children }) {
     }
   };
 
+  const resetMediaRenderingContext = () => {
+    setLocalMediaStream(null);
+    setPeerUserMediaStreamMap(null);
+    setMediaAccessibilityType(mediaAccessibilityTypeEnum.MEDIA_ACCESSIBILITY_TYPE_PRESENTATION);
+    setPresenterId(undefined);
+  }
+
   const contextValue = {
     numberOfInitialVisibleMediaMembers: numberOfInitialVisibleMediaMembers,
     mediaRenderingDataSourceList,
@@ -92,6 +99,8 @@ function MediaRenderingContextProvider({ children }) {
     mediaAccessibilityTypeEnum,
     mediaAccessibilityType,
     updateMediaAccessibilityType,
+
+    resetMediaRenderingContext,
   };
   return (
     <MediaRenderingContext.Provider value={contextValue}>{children}</MediaRenderingContext.Provider>

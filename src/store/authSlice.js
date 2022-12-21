@@ -11,15 +11,23 @@ export const requestStatus = {
   failed: "failed",
 };
 
+const initialState = {
+  authenticated: false,
+  authenticatedUserName: "",
+  authenticatedUserId: "",
+  requestStatus: requestStatus.idle,
+};
+
 export const authSlice = createSlice({
   name: "auth",
-  initialState: {
-    authenticated: false,
-    authenticatedUserName: "",
-    authenticatedUserId: "",
-    requestStatus: requestStatus.idle,
+  initialState,
+  reducers: {
+    reset: {
+      reducer(sliceState, action) {
+        return initialState;
+      },
+    },
   },
-  reducers: {},
   extraReducers: (builder) => {
     builder
       .addCase(requestToSignin.pending, (sliceState, action) => {
@@ -105,6 +113,10 @@ export const requestToSignout = createAsyncThunk("auth/requestToSignout", async 
 /* Reducer */
 
 export default authSlice.reducer;
+
+/* Action Creator */
+
+export const { reset } = authSlice.actions;
 
 /* Selector */
 

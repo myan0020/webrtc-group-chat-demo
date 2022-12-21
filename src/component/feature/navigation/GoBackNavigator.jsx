@@ -5,6 +5,8 @@ import styled from "styled-components";
 import { selectRoom, leaveRoom } from "store/roomSlice";
 import goBackImageUrl from "resource/image/go_back_3x.png";
 import { GlobalContext } from "context/global-context";
+import { reset as resetTextChatSlice } from "store/textChatSlice";
+import { reset as resetMediaChatSlice } from "store/mediaChatSlice";
 
 const Wrapper = styled.button`
   width: 100%;
@@ -21,17 +23,18 @@ const Wrapper = styled.button`
   background-size: calc(100% / 3);
 `;
 
-function GoBackNavigatorToMemo({
-  visibility,
-  clearTextMessageContext,
-  clearAllFileInput,
-  clearFileMessageContext,
-}) {
+function GoBackNavigatorToMemo({ visibility, resetMediaRenderingContext, resetMessageContext }) {
   const dispatch = useDispatch();
   const handleRoomLeaved = () => {
-    clearTextMessageContext();
-    clearAllFileInput();
-    clearFileMessageContext();
+    // media
+    dispatch(resetMediaChatSlice());
+    resetMediaRenderingContext();
+
+    // message
+    dispatch(resetTextChatSlice());
+    resetMessageContext();
+
+    // room
     dispatch(leaveRoom());
   };
 
@@ -44,33 +47,23 @@ function GoBackNavigatorToMemo({
 }
 
 const arePropsEqual = (prevProps, nextProps) => {
-  const isLocalizedStringEqual = Object.is(prevProps.localizedStrings, nextProps.localizedStrings);
-  const isClearTextMessageContextEqual = Object.is(
-    prevProps.clearTextMessageContext,
-    nextProps.clearTextMessageContext
+  const isVisibilityEqual = Object.is(prevProps.visibility, nextProps.visibility);
+  const isResetMediaRenderingContextEqual = Object.is(
+    prevProps.resetMediaRenderingContext,
+    nextProps.resetMediaRenderingContext
   );
-  const isClearAllFileInputEqual = Object.is(
-    prevProps.clearAllFileInput,
-    nextProps.clearAllFileInput
+  const isResetMessageContextEqual = Object.is(
+    prevProps.resetMessageContext,
+    nextProps.resetMessageContext
   );
-  const isClearFileMessageContextEqual = Object.is(
-    prevProps.clearFileMessageContext,
-    nextProps.clearFileMessageContext
-  );
-  return (
-    isLocalizedStringEqual &&
-    isClearTextMessageContextEqual &&
-    isClearAllFileInputEqual &&
-    isClearFileMessageContextEqual
-  );
+  return isVisibilityEqual && isResetMediaRenderingContextEqual && isResetMessageContextEqual;
 };
 
 const MemorizedGoBackNavigator = React.memo(GoBackNavigatorToMemo, arePropsEqual);
 
 export default function GoBackNavigator() {
   const { joinedRoomId } = useSelector(selectRoom);
-  const { clearTextMessageContext, clearAllFileInput, clearFileMessageContext } =
-    useContext(GlobalContext);
+  const { resetMediaRenderingContext, resetMessageContext } = useContext(GlobalContext);
 
   const hasJoinedRoom = joinedRoomId && joinedRoomId.length > 0;
   const visibility = !hasJoinedRoom ? "hidden" : "visible";
@@ -78,9 +71,8 @@ export default function GoBackNavigator() {
   return (
     <MemorizedGoBackNavigator
       visibility={visibility}
-      clearTextMessageContext={clearTextMessageContext}
-      clearAllFileInput={clearAllFileInput}
-      clearFileMessageContext={clearFileMessageContext}
+      resetMediaRenderingContext={resetMediaRenderingContext}
+      resetMessageContext={resetMessageContext}
     />
   );
 }

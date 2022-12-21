@@ -53,7 +53,7 @@ const BadgeWrapper = styled.div`
   right: 8px;
 
   border-radius: 5px;
-  background-color: rgba(178, 223, 219, 0.2);
+  background-color: rgb(0, 150, 136);
 
   ${
     "" /* background-image: url(${(props) => props.backgroundImageUrl});
@@ -66,7 +66,8 @@ const BadgeWrapper = styled.div`
   justify-content: center;
   align-items: center;
   font-size: 12px;
-  color: rgb(0, 150, 136);
+  font-weight: 600;
+  color: rgb(255, 255, 255);
 `;
 
 export const multiTabSwitchTabBuilder = ({

@@ -27,10 +27,24 @@ function ChildrenWrapper({ children }) {
   const mediaRenderingContextValue = useContext(MediaRenderingContext);
   const messageContextValue = useContext(MessageContext);
 
+  const resetGlobalContext = () => {
+    if (typeof localizationContextValue.resetLocalizationContext === "function") {
+      localizationContextValue.resetLocalizationContext();
+    }
+    if (typeof mediaRenderingContextValue.resetMediaRenderingContext === "function") {
+      mediaRenderingContextValue.resetMediaRenderingContext();
+    }
+    if (typeof messageContextValue.resetMessageContext === "function") {
+      messageContextValue.resetMessageContext();
+    }
+  }
+
   const contextValue = {
     ...localizationContextValue,
     ...mediaRenderingContextValue,
     ...messageContextValue,
+
+    resetGlobalContext,
   };
 
   return <GlobalContext.Provider value={contextValue}>{children}</GlobalContext.Provider>;

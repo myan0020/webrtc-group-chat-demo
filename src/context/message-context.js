@@ -1,13 +1,7 @@
 import React, { useContext, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 
-import {
-  selectAllTextMessages,
-  sendTextMessage,
-  readAllTextMessages,
-  selectUnreadTextMessageCount,
-  clearTextMessage,
-} from "store/textChatSlice";
+import { selectAllTextMessages } from "store/textChatSlice";
 import { FileMessageContext, FileMessageContextProvider } from "context/file-message-context";
 
 export const messageTypeEnum = {
@@ -28,8 +22,6 @@ function MessageContextProviderWrapper({ children }) {
 
 function MessageContextProviderContent({ children }) {
   const [visibleMessageType, setVisibleMessageType] = useState(messageTypeEnum.MESSAGE_TYPE_TEXT);
-
-  const dispatch = useDispatch();
   const {
     messageContainer: fileMessageContainer,
     unreadMessageCount: unreadFileMessageCount,
@@ -41,12 +33,12 @@ function MessageContextProviderContent({ children }) {
     sendFiles,
     cancelAllFileSending,
     clearAllFileInput,
-    clearMessageContext: clearFileMessageContext,
     clearAllFileBuffersReceived,
     clearAllFileReceived,
+
+    resetFileMessageContext,
   } = useContext(FileMessageContext);
   const textMessageContainer = useSelector(selectAllTextMessages);
-  const unreadTextMessageCount = useSelector(selectUnreadTextMessageCount);
 
   const textMessageList = [];
   if (textMessageContainer) {
@@ -74,28 +66,18 @@ function MessageContextProviderContent({ children }) {
     return a.timestamp - b.timestamp;
   });
 
-  const sendTextToAllPeer = (text) => {
-    dispatch(sendTextMessage(text));
-  };
+  const resetMessageContext = () => {
+    if (typeof resetFileMessageContext === "function") {
+      resetFileMessageContext();
+    }
+    setVisibleMessageType(messageTypeEnum.MESSAGE_TYPE_TEXT)
+  }
 
   const contextValue = {
     visibleMessageType,
     updateVisibleMessageType: setVisibleMessageType,
 
     orderedTextMessageList,
-    unreadTextMessageCount,
-    sendTextToAllPeer,
-
-    // Incorrect: should not dispatch redux actions inside a react context provider
-    readAllTextMessages: () => {
-      if (unreadTextMessageCount === 0) {
-        return;
-      }
-      dispatch(readAllTextMessages());
-    },
-    clearTextMessageContext: () => {
-      dispatch(clearTextMessage());
-    },
 
     orderedFileMessageList,
     isFileSendingStatusSending,
@@ -106,9 +88,11 @@ function MessageContextProviderContent({ children }) {
     sendFiles,
     cancelAllFileSending,
     clearAllFileInput,
-    clearFileMessageContext,
     clearAllFileBuffersReceived,
     clearAllFileReceived,
+
+    resetFileMessageContext,
+    resetMessageContext,
   };
 
   return <MessageContext.Provider value={contextValue}>{children}</MessageContext.Provider>;

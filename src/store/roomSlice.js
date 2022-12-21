@@ -2,7 +2,6 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 
 import WebRTCGroupChatService from "service/WebRTCGroupChatService/WebRTCGroupChatService";
-import { clearTextMessage } from "./textChatSlice";
 
 export const requestStatus = {
   idle: "idle",
@@ -11,15 +10,17 @@ export const requestStatus = {
   failed: "failed",
 };
 
+const initialState = {
+  roomList: {},
+  joinedRoomId: "",
+  joinedRoomName: "",
+  isNewRoomPopupVisible: false,
+  requestStatus: requestStatus.idle,
+};
+
 export const roomSlice = createSlice({
   name: "room",
-  initialState: {
-    roomList: {},
-    joinedRoomId: "",
-    joinedRoomName: "",
-    isNewRoomPopupVisible: false,
-    requestStatus: requestStatus.idle,
-  },
+  initialState,
   reducers: {
     updateRoomList: {
       reducer(sliceState, action) {
@@ -38,6 +39,11 @@ export const roomSlice = createSlice({
       reducer(sliceState, action) {
         sliceState.joinedRoomId = action.payload.roomId;
         sliceState.joinedRoomName = action.payload.roomName;
+      },
+    },
+    reset: {
+      reducer(sliceState, action) {
+        return initialState;
       },
     },
   },
@@ -84,8 +90,6 @@ export const joinRoom = createAsyncThunk("room/joinRoom", async (roomId) => {
 });
 
 export const leaveRoom = createAsyncThunk("room/leaveRoom", async (_, thunkAPI) => {
-  // thunkAPI.dispatch(clearTextMessage());
-
   WebRTCGroupChatService.leaveRoom();
 });
 
@@ -95,7 +99,7 @@ export default roomSlice.reducer;
 
 /* Action Creator */
 
-export const { updateRoomList, toggleNewRoomPopupVisibility, updateJoinedRoomId } =
+export const { updateRoomList, toggleNewRoomPopupVisibility, updateJoinedRoomId, reset } =
   roomSlice.actions;
 
 /* Selector */

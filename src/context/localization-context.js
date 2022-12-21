@@ -19,9 +19,14 @@ function LocalizationContextProvider({ children }) {
     }
   };
 
+  const resetLocalizationContext = () => {
+    setLocaleType(localeTypeEnum.ENGLISH);
+  }
+
   const contextValue = {
     localizedStrings: localizableStrings[localeType],
     changeLocalization,
+    resetLocalizationContext,
   };
   return (
     <LocalizationContext.Provider value={contextValue}>{children}</LocalizationContext.Provider>

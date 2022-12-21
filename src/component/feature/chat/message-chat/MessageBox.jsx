@@ -1,10 +1,12 @@
 import React, { useContext, useEffect, useRef } from "react";
 import styled from "styled-components";
+import { useDispatch, useSelector } from "react-redux";
 
 import TextMessage, { textMessagePropsBuilder } from "./TextMessage";
 import FileMessage, { fileMessagePropsBuilder } from "./FileMessage";
 import { messageTypeEnum } from "context/message-context";
 import { GlobalContext } from "context/global-context";
+import { readAllTextMessages, selectUnreadTextMessageCount } from "store/textChatSlice";
 
 const sharedStyleValues = {
   // autoScrollingThredhold: 300,
@@ -59,15 +61,19 @@ function MessageBoxToMemo({
   visibleMessageType,
   orderedTextMessageList,
   orderedFileMessageList,
-  readAllTextMessages,
   readAllFileMessage,
 }) {
+  const dispatch = useDispatch();
+  const unreadTextMessageCount = useSelector(selectUnreadTextMessageCount);
   const textBoxWrapperRef = useRef(null);
   const fileBoxWrapperRef = useRef(null);
 
   useEffect(() => {
     if (visibleMessageType === messageTypeEnum.MESSAGE_TYPE_TEXT) {
-      readAllTextMessages();
+      if (unreadTextMessageCount === 0) {
+        return;
+      }
+      dispatch(readAllTextMessages());
     } else if (visibleMessageType === messageTypeEnum.MESSAGE_TYPE_FILE) {
       readAllFileMessage();
     }
@@ -152,10 +158,6 @@ const arePropsEqual = (prevProps, nextProps) => {
     prevProps.orderedFileMessageList,
     nextProps.orderedFileMessageList
   );
-  const isReadAllTextMessagesEqual = Object.is(
-    prevProps.readAllTextMessages,
-    nextProps.readAllTextMessages
-  );
   const isReadAllFileMessageEqual = Object.is(
     prevProps.readAllFileMessage,
     nextProps.readAllFileMessage
@@ -165,7 +167,6 @@ const arePropsEqual = (prevProps, nextProps) => {
     isVisibleMessageTypeEqual &&
     isOrderedTextMessageListEqual &&
     isOrderedFileMessageListEqual &&
-    isReadAllTextMessagesEqual &&
     isReadAllFileMessageEqual
   );
 };
@@ -178,7 +179,6 @@ export default function MessageBox({}) {
     visibleMessageType,
     orderedTextMessageList,
     orderedFileMessageList,
-    readAllTextMessages,
     readAllFileMessage,
   } = useContext(GlobalContext);
   return (
@@ -187,7 +187,6 @@ export default function MessageBox({}) {
       visibleMessageType={visibleMessageType}
       orderedTextMessageList={orderedTextMessageList}
       orderedFileMessageList={orderedFileMessageList}
-      readAllTextMessages={readAllTextMessages}
       readAllFileMessage={readAllFileMessage}
     />
   );

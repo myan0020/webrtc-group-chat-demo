@@ -1,5 +1,6 @@
 import React, { useContext } from "react";
 import styled from "styled-components";
+import { useSelector } from "react-redux";
 
 import { messageTypeEnum } from "context/message-context";
 import { localizableStringKeyEnum } from "resource/string/localizable-strings";
@@ -9,6 +10,7 @@ import MultiTabSwitch, {
 } from "../../../generic/switch/MultiTabSwitch";
 import badgeBackgroundImageUrl from "resource/image/badge_3x.png";
 import { GlobalContext } from "context/global-context";
+import { selectUnreadTextMessageCount } from "store/textChatSlice";
 
 const sharedStyleValues = {
   switchPaddingTop: 10,
@@ -122,9 +124,9 @@ export default function MessageTypeSwitch({}) {
     localizedStrings,
     visibleMessageType,
     updateVisibleMessageType,
-    unreadTextMessageCount,
     unreadFileMessageCount,
   } = useContext(GlobalContext);
+  const unreadTextMessageCount = useSelector(selectUnreadTextMessageCount);
 
   let textMessageTabSelected = true;
   let fileMessageTabSelected = false;

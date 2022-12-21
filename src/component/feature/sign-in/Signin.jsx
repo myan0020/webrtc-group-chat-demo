@@ -111,7 +111,7 @@ function SigninToMemo({
   onKeyDown,
   onSigninClick,
 }) {
-  const renderingResult = (
+  return (
     <Wrapper>
       <ContentWrapper>
         <HeadingWrapper>
@@ -150,8 +150,6 @@ function SigninToMemo({
       </ContentWrapper>
     </Wrapper>
   );
-
-  return renderingResult;
 }
 
 const arePropsEqual = (prevProps, nextProps) => {

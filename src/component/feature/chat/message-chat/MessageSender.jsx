@@ -6,6 +6,8 @@ import { localizableStringKeyEnum } from "resource/string/localizable-strings";
 import messageSendBubbleImageUrl from "resource/image/send_message_bubble_3x.png";
 import messageSendPlaneImageUrl from "resource/image/send_message_plane_3x.png";
 import { GlobalContext } from "context/global-context";
+import { useDispatch } from "react-redux";
+import { sendTextMessage } from "store/textChatSlice";
 
 const sharedStyleValues = {
   contentHeight: 48,
@@ -135,8 +137,8 @@ function MessageSenderToMemo({
   sendFiles,
   updateInputFiles,
   visibleMessageType,
-  sendTextToAllPeer,
 }) {
+  const dispatch = useDispatch();
   const messageInputRef = useRef(null);
   const messageSendRef = useRef(null);
   const [inputText, setInputText] = useState("");
@@ -210,7 +212,7 @@ function MessageSenderToMemo({
 
   const handleMessageSendClick = () => {
     if (visibleMessageType === messageTypeEnum.MESSAGE_TYPE_TEXT) {
-      sendTextToAllPeer(inputText);
+      dispatch(sendTextMessage(inputText));
       setInputText("");
     } else if (visibleMessageType === messageTypeEnum.MESSAGE_TYPE_FILE) {
       sendFiles();
@@ -252,17 +254,12 @@ const arePropsEqual = (prevProps, nextProps) => {
     prevProps.visibleMessageType,
     nextProps.visibleMessageType
   );
-  const isSendTextToAllPeerEqual = Object.is(
-    prevProps.sendTextToAllPeer,
-    nextProps.sendTextToAllPeer
-  );
   return (
     isLocalizedStringEqual &&
     isInputFilesEqual &&
     isSendFilesEqual &&
     isUpdateInputFilesEqual &&
-    isVisibleMessageTypeEqual &&
-    isSendTextToAllPeerEqual
+    isVisibleMessageTypeEqual
   );
 };
 
@@ -279,7 +276,6 @@ export default function MessageSender({}) {
     sendFiles,
     updateInputFiles,
     visibleMessageType,
-    sendTextToAllPeer,
   } = useContext(GlobalContext);
   return (
     <MemorizedMessageSender
@@ -288,7 +284,6 @@ export default function MessageSender({}) {
       sendFiles={sendFiles}
       updateInputFiles={updateInputFiles}
       visibleMessageType={visibleMessageType}
-      sendTextToAllPeer={sendTextToAllPeer}
     />
   );
 }

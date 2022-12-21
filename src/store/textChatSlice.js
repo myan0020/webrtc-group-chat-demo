@@ -10,12 +10,14 @@ export const requestStatus = {
   failed: "failed",
 };
 
+const initialState = {
+  requestStatus: requestStatus.idle,
+  textMessages: {},
+};
+
 export const textChatSlice = createSlice({
   name: "textChat",
-  initialState: {
-    requestStatus: requestStatus.idle,
-    textMessages: {},
-  },
+  initialState,
   reducers: {
     addTextMessage: {
       reducer(sliceState, action) {
@@ -33,9 +35,9 @@ export const textChatSlice = createSlice({
         });
       },
     },
-    clearTextMessage: {
+    reset: {
       reducer(sliceState, action) {
-        sliceState.textMessages = {};
+        return initialState;
       },
     },
 
@@ -112,18 +114,16 @@ export const receiveTextMessage = createAsyncThunk(
 );
 
 /* Reducer */
-window.reducer = textChatSlice.reducer;
+
 export default textChatSlice.reducer;
 
 /* Action Creator */
 
-export const { addTextMessage, readAllTextMessages, clearTextMessage } = textChatSlice.actions;
+export const { addTextMessage, readAllTextMessages, reset } = textChatSlice.actions;
 
 /* Selector */
 
 export const selectAllTextMessages = (state) => state.textChat.textMessages;
-
-
 
 export const selectUnreadTextMessageCount = createSelector(
   selectAllTextMessages,

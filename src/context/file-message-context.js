@@ -111,7 +111,7 @@ const fileMessageContainerBuilder = (
 function FileMessageContextProvider({ children }) {
   const [inputFiles, setInputFiles] = useState(null);
   const [isSendingStatusSending, setIsSendingStatusSending] = useState(false);
-  const [messageContainer, setMessageContainer] = useState({});
+  const [messageContainer, setMessageContainer] = useState(null);
   const { authenticatedUserId, authenticatedUserName } = useSelector(selectAuth);
 
   const messageContainerRef = useRef(messageContainer);
@@ -188,9 +188,6 @@ function FileMessageContextProvider({ children }) {
   const updateInputFiles = (files) => {
     setInputFiles(files);
   };
-  const clearAllFileInput = () => {
-    setInputFiles(null);
-  };
   const sendFiles = () => {
     if (inputFiles) {
       WebRTCGroupChatService.sendFileToAllPeer(inputFiles);
@@ -205,9 +202,11 @@ function FileMessageContextProvider({ children }) {
   const clearAllFileReceived = () => {
     WebRTCGroupChatService.clearAllFilesReceived();
   };
-  const clearMessageContext = () => {
+  const resetFileMessageContext = () => {
+    setInputFiles(null);
+    setIsSendingStatusSending(false);
     setMessageContainer(null);
-  }
+  };
 
   const contextValue = {
     messageContainer,
@@ -217,12 +216,12 @@ function FileMessageContextProvider({ children }) {
     readAllMessage,
     inputFiles,
     updateInputFiles,
-    clearAllFileInput,
-    clearMessageContext,
     sendFiles,
     cancelAllFileSending,
     clearAllFileBuffersReceived,
     clearAllFileReceived,
+
+    resetFileMessageContext,
   };
 
   return <FileMessageContext.Provider value={contextValue}>{children}</FileMessageContext.Provider>;
