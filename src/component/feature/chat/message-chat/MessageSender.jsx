@@ -1,12 +1,13 @@
 import React, { useContext, useRef, useState } from "react";
 import styled from "styled-components";
+import { useDispatch } from "react-redux";
 
 import { messageTypeEnum } from "context/message-context";
 import { localizableStringKeyEnum } from "resource/string/localizable-strings";
-import messageSendBubbleImageUrl from "resource/image/send_message_bubble_3x.png";
+import enabledMessageSendBubbleImageUrl from "resource/image/send_message_bubble_enabled_3x.png";
+import disabledMessageSendBubbleImageUrl from "resource/image/send_message_bubble_disabled_3x.png";
 import messageSendPlaneImageUrl from "resource/image/send_message_plane_3x.png";
 import { GlobalContext } from "context/global-context";
-import { useDispatch } from "react-redux";
 import { sendTextMessage } from "store/textChatSlice";
 
 const sharedStyleValues = {
@@ -79,22 +80,7 @@ const FileInputInfoWrapper = styled.div`
   align-items: center;
 `;
 
-const MessageInput = styled.input.attrs((props) => {
-  if (
-    props.inputType === messageInputTypeEnum.MESSAGE_INPUT_TYPE_TEXT &&
-    typeof props.inputTextValue === "string"
-  ) {
-    return {
-      type: "text",
-      value: props.inputTextValue,
-    };
-  } else if (props.inputType === messageInputTypeEnum.MESSAGE_INPUT_TYPE_FILE) {
-    return {
-      type: "file",
-      multiple: true,
-    };
-  }
-})`
+const TextInput = styled.input`
   display: ${(props) => props.display};
   box-sizing: border-box;
   border-color: transparent;
@@ -114,6 +100,10 @@ const MessageInput = styled.input.attrs((props) => {
   }
 `;
 
+const FileInput = styled.input`
+  display: none;
+`;
+
 const MessageSendButton = styled.button`
   box-sizing: border-box;
   width: ${sharedStyleValues.messageSendWidth}px;
@@ -123,23 +113,28 @@ const MessageSendButton = styled.button`
   margin-right: ${sharedStyleValues.messageSendMarginRight}px;
   margin-top: ${sharedStyleValues.messageSendVerticalMargin}px;
   margin-bottom: ${sharedStyleValues.messageSendVerticalMargin}px;
-  background-image: url(${messageSendBubbleImageUrl});
+  background-image: url(${enabledMessageSendBubbleImageUrl});
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
   border-color: transparent;
   background-color: transparent;
+
+  &:disabled {
+    background-image: url(${disabledMessageSendBubbleImageUrl});
+  }
 `;
 
 function MessageSenderToMemo({
   localizedStrings,
+  isFileSendingStatusSending,
   inputFiles,
   sendFiles,
   updateInputFiles,
   visibleMessageType,
 }) {
   const dispatch = useDispatch();
-  const messageInputRef = useRef(null);
+  const fileInputRef = useRef(null);
   const messageSendRef = useRef(null);
   const [inputText, setInputText] = useState("");
 
@@ -149,9 +144,9 @@ function MessageSenderToMemo({
   let fileInputInfoText = undefined;
   let messageInputDisplayment = "block";
   let messageInputType = messageInputTypeEnum.MESSAGE_INPUT_TYPE_TEXT;
+  let messageSendDisabled = false;
 
-  const messageInputTextAligment = "start";
-  const messageInputPlaceholder =
+  const textInputPlaceholder =
     localizedStrings[localizableStringKeyEnum.CHAT_ROOM_MESSAGE_TEXT_INPUT_PLACEHOLDER];
 
   if (visibleMessageType === messageTypeEnum.MESSAGE_TYPE_TEXT) {
@@ -159,6 +154,7 @@ function MessageSenderToMemo({
     fileInputInfoText = undefined;
     messageInputDisplayment = "block";
     messageInputType = messageInputTypeEnum.MESSAGE_INPUT_TYPE_TEXT;
+    messageSendDisabled = false;
   } else if (visibleMessageType === messageTypeEnum.MESSAGE_TYPE_FILE) {
     contentBorderStyle = "dashed";
     fileInputInfoText =
@@ -182,28 +178,24 @@ function MessageSenderToMemo({
           }`;
     messageInputDisplayment = "none";
     messageInputType = messageInputTypeEnum.MESSAGE_INPUT_TYPE_FILE;
+    messageSendDisabled = isFileSendingStatusSending;
   }
 
-  const handleMessageInputChange = (e) => {
-    if (visibleMessageType === messageTypeEnum.MESSAGE_TYPE_TEXT) {
-      const text = e.target.value;
-      setInputText(text);
-    } else if (visibleMessageType === messageTypeEnum.MESSAGE_TYPE_FILE) {
-      const inputFiles = e.target.files;
-      updateInputFiles(inputFiles);
-    }
+  const handleTextInputChange = (e) => {
+    setInputText(e.target.value);
+  };
+
+  const handleFileInputChange = (e) => {
+    updateInputFiles(e.target.files);
   };
 
   const handleMessageInputWrapperClick = () => {
-    if (visibleMessageType !== messageTypeEnum.MESSAGE_TYPE_FILE) {
-      return;
-    }
-    if (messageInputRef.current) {
-      messageInputRef.current.click();
+    if (visibleMessageType === messageTypeEnum.MESSAGE_TYPE_FILE && fileInputRef.current) {
+      fileInputRef.current.click();
     }
   };
 
-  const handleMessageInputKeyDown = (e) => {
+  const handleTextInputKeyDown = (e) => {
     if (e.key !== "Enter") return;
     if (messageSendRef.current) {
       messageSendRef.current.click();
@@ -224,21 +216,26 @@ function MessageSenderToMemo({
       <ContentWrapper borderStyle={contentBorderStyle}>
         <MessageInputWrapper onClick={handleMessageInputWrapperClick}>
           {fileInputInfoText && <FileInputInfoWrapper>{fileInputInfoText}</FileInputInfoWrapper>}
-          <MessageInput
+          <TextInput
+            type='text'
             display={messageInputDisplayment}
-            ref={messageInputRef}
-            placeholder={messageInputPlaceholder}
-            textAligment={messageInputTextAligment}
-            inputType={messageInputType}
-            onChange={handleMessageInputChange}
-            inputTextValue={inputText}
-            onKeyDown={handleMessageInputKeyDown}
+            placeholder={textInputPlaceholder}
+            onChange={handleTextInputChange}
+            value={inputText}
+            onKeyDown={handleTextInputKeyDown}
             autoFocus
+          />
+          <FileInput
+            type='file'
+            multiple
+            ref={fileInputRef}
+            onChange={handleFileInputChange}
           />
         </MessageInputWrapper>
         <MessageSendButton
           ref={messageSendRef}
           onClick={handleMessageSendClick}
+          disabled={messageSendDisabled}
         />
       </ContentWrapper>
     </Wrapper>
@@ -247,6 +244,10 @@ function MessageSenderToMemo({
 
 const arePropsEqual = (prevProps, nextProps) => {
   const isLocalizedStringEqual = Object.is(prevProps.localizedStrings, nextProps.localizedStrings);
+  const isIsFileSendingStatusSendingEqual = Object.is(
+    prevProps.isFileSendingStatusSending,
+    nextProps.isFileSendingStatusSending
+  );
   const isInputFilesEqual = Object.is(prevProps.inputFiles, nextProps.inputFiles);
   const isSendFilesEqual = Object.is(prevProps.sendFiles, nextProps.sendFiles);
   const isUpdateInputFilesEqual = Object.is(prevProps.updateInputFiles, nextProps.updateInputFiles);
@@ -256,6 +257,7 @@ const arePropsEqual = (prevProps, nextProps) => {
   );
   return (
     isLocalizedStringEqual &&
+    isIsFileSendingStatusSendingEqual &&
     isInputFilesEqual &&
     isSendFilesEqual &&
     isUpdateInputFilesEqual &&
@@ -272,6 +274,7 @@ export const MessageSenderPropsBuilder = ({}) => {
 export default function MessageSender({}) {
   const {
     localizedStrings,
+    isFileSendingStatusSending,
     inputFiles,
     sendFiles,
     updateInputFiles,
@@ -280,6 +283,7 @@ export default function MessageSender({}) {
   return (
     <MemorizedMessageSender
       localizedStrings={localizedStrings}
+      isFileSendingStatusSending={isFileSendingStatusSending}
       inputFiles={inputFiles}
       sendFiles={sendFiles}
       updateInputFiles={updateInputFiles}

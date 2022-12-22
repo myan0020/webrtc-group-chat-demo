@@ -21,7 +21,7 @@ button {
   cursor: pointer;
 }
 
-button:active, button:hover {
+button:enabled:hover {
   opacity: 0.7;
 }
 
