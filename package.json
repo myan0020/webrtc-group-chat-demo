@@ -1,7 +1,7 @@
 {
   "name": "webrtc-group-chat-demo",
   "version": "1.0.0",
-  "description": "",
+  "description": "A web application to realize P2P features including video calling, screen sharing, text messaging and file transceiving with low lantency",
   "main": "index.jsx",
   "scripts": {
     "start": "nodemon ./scripts/start.js",

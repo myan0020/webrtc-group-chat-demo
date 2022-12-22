@@ -2,7 +2,6 @@ import React, { useContext } from "react";
 import styled from "styled-components";
 
 import MediaUserTag from "./MediaUserTag";
-import { MediaRenderingContext } from "context/media-rendering-context";
 import cancelImageUrl from "resource/image/cancel_media_presenting_3x.png";
 import { GlobalContext } from "context/global-context";
 

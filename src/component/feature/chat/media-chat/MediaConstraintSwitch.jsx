@@ -11,7 +11,6 @@ import {
   updateVideoCallingInputType,
   videoCallingInputTypeEnum,
 } from "store/mediaChatSlice";
-import { LocalizationContext } from "context/localization-context";
 import { localizableStringKeyEnum } from "resource/string/localizable-strings";
 import { GlobalContext } from "context/global-context";
 

@@ -2,7 +2,6 @@ import React, { useContext } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 
-import { LocalizationContext } from "context/localization-context";
 import { toggleNewRoomPopupVisibility, selectRoom } from "store/roomSlice";
 import { localizableStringKeyEnum } from "resource/string/localizable-strings";
 import { GlobalContext } from "context/global-context";

@@ -1,7 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 import { Navigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 
 import { selectRoom } from "store/roomSlice";
 import MediaController from "./media-chat/MediaController";

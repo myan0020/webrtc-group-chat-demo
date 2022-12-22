@@ -5,7 +5,6 @@ import { Navigate } from "react-router-dom";
 import { RotatingLines } from "react-loader-spinner";
 
 import { requestToSignin, selectAuth, requestStatus } from "store/authSlice";
-import { LocalizationContext } from "context/localization-context";
 import { localizableStringKeyEnum } from "resource/string/localizable-strings";
 import LocalizationSwitch from "../localization/LocalizationSwitch";
 import globalGreyImageUrl from "resource/image/global_grey_3x.png";

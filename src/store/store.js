@@ -1,6 +1,5 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 
-
 import authReducer from "./authSlice";
 import roomReducer, { updateJoinedRoomId, updateRoomList } from "./roomSlice";
 import mediaChatReducer, {
