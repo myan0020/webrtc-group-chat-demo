@@ -1,23 +1,18 @@
-# react-comprehensive-demo
+# webrtc-group-chat-demo
 
-A client-side rendering react application.
-
-## Description
-
-It's a practical and comprehensive demo to learn modern front-end tech.
+A web application to realize P2P features including video calling, screen sharing, text messaging and file transceiving with low lantency
 
 ## Getting Started
 
-### Executing program
-
 #### For development:
-```
-npm start
-```
 
-#### For production build:
+##### Step 1. start a dev server to serve web pages and enable react fast refreshing;
 ```
-npm run build:prod
+npm run start:devServer:expressServerProxying
+```
+##### Step 2. start another server to enable API data fetching and signaling;
+```
+npm run start:expressServer
 ```
 
 ## Authors
