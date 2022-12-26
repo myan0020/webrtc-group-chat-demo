@@ -8,11 +8,16 @@ A web application to realize P2P features including video calling, screen sharin
 
 ##### Step 1. start a dev server to serve web pages and enable react fast refreshing;
 ```
-npm run start:devServer:expressServerProxying
+npm run devServer
 ```
 ##### Step 2. start another server to enable API data fetching and signaling;
 ```
-npm run start:expressServer
+npm run express
+```
+
+##### Alternative (not recommend, because node console does not use colors, which is less readable, and also, the script behind this command is unstable right now), 
+```
+npm start
 ```
 
 ## Authors

@@ -1,10 +1,9 @@
 const path = require("path");
+const fs = require("fs");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const {
   devServerPort,
-  jsonServerPort,
   expressServerPort,
-  jsonServerPaths,
   expressServerPaths,
 } = require("./url");
 
@@ -38,20 +37,21 @@ module.exports = (env, argv) => {
           proxy: [
             env.proxy === "expressServer" && {
               context: expressServerPaths,
-              target: `http://localhost:${expressServerPort}`,
+              target: `https://localhost:${expressServerPort}`,
               changeOrigin: true,
-            },
-            env.proxy === "jsonServer" && {
-              context: jsonServerPaths,
-              target: `http://localhost:${jsonServerPort}`,
-              changeOrigin: true,
+              secure: false,
             },
           ].filter(Boolean),
+
+          https: {
+            key: fs.readFileSync(path.resolve(process.cwd(), "ssl", "key.pem")),
+            cert: fs.readFileSync(path.resolve(process.cwd(), "ssl", "cert.pem")),
+          },
         }
       : {},
 
     entry: {
-      index: "./src/index.jsx",
+      index: "./react_client/index.jsx",
     },
 
     output: {
@@ -74,9 +74,10 @@ module.exports = (env, argv) => {
 
       new HtmlWebpackPlugin({
         title: "React Template",
-        template: "./src/index.html",
+        template: "./react_client/index.html",
         filename: "index.html",
       }),
+
     ].filter(Boolean),
 
     module: {
@@ -104,8 +105,8 @@ module.exports = (env, argv) => {
         {
           // local styles should use modular css
           test: /\.css$/i,
-          exclude: /node_modules|src\/index.css/,
-          include: /src\/component/,
+          exclude: /node_modules|react_client\/index.css/,
+          include: /react_client\/component/,
           use: [
             {
               loader: "style-loader",
@@ -129,7 +130,7 @@ module.exports = (env, argv) => {
           // global styles should not use modular css
           test: /\.css$/i,
           exclude: /node_modules/,
-          include: /src\/index.css/,
+          include: /react_client\/index.css/,
           use: [
             {
               loader: "style-loader",
@@ -147,7 +148,7 @@ module.exports = (env, argv) => {
         {
           test: /\.(png|svg|jpg|jpeg|gif)$/i,
           type: "asset/resource",
-          include: /src\/resource/,
+          include: /react_client\/resource/,
           generator: {
             filename: "images/[hash].[ext]",
           },
@@ -163,18 +164,18 @@ module.exports = (env, argv) => {
     },
     resolve: {
       // aiming to shorten so long module path names when importing these modules inside a << different type >> of module
-      // so, all folders directly under "src" folder should collect modules with different types
+      // so, all folders directly under "react_client" folder should collect modules with different types
       //
-      // eg: importing a React context module (at "./src/context/") into a React feature component module (at "./src/component/")
+      // eg: importing a React context module (at "./react_client/context/") into a React feature component module (at "./react_client/component/")
       //
       alias: {
-        component: path.resolve(process.cwd(), "./src/component/"),
-        context: path.resolve(process.cwd(), "./src/context/"),
-        store: path.resolve(process.cwd(), "./src/store/"),
-        util: path.resolve(process.cwd(), "./src/util/"),
-        service: path.resolve(process.cwd(), "./src/service/"),
-        resource: path.resolve(process.cwd(), "./src/resource/"),
-        hook: path.resolve(process.cwd(), "./src/hook/"),
+        component: path.resolve(process.cwd(), "./react_client/component/"),
+        context: path.resolve(process.cwd(), "./react_client/context/"),
+        store: path.resolve(process.cwd(), "./react_client/store/"),
+        util: path.resolve(process.cwd(), "./react_client/util/"),
+        service: path.resolve(process.cwd(), "./react_client/service/"),
+        resource: path.resolve(process.cwd(), "./react_client/resource/"),
+        hook: path.resolve(process.cwd(), "./react_client/hook/"),
       },
     },
   };
