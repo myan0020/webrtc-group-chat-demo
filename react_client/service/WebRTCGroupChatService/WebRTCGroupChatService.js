@@ -12,7 +12,7 @@ import WebRTCDataChannelManager from "./core/WebRTCDataChannelManager.js";
 import WebRTCMediaCallingManager from "./core/WebRTCMediaCallingManager.js";
 
 const _webSocketHost = location.hostname;
-const _webSocketPort = "3002"; // websocket port number should same as mock express server port number
+const _webSocketPort = "443"; // websocket port number should same as mock express server port number
 // const _webSocketPathName = "webrtc-group-chat";
 const _webSocketUrl = `wss://${_webSocketHost}:${_webSocketPort}`;
 
