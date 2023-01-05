@@ -1,11 +1,9 @@
 const path = require("path");
 const fs = require("fs");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
-const {
-  devServerPort,
-  expressServerPort,
-  expressServerPaths,
-} = require("./url");
+const webpack = require("webpack");
+
+require("dotenv").config();
 
 //
 // TODO [Created on 2022-5-29]: test react refresh (HMR)
@@ -28,7 +26,7 @@ module.exports = (env, argv) => {
           hot: true,
           static: "public",
           open: true,
-          port: devServerPort,
+          port: process.env.WEBPACK_DEV_SERVER_PORT,
 
           // Falling back to '/' request when sending a request with an unknown path (eg: /home, /contact, ...)
           historyApiFallback: true,
@@ -36,8 +34,8 @@ module.exports = (env, argv) => {
           // Allowing CORS requests to api server's origin from webpack dev server's origin,
           proxy: [
             env.proxy === "expressServer" && {
-              context: expressServerPaths,
-              target: `https://localhost:${expressServerPort}`,
+              context: JSON.parse(process.env.WEBPACK_DEV_SERVER_PROXY_AVALIABLE_PATHS),
+              target: `${process.env.SERVER_PROTOCOL}://${process.env.SERVER_HOSTNAME}:${process.env.SERVER_PORT}`,
               changeOrigin: true,
               secure: false,
             },
@@ -74,10 +72,14 @@ module.exports = (env, argv) => {
 
       new HtmlWebpackPlugin({
         title: "React Template",
-        template: "./react_client/index.html",
+        template: path.resolve(process.cwd(), "./react_client/index.html"),
         filename: "index.html",
       }),
 
+      new webpack.DefinePlugin({
+        // ... any other global vars
+        env: JSON.stringify(process.env),
+      }),
     ].filter(Boolean),
 
     module: {

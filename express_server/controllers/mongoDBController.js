@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 const chalk = require("chalk");
-const { expressServerPort } = require("../../config/url");
 
 exports.connectMongDB = () => {
   const mongooseUrl = "mongodb://mingdongshensen:mingdongshensen@localhost/admin";
@@ -13,7 +12,7 @@ exports.connectMongDB = () => {
   mongoose.connection.on("connected", function () {
     console.log(chalk.yellow`express-server's mongodb connection established`);
     // send message through stdout write stream if mongodb connection is established
-    console.log(chalk.yellow`express-server is running on http://localhost:${expressServerPort}`);
+    console.log(chalk.yellow`express-server is running`);
     console.log(chalk.yellow`success`);
   });
   mongoose.connection.on("disconnected", function () {

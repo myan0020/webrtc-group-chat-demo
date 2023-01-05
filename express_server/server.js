@@ -2,23 +2,25 @@ require('dotenv').config()
 
 // const createError = require('http-errors');
 // const cookieParser = require('cookie-parser');
-const http = require("http");
-const https = require("https");
 const path = require("path");
 const fs = require("fs");
-const options = {
-  key: fs.readFileSync(path.resolve(process.cwd(), "ssl", "key.pem")),
-  cert: fs.readFileSync(path.resolve(process.cwd(), "ssl", "cert.pem")),
-};
 const express = require("express");
 const app = express();
-// const server = http.createServer(app);
-const server = https.createServer(options, app);
+
+let server;
+if (process.env.SERVER_PROTOCOL === "http") {
+  server = require("http").createServer(app);
+} else {
+  const options = {
+    key: fs.readFileSync(path.resolve(process.cwd(), "ssl", "key.pem")),
+    cert: fs.readFileSync(path.resolve(process.cwd(), "ssl", "cert.pem")),
+  };
+  server = require("https").createServer(options, app);
+}
+
 const logger = require("morgan");
 const bodyParser = require("body-parser");
-
 const apiRouter = require("./routers/apiRouter");
-const { expressServerPort } = require("../config/url");
 const mongoDBController = require("./controllers/mongoDBController");
 const websocketController = require("./controllers/websocketController");
 const sessionController = require("./controllers/sessionController");
@@ -113,7 +115,7 @@ server.on("upgrade", websocketController.handleUpgrade);
  * start server listening & mongoose connection setup
  */
 
-server.listen(expressServerPort, () => {
+server.listen(process.env.SERVER_PORT, () => {
   if (openMongDBConnection) {
     mongoDBController.connectMongDB();
   }

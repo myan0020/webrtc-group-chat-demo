@@ -11,10 +11,16 @@ import WebRTCPeerConnectionManager from "./core/WebRTCPeerConnectionManager.js";
 import WebRTCDataChannelManager from "./core/WebRTCDataChannelManager.js";
 import WebRTCMediaCallingManager from "./core/WebRTCMediaCallingManager.js";
 
-const _webSocketHost = location.hostname;
-const _webSocketPort = "443"; // websocket port number should same as mock express server port number
-// const _webSocketPathName = "webrtc-group-chat";
-const _webSocketUrl = `wss://${_webSocketHost}:${_webSocketPort}`;
+let _webSocketUrl;
+if (
+  env.WEB_SOCKET_SERVER_PROTOCOL.length > 0 &&
+  env.WEB_SOCKET_SERVER_HOSTNAME.length > 0 &&
+  env.WEB_SOCKET_SERVER_PORT.length > 0
+) {
+  _webSocketUrl = `${env.WEB_SOCKET_SERVER_PROTOCOL}://${env.WEB_SOCKET_SERVER_HOSTNAME}:${env.WEB_SOCKET_SERVER_PORT}`;
+} else {
+  _webSocketUrl = `wss://${location.hostname}:${8888}`;
+}
 
 WebRTCPeerConnectionManager.webSocketUrl = _webSocketUrl;
 WebRTCSignalingManager.webSocketUrl = _webSocketUrl;
