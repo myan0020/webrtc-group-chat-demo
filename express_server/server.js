@@ -7,16 +7,7 @@ const fs = require("fs");
 const express = require("express");
 const app = express();
 
-let server;
-if (process.env.SERVER_PROTOCOL === "http") {
-  server = require("http").createServer(app);
-} else {
-  const options = {
-    key: fs.readFileSync(path.resolve(process.cwd(), "ssl", "key.pem")),
-    cert: fs.readFileSync(path.resolve(process.cwd(), "ssl", "cert.pem")),
-  };
-  server = require("https").createServer(options, app);
-}
+const server = require("http").createServer(app);
 
 const logger = require("morgan");
 const bodyParser = require("body-parser");
@@ -115,7 +106,7 @@ server.on("upgrade", websocketController.handleUpgrade);
  * start server listening & mongoose connection setup
  */
 
-server.listen(process.env.SERVER_PORT, () => {
+server.listen(process.env.EXPRESS_SERVER_PORT, () => {
   if (openMongDBConnection) {
     mongoDBController.connectMongDB();
   }

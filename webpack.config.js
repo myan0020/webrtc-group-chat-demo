@@ -35,16 +35,11 @@ module.exports = (env, argv) => {
           proxy: [
             env.proxy === "expressServer" && {
               context: JSON.parse(process.env.WEBPACK_DEV_SERVER_PROXY_AVALIABLE_PATHS),
-              target: `${process.env.SERVER_PROTOCOL}://${process.env.SERVER_HOSTNAME}:${process.env.SERVER_PORT}`,
+              target: `http://localhost:${process.env.EXPRESS_SERVER_PORT}`,
               changeOrigin: true,
               secure: false,
             },
           ].filter(Boolean),
-
-          https: {
-            key: fs.readFileSync(path.resolve(process.cwd(), "ssl", "key.pem")),
-            cert: fs.readFileSync(path.resolve(process.cwd(), "ssl", "cert.pem")),
-          },
         }
       : {},
 

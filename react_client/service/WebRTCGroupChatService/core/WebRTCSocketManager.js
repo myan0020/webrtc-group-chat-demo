@@ -34,6 +34,11 @@ function _createSocket(_socketUrl, openCallback, closeCallback) {
         openCallback(event);
       }
     });
+    socket.addEventListener("error", function (event) {
+      console.log(
+        "SocketService: client side heared websocket onerror event", event
+      );
+    });
     socket.addEventListener("close", function (event) {
       console.log(
         "SocketService: client side heared websocket onclose event"

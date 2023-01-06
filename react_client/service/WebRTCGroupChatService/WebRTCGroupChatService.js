@@ -12,14 +12,10 @@ import WebRTCDataChannelManager from "./core/WebRTCDataChannelManager.js";
 import WebRTCMediaCallingManager from "./core/WebRTCMediaCallingManager.js";
 
 let _webSocketUrl;
-if (
-  env.WEB_SOCKET_SERVER_PROTOCOL.length > 0 &&
-  env.WEB_SOCKET_SERVER_HOSTNAME.length > 0 &&
-  env.WEB_SOCKET_SERVER_PORT.length > 0
-) {
-  _webSocketUrl = `${env.WEB_SOCKET_SERVER_PROTOCOL}://${env.WEB_SOCKET_SERVER_HOSTNAME}:${env.WEB_SOCKET_SERVER_PORT}`;
+if (process.env.NODE_ENV === "production") {
+  _webSocketUrl = `wss://${location.hostname}`
 } else {
-  _webSocketUrl = `wss://${location.hostname}:${8888}`;
+  _webSocketUrl = `ws://${location.hostname}:${env.EXPRESS_SERVER_PORT}`
 }
 
 WebRTCPeerConnectionManager.webSocketUrl = _webSocketUrl;
