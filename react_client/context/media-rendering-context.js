@@ -42,7 +42,7 @@ function MediaRenderingContextProvider({ children }) {
 
   // config media rendering data source list
   const mediaRenderingDataSourceList = [
-    { userId: authenticatedUserId, userName: "You", mediaStream: localMediaStream },
+    { userId: authenticatedUserId, userName: "You", mediaStream: localMediaStream, muted: true },
   ];
   if (
     peerUserMediaStreamMap &&
@@ -51,7 +51,7 @@ function MediaRenderingContextProvider({ children }) {
   ) {
     Array.from(peerUserMediaStreamMap.peerMap.entries()).forEach(([peerId, mediaStream]) => {
       const peerName = WebRTCGroupChatService.getPeerNameById(peerId)
-      mediaRenderingDataSourceList.push({ userId: peerId, userName: peerName, mediaStream });
+      mediaRenderingDataSourceList.push({ userId: peerId, userName: peerName, mediaStream, muted: false });
     });
   }
   if (mediaRenderingDataSourceList.length < numberOfInitialVisibleMediaMembers) {

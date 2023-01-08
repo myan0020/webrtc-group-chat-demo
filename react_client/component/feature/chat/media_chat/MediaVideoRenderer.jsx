@@ -61,6 +61,7 @@ function MediaVideoRendererToMemo(props) {
   const userId = props.userId;
   const userName = props.userName;
   const mediaStream = props.mediaStream;
+  const muted = props.muted;
   const isCancellable = props.isCancellable;
   const isVideoClickable = props.isVideoClickable;
   const updatePresenterId = props.updatePresenterId;
@@ -90,6 +91,7 @@ function MediaVideoRendererToMemo(props) {
             addMediaStreamToVideoDOM(videoDOM, mediaStream);
           }}
           autoPlay
+          muted={muted}
           isClickable={isVideoClickable}
           onClick={handleVideoClick}
         ></Video>
@@ -106,6 +108,7 @@ const arePropsEqual = (prevProps, nextProps) => {
   const isUserIdEqual = Object.is(prevProps.userId, nextProps.userId);
   const isUserNameEqual = Object.is(prevProps.userName, nextProps.userName);
   const isMediaStreamEqual = Object.is(prevProps.mediaStream, nextProps.mediaStream);
+  const isMutedEqual = Object.is(prevProps.muted, nextProps.muted);
   const isIsCancellableEqual = Object.is(prevProps.isCancellable, nextProps.isCancellable);
   const isIsVideoClickableEqual = Object.is(prevProps.isVideoClickable, nextProps.isVideoClickable);
   const isUpdatePresenterIdEqual = Object.is(
@@ -116,6 +119,7 @@ const arePropsEqual = (prevProps, nextProps) => {
     isUserIdEqual &&
     isUserNameEqual &&
     isMediaStreamEqual &&
+    isMutedEqual &&
     isIsCancellableEqual &&
     isIsVideoClickableEqual &&
     isUpdatePresenterIdEqual
@@ -128,6 +132,7 @@ export default function MediaVideoRenderer(props) {
   const userId = props.userId;
   const userName = props.userName;
   const mediaStream = props.mediaStream;
+  const muted = props.muted;
   const isCancellable = props.isCancellable;
   const isVideoClickable = props.isVideoClickable;
 
@@ -138,6 +143,7 @@ export default function MediaVideoRenderer(props) {
       userId={userId}
       userName={userName}
       mediaStream={mediaStream}
+      muted={muted}
       isCancellable={isCancellable}
       isVideoClickable={isVideoClickable}
       updatePresenterId={updatePresenterId}
