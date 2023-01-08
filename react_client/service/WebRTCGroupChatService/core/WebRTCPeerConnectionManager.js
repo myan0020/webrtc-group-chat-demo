@@ -5,19 +5,10 @@ import WebRTCSocketManager from "./WebRTCSocketManager.js";
 let _webSocketUrl;
 let _peerConnectionConfig = {
   iceServers: [
-    { urls: ["stun:ntk-turn-2.xirsys.com"] },
     {
-      username:
-        "PpsOixjIvGfVGKvClS6m3_yc_yt-RPmOD-ONP9GbJX3XQMErjEBK2OWVEMRIOcuEAAAAAGMgcvttaW5nZG9uZ3NoZW5zZW4=",
-      credential: "ec2e791a-335c-11ed-b98b-0242ac120004",
-      urls: [
-        "turn:ntk-turn-2.xirsys.com:80?transport=udp",
-        "turn:ntk-turn-2.xirsys.com:3478?transport=udp",
-        "turn:ntk-turn-2.xirsys.com:80?transport=tcp",
-        "turn:ntk-turn-2.xirsys.com:3478?transport=tcp",
-        "turns:ntk-turn-2.xirsys.com:443?transport=tcp",
-        "turns:ntk-turn-2.xirsys.com:5349?transport=tcp",
-      ],
+      username: "mingdongshensen",
+      credential: "123456",
+      urls: "turn:81.68.228.106:3478",
     },
   ],
 };
@@ -74,7 +65,12 @@ const _peerConnectionMap = {
 };
 
 function _handleNewPeerArivalInternally(payload) {
-  const { userId: peerId, userName: peerName, userContainer: peerContainer, isPolite: isNewPeerPolite } = payload;
+  const {
+    userId: peerId,
+    userName: peerName,
+    userContainer: peerContainer,
+    isPolite: isNewPeerPolite,
+  } = payload;
   const peerIdValid = peerId && peerId.length > 0;
   const peerContainerValid = peerContainer && Object.keys(peerContainer).length > 0;
 
