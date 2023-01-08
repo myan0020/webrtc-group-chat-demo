@@ -6,7 +6,7 @@
   "scripts": {
     "start": "nodemon ./scripts/start.js",
     "express": "nodemon ./express_server/server.js",
-    "devServer": "webpack serve --env proxy=expressServer --mode=development --config=webpack.config.js",
+    "dev": "webpack serve --env proxy=expressServer --mode=development --config=webpack.config.js",
     "build": "webpack --mode=production --config=webpack.config.js"
   },
   "keywords": [],

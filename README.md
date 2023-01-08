@@ -2,24 +2,45 @@
 
 A web application to realize P2P features including video calling, screen sharing, text messaging and file transceiving with low lantency
 
-## Getting Started
+## Prerequisites:
 
-#### For development:
+* avaliable TURN server urls
 
-##### Step 1. start a dev server to serve web pages and enable react fast refreshing;
+## For development:
+
+Step 1. clone this project into your local machine and move into it;
 ```
-npm run devServer
+$ git clone https://github.com/myan0020/webrtc-group-chat-demo.git
+$ cd webrtc-group-chat-demo
 ```
-##### Step 2. start another server to enable API data fetching and signaling;
+Step 2. start a webpack dev server to serve web pages and enable react fast refreshing;
 ```
-npm run express
+$ npm run dev
+```
+Step 3. start another server to enable data fetching and WebRTC peer connection establishment related signaling;
+```
+$ npm run express
+```
+Alternative (warning! not recommended, because node console does not use colors, which is less readable, and also, the script behind this command is unstable right now), 
+```
+$ npm start
 ```
 
-##### Alternative (not recommend, because node console does not use colors, which is less readable, and also, the script behind this command is unstable right now), 
+## For production:
+
+Step 1. clone this project into your cloud directory and move into it;
 ```
-npm start
+$ git clone https://github.com/myan0020/webrtc-group-chat-demo.git
+$ cd webrtc-group-chat-demo
+```
+Step 2. use webpack compiling to create a directory named "build" which is directly under the project root directory (*** if you fail at this step, please run webpack compiling locally and then upload the generated "build" directory directly under the project root directory in the cloud);
+```
+$ npm run build
+```
+Step 3. start a server to serve this "build" directory as well as to enable API data fetching and WebRTC peer connection establishment related signaling;
+```
+$ npm run express
 ```
 
 ## Authors
-
 MingDongShenSen
