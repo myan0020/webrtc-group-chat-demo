@@ -66,7 +66,7 @@ module.exports = (env, argv) => {
       //
 
       new HtmlWebpackPlugin({
-        title: "React Template",
+        title: "webrtc-group-chat-demo",
         template: path.resolve(process.cwd(), "./react_client/index.html"),
         filename: "index.html",
       }),
