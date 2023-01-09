@@ -5,7 +5,7 @@ import styled from "styled-components";
 
 import { requestToSignout, selectAuth } from "store/authSlice";
 import NavigationBar from "../navigation/NavigationBar";
-import useBeforeunload from "hook/use-beforeUnload";
+import useBeforeunload from "hook/use-beforeunload";
 import { leaveRoom } from "store/roomSlice";
 
 const Wrapper = styled.div`
