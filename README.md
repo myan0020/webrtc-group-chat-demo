@@ -41,7 +41,7 @@ $ npm install
 ```
 **Step 2**: use webpack compiling to update the directory named "build" which is directly under the project root directory
 
-*( If you fail at this step, please try to compile inside your local machine and then upload the generated "build" directory directly under the project root directory in your cloud environment ); *
+*( If you fail at this step, please try to compile inside your local machine and then upload the generated "build" directory directly under the project root directory in your cloud environment );*
 
 ```
 $ npm run build
