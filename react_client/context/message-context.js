@@ -1,8 +1,8 @@
 import React, { useContext, useState } from "react";
 import { useSelector } from "react-redux";
 
-import { selectAllTextMessages } from "../store/textChatSlice";
-import { FileMessageContext, FileMessageContextProvider } from "./file-message-context";
+import { selectAllTextMessages } from "store/textChatSlice";
+import { FileMessageContext, FileMessageContextProvider } from "context/file-message-context";
 
 export const messageTypeEnum = {
   MESSAGE_TYPE_TEXT: 1,

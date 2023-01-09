@@ -4,13 +4,13 @@ import { Provider as ReduxProvider } from "react-redux";
 // import ReactDOM from 'react-dom';
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-import store from "./store/store";
+import store from "store/store";
 import "./index.css";
-import RequireAuth from "./component/feature/require_auth/RequireAuth";
-import Signin from "./component/feature/sign_in/Signin";
-import RoomList from "./component/feature/room_list/RoomList";
-import ChatRoom from "./component/feature/chat/ChatRoom";
-import { GlobalContextProvider } from "./context/global-context";
+import RequireAuth from "component/feature/require_auth/RequireAuth";
+import Signin from "component/feature/sign_in/Signin";
+import RoomList from "component/feature/room_list/RoomList";
+import ChatRoom from "component/feature/chat/ChatRoom";
+import { GlobalContextProvider } from "context/global-context";
 
 /**
  * Displaying the current environment ('development' or 'production')

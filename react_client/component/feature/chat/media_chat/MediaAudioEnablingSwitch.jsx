@@ -6,10 +6,10 @@ import SingleTabSwitch, {
   singleTabSwitchOptionBuilder,
   singleTabSwitchPropsBuilder,
 } from "../../../generic/switch/SingleTabSwitch";
-import { selectMediaChat, toggleAudioEnabling } from "../../../../store/mediaChatSlice";
-import enableAudioUrl from "../../../../resource/image/enable_audio_3x.png";
-import disableAudioUrl from "../../../../resource/image/disable_audio_3x.png";
-import audioEnablingDisabledUrl from "../../../../resource/image/audio_enabling_disabled_3x.png";
+import { selectMediaChat, toggleAudioEnabling } from "store/mediaChatSlice";
+import enableAudioUrl from "resource/image/enable_audio_3x.png";
+import disableAudioUrl from "resource/image/disable_audio_3x.png";
+import audioEnablingDisabledUrl from "resource/image/audio_enabling_disabled_3x.png";
 
 const Wrapper = styled.div`
   width: 55px;

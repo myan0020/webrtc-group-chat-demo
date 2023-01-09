@@ -2,7 +2,7 @@ import React from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
 
-import { selectMediaChat } from "../../../../store/mediaChatSlice";
+import { selectMediaChat } from "store/mediaChatSlice";
 import MediaConstraintCheckBox from "./MediaConstraintCheckBox";
 import MediaConstraintSwitch from "./MediaConstraintSwitch";
 

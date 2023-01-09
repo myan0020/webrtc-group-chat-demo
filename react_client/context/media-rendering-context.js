@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 
-import WebRTCGroupChatService from "../service/WebRTCGroupChatService/WebRTCGroupChatService";
-import { selectAuth } from "../store/authSlice";
+import WebRTCGroupChatService from "service/WebRTCGroupChatService/WebRTCGroupChatService";
+import { selectAuth } from "store/authSlice";
 
 const MediaRenderingContext = React.createContext();
 MediaRenderingContext.displayName = "MediaRenderingContext";

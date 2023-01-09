@@ -1,12 +1,12 @@
 import React, { useContext } from "react";
 import styled from "styled-components";
 
-import { localeTypeEnum, localizableStringKeyEnum } from "../../../resource/string/localizable-strings";
+import { localeTypeEnum, localizableStringKeyEnum } from "resource/string/localizable-strings";
 import DropdownSwitch, {
   dropdownSwitchOptionBuilder,
   dropdownSwitchPropsBuilder,
 } from "../../generic/switch/DropdownSwitch";
-import { GlobalContext } from "../../../context/global-context";
+import { GlobalContext } from "context/global-context";
 
 const Wrapper = styled.div`
   width: 100%;

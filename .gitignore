@@ -7,13 +7,8 @@ node_modules
 # [Ignore dist folder]
 #
 # It's a webpack building output. 
-# Please run 'npm run build-dev' for development or 'npm run build-prod' for production to create.
-#
-# the reason of uncommenting this "build" directory: 
-# only in Tencent Cloud environment (instead of local machines), 
-# webpack will fail to compile in both development and production mode.
-# So, this "build" directory needs to be uploaded using git
-# build
+# Please run 'npm run build' for production to create.
+build
 
 # [Ignore .DS_Store]
 #

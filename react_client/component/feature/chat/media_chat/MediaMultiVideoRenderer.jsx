@@ -2,7 +2,7 @@ import React, { useContext } from "react";
 import styled from "styled-components";
 
 import MediaVideoRenderer from "./MediaVideoRenderer";
-import { GlobalContext } from "../../../../context/global-context";
+import { GlobalContext } from "context/global-context";
 
 const sharedStyleValues = {
   bottomSpaceHeight: 14,

@@ -1,4 +1,4 @@
-import { localizableStringKeyEnum } from "../resource/string/localizable-strings"
+import { localizableStringKeyEnum } from "resource/string/localizable-strings"
 
 function timeSince(timestamp, withLocalizedStrings) {
   const localizedYearsAgoText = withLocalizedStrings[localizableStringKeyEnum.YEARS_AGO];

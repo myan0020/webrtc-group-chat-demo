@@ -1,7 +1,7 @@
 import React, { useContext } from "react";
 import styled from "styled-components";
 
-import { timeSince } from "../../../../util/time-since";
+import { timeSince } from "util/time-since";
 
 const sharedStyleValues = {
   contentHorizontalMargin: 10,

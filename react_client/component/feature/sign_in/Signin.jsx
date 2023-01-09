@@ -4,11 +4,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { Navigate } from "react-router-dom";
 import { RotatingLines } from "react-loader-spinner";
 
-import { requestToSignin, selectAuth, requestStatus, verifyAuthentication } from "../../../store/authSlice";
-import { localizableStringKeyEnum } from "../../../resource/string/localizable-strings";
+import { requestToSignin, selectAuth, requestStatus, verifyAuthentication } from "store/authSlice";
+import { localizableStringKeyEnum } from "resource/string/localizable-strings";
 import LocalizationSwitch from "../localization/LocalizationSwitch";
-import globalGreyImageUrl from "../../../resource/image/global_grey_3x.png";
-import { GlobalContext } from "../../../context/global-context";
+import globalGreyImageUrl from "resource/image/global_grey_3x.png";
+import { GlobalContext } from "context/global-context";
 
 const sharedStyleValues = {
   formInputVerticalMargin: 40,

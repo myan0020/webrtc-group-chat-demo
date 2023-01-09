@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
-import WebRTCGroupChatService from "../service/WebRTCGroupChatService/WebRTCGroupChatService";
+import WebRTCGroupChatService from "service/WebRTCGroupChatService/WebRTCGroupChatService";
 
 export const videoCallingInputTypeEnum = {
   VIDEO_CALLING_INPUT_TYPE_NONE: "none",

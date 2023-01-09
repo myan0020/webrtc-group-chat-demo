@@ -3,10 +3,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { Navigate, Outlet } from "react-router-dom";
 import styled from "styled-components";
 
-import { requestToSignout, selectAuth } from "../../../store/authSlice";
+import { requestToSignout, selectAuth } from "store/authSlice";
 import NavigationBar from "../navigation/NavigationBar";
-import useBeforeunload from "hook/use-beforeunload";
-import { leaveRoom } from "../../../store/roomSlice";
+import useBeforeunload from "hook/use-beforeUnload";
+import { leaveRoom } from "store/roomSlice";
 
 const Wrapper = styled.div`
   width: 100%;

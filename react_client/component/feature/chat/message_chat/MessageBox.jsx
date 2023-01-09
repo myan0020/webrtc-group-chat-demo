@@ -4,9 +4,9 @@ import { useDispatch, useSelector } from "react-redux";
 
 import TextMessage, { textMessagePropsBuilder } from "./TextMessage";
 import FileMessage, { fileMessagePropsBuilder } from "./FileMessage";
-import { messageTypeEnum } from "../../../../context/message-context";
-import { GlobalContext } from "../../../../context/global-context";
-import { readAllTextMessages, selectUnreadTextMessageCount } from "../../../../store/textChatSlice";
+import { messageTypeEnum } from "context/message-context";
+import { GlobalContext } from "context/global-context";
+import { readAllTextMessages, selectUnreadTextMessageCount } from "store/textChatSlice";
 
 const sharedStyleValues = {
   // autoScrollingThredhold: 300,
