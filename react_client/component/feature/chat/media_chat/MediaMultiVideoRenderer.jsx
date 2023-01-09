@@ -98,7 +98,7 @@ function MediaMultiVideoRendererToMemo({
                 userId={mediaRenderingDataSource.userId}
                 userName={mediaRenderingDataSource.userName}
                 mediaStream={mediaRenderingDataSource.mediaStream}
-                muted={mediaRenderingDataSource.muted}
+                volume={mediaRenderingDataSource.volume}
               />
             </EqualityTypeMemberRendererContainer>
           );
@@ -119,7 +119,7 @@ function MediaMultiVideoRendererToMemo({
                 userId={mediaRenderingDataSource.userId}
                 userName={mediaRenderingDataSource.userName}
                 mediaStream={mediaRenderingDataSource.mediaStream}
-                muted={mediaRenderingDataSource.muted}
+                volume={mediaRenderingDataSource.volume}
                 isVideoClickable={true}
               />
             </PresentationTypeMemberRendererContainer>

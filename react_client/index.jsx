@@ -15,14 +15,13 @@ import { GlobalContextProvider } from "context/global-context";
 /**
  * Displaying the current environment ('development' or 'production')
  */
+
 console.log(`[In ${process.env.NODE_ENV} mode]`);
-if (process.env.NODE_ENV === "production") {
-  console.log = () => {};
-}
 
 /**
  * The root component to render in the application
  */
+
 function App() {
   return (
     <ReduxProvider store={store}>
