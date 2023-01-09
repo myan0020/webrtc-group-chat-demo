@@ -2,11 +2,11 @@ import React, { useContext } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 
-import { selectRoom, leaveRoom } from "store/roomSlice";
-import goBackImageUrl from "resource/image/go_back_3x.png";
-import { GlobalContext } from "context/global-context";
-import { reset as resetTextChatSlice } from "store/textChatSlice";
-import { reset as resetMediaChatSlice } from "store/mediaChatSlice";
+import { selectRoom, leaveRoom } from "../../../store/roomSlice";
+import goBackImageUrl from "../../../resource/image/go_back_3x.png";
+import { GlobalContext } from "../../../context/global-context";
+import { reset as resetTextChatSlice } from "../../../store/textChatSlice";
+import { reset as resetMediaChatSlice } from "../../../store/mediaChatSlice";
 
 const Wrapper = styled.button`
   width: 100%;

@@ -2,15 +2,15 @@ import React, { useContext } from "react";
 import styled from "styled-components";
 import { useSelector } from "react-redux";
 
-import { messageTypeEnum } from "context/message-context";
-import { localizableStringKeyEnum } from "resource/string/localizable-strings";
+import { messageTypeEnum } from "../../../../context/message-context";
+import { localizableStringKeyEnum } from "../../../../resource/string/localizable-strings";
 import MultiTabSwitch, {
   multiTabSwitchPropsBuilder,
   multiTabSwitchTabBuilder,
 } from "../../../generic/switch/MultiTabSwitch";
-import badgeBackgroundImageUrl from "resource/image/badge_3x.png";
-import { GlobalContext } from "context/global-context";
-import { selectUnreadTextMessageCount } from "store/textChatSlice";
+import badgeBackgroundImageUrl from "../../../../resource/image/badge_3x.png";
+import { GlobalContext } from "../../../../context/global-context";
+import { selectUnreadTextMessageCount } from "../../../../store/textChatSlice";
 
 const sharedStyleValues = {
   switchPaddingTop: 10,

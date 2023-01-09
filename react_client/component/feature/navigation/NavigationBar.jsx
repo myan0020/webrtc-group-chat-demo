@@ -2,14 +2,14 @@ import React, { useContext } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
 
-import { selectAuth } from "store/authSlice";
+import { selectAuth } from "../../../store/authSlice";
 import GoBackNavigator from "./GoBackNavigator";
 import NewRoomNavigator from "./NewRoomNavigator";
 import SignoutNavigator from "./SignoutNavigator";
-import { localizableStringKeyEnum } from "resource/string/localizable-strings";
+import { localizableStringKeyEnum } from "../../../resource/string/localizable-strings";
 import LocalizationSwitch from "../localization/LocalizationSwitch";
-import globalWhiteImageUrl from "resource/image/gobal_white_3x.png";
-import { GlobalContext } from "context/global-context";
+import globalWhiteImageUrl from "../../../resource/image/gobal_white_3x.png";
+import { GlobalContext } from "../../../context/global-context";
 
 const sharedStyleValues = {
   rightContainerInnerHorizontalMargin: 8,

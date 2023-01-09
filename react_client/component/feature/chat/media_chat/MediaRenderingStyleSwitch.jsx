@@ -5,11 +5,11 @@ import MultiTabSwitch, {
   multiTabSwitchTabBuilder,
   multiTabSwitchPropsBuilder,
 } from "../../../generic/switch/MultiTabSwitch";
-import presentationEnabledUrl from "resource/image/presentation_enabled_3x.png";
-import presentationDisabledUrl from "resource/image/presentation_disabled_3x.png";
-import equalityEnabledUrl from "resource/image/equality_enabled_3x.png";
-import equalityDisabledUrl from "resource/image/equality_disabled_3x.png";
-import { GlobalContext } from "context/global-context";
+import presentationEnabledUrl from "../../../../resource/image/presentation_enabled_3x.png";
+import presentationDisabledUrl from "../../../../resource/image/presentation_disabled_3x.png";
+import equalityEnabledUrl from "../../../../resource/image/equality_enabled_3x.png";
+import equalityDisabledUrl from "../../../../resource/image/equality_disabled_3x.png";
+import { GlobalContext } from "../../../../context/global-context";
 
 const Wrapper = styled.div`
   width: 80px;

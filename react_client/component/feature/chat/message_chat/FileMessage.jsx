@@ -1,11 +1,11 @@
 import React from "react";
 import styled from "styled-components";
 
-import { formatBytes } from "util/format-bytes";
-import { timeSince } from "util/time-since";
-import fileIconUrl from "resource/image/dowload_new_file_3x.png";
-import cancellingAvaliableImageUrl from "resource/image/cancel_single_download_3x.png";
-import exportingAvaliableImageUrl from "resource/image/download_completed_3x.png";
+import { formatBytes } from "../../../../util/format-bytes";
+import { timeSince } from "../../../../util/time-since";
+import fileIconUrl from "../../../../resource/image/dowload_new_file_3x.png";
+import cancellingAvaliableImageUrl from "../../../../resource/image/cancel_single_download_3x.png";
+import exportingAvaliableImageUrl from "../../../../resource/image/download_completed_3x.png";
 
 const sharedStyleValues = {
   contentHorizontalMargin: 10,

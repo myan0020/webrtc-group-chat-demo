@@ -2,12 +2,12 @@ import React, { useContext } from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
 
-import { requestToSignout } from "store/authSlice";
-import { localizableStringKeyEnum } from "resource/string/localizable-strings";
-import { leaveRoom } from "store/roomSlice";
-import { GlobalContext } from "context/global-context";
-import { reset as resetTextChatSlice } from "store/textChatSlice";
-import { reset as resetMediaChatSlice } from "store/mediaChatSlice";
+import { requestToSignout } from "../../../store/authSlice";
+import { localizableStringKeyEnum } from "../../../resource/string/localizable-strings";
+import { leaveRoom } from "../../../store/roomSlice";
+import { GlobalContext } from "../../../context/global-context";
+import { reset as resetTextChatSlice } from "../../../store/textChatSlice";
+import { reset as resetMediaChatSlice } from "../../../store/mediaChatSlice";
 
 const SignoutNavigatorWrapper = styled.div`
   width: 100%;

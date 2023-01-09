@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-import { localeTypeEnum, localizableStrings } from "resource/string/localizable-strings";
+import { localeTypeEnum, localizableStrings } from "../resource/string/localizable-strings";
 
 const LocalizationContext = React.createContext();
 LocalizationContext.displayName = "LocalizationContext";

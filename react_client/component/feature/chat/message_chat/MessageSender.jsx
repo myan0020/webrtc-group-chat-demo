@@ -2,13 +2,13 @@ import React, { useContext, useRef, useState } from "react";
 import styled from "styled-components";
 import { useDispatch } from "react-redux";
 
-import { messageTypeEnum } from "context/message-context";
-import { localizableStringKeyEnum } from "resource/string/localizable-strings";
-import enabledMessageSendBubbleImageUrl from "resource/image/send_message_bubble_enabled_3x.png";
-import disabledMessageSendBubbleImageUrl from "resource/image/send_message_bubble_disabled_3x.png";
-import messageSendPlaneImageUrl from "resource/image/send_message_plane_3x.png";
-import { GlobalContext } from "context/global-context";
-import { sendTextMessage } from "store/textChatSlice";
+import { messageTypeEnum } from "../../../../context/message-context";
+import { localizableStringKeyEnum } from "../../../../resource/string/localizable-strings";
+import enabledMessageSendBubbleImageUrl from "../../../../resource/image/send_message_bubble_enabled_3x.png";
+import disabledMessageSendBubbleImageUrl from "../../../../resource/image/send_message_bubble_disabled_3x.png";
+import messageSendPlaneImageUrl from "../../../../resource/image/send_message_plane_3x.png";
+import { GlobalContext } from "../../../../context/global-context";
+import { sendTextMessage } from "../../../../store/textChatSlice";
 
 const sharedStyleValues = {
   contentHeight: 48,

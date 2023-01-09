@@ -5,10 +5,10 @@ import { useDispatch, useSelector } from "react-redux";
 import SingleTabSwitch, {
   singleTabSwitchOptionBuilder,
   singleTabSwitchPropsBuilder,
-} from "component/generic/switch/SingleTabSwitch";
-import { startCalling, selectMediaChat, hangUpCalling } from "store/mediaChatSlice";
-import startCallingUrl from "resource/image/start_calling_3x.png";
-import hangUpCallingUrl from "resource/image/hang_up_calling_3x.png";
+} from "../../../generic/switch/SingleTabSwitch";
+import { startCalling, selectMediaChat, hangUpCalling } from "../../../../store/mediaChatSlice";
+import startCallingUrl from "../../../../resource/image/start_calling_3x.png";
+import hangUpCallingUrl from "../../../../resource/image/hang_up_calling_3x.png";
 
 const Wrapper = styled.div`
   width: 590px;

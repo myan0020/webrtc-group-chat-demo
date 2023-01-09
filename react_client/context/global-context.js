@@ -1,11 +1,11 @@
 import React, { useContext } from "react";
 
-import { LocalizationContext, LocalizationContextProvider } from "context/localization-context";
+import { LocalizationContext, LocalizationContextProvider } from "./localization-context";
 import {
   MediaRenderingContext,
   MediaRenderingContextProvider,
-} from "context/media-rendering-context";
-import { MessageContext, MessageContextProvider } from "context/message-context";
+} from "./media-rendering-context";
+import { MessageContext, MessageContextProvider } from "./message-context";
 
 const GlobalContext = React.createContext();
 GlobalContext.displayName = "GlobalContext";

@@ -159,22 +159,22 @@ module.exports = (env, argv) => {
         },
       ],
     },
-    resolve: {
-      // aiming to shorten so long module path names when importing these modules inside a << different type >> of module
-      // so, all folders directly under "react_client" folder should collect modules with different types
-      //
-      // eg: importing a React context module (at "./react_client/context/") into a React feature component module (at "./react_client/component/")
-      //
-      alias: {
-        component: path.resolve(process.cwd(), "./react_client/component/"),
-        context: path.resolve(process.cwd(), "./react_client/context/"),
-        store: path.resolve(process.cwd(), "./react_client/store/"),
-        util: path.resolve(process.cwd(), "./react_client/util/"),
-        service: path.resolve(process.cwd(), "./react_client/service/"),
-        resource: path.resolve(process.cwd(), "./react_client/resource/"),
-        hook: path.resolve(process.cwd(), "./react_client/hook/"),
-      },
-    },
+    // resolve: {
+    //   // aiming to shorten so long module path names when importing these modules inside a << different type >> of module
+    //   // so, all folders directly under "react_client" folder should collect modules with different types
+    //   //
+    //   // eg: importing a React context module (at "./react_client/context/") into a React feature component module (at "./react_client/component/")
+    //   //
+    //   alias: {
+    //     component: path.resolve(process.cwd(), "./react_client/component/"),
+    //     context: path.resolve(process.cwd(), "./react_client/context/"),
+    //     store: path.resolve(process.cwd(), "./react_client/store/"),
+    //     util: path.resolve(process.cwd(), "./react_client/util/"),
+    //     service: path.resolve(process.cwd(), "./react_client/service/"),
+    //     resource: path.resolve(process.cwd(), "./react_client/resource/"),
+    //     hook: path.resolve(process.cwd(), "./react_client/hook/"),
+    //   },
+    // },
   };
 
   return config;

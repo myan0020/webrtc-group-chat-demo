@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSelector, createSlice } from "@reduxjs/toolkit";
 
-import WebRTCGroupChatService from "service/WebRTCGroupChatService/WebRTCGroupChatService";
+import WebRTCGroupChatService from "../service/WebRTCGroupChatService/WebRTCGroupChatService";
 import { selectAuth } from "./authSlice";
 
 export const requestStatus = {
