@@ -159,7 +159,7 @@ module.exports = (env, argv) => {
         },
       ],
     },
-    
+
     // resolve: {
     //   // aiming to shorten so long module path names when importing these modules inside a << different type >> of module
     //   // so, all folders directly under "react_client" folder should collect modules with different types
@@ -176,6 +176,7 @@ module.exports = (env, argv) => {
     //     hook: path.resolve(process.cwd(), "./react_client/hook/"),
     //   },
     // },
+    
   };
 
   return config;
