@@ -83,6 +83,7 @@ function MediaMultiVideoRendererToMemo({
           userId={mediaRenderingDataSourceForPresenter.userId}
           userName={mediaRenderingDataSourceForPresenter.userName}
           mediaStream={mediaRenderingDataSourceForPresenter.mediaStream}
+          volume={mediaRenderingDataSourceForPresenter.volume}
           isCancellable={mediaRenderingDataSourceForPresenter.mediaStream !== undefined}
         />
       </PresenterRendererContainer>
