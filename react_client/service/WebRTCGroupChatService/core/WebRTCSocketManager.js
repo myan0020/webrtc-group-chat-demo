@@ -35,13 +35,11 @@ function _createSocket(_socketUrl, openCallback, closeCallback) {
       }
     });
     socket.addEventListener("error", function (event) {
-      console.debug(
-        "SocketService: client side heared websocket onerror event", event
-      );
+      console.debug("SocketService: client side heared websocket onerror event", event);
     });
     socket.addEventListener("close", function (event) {
       console.debug(
-        `SocketService: client side heared websocket onclose event, whose close code is ${event.code}`
+        `SocketService: client side heared websocket onclose event (code: ${event.code}; reason: ${event.reason})`
       );
       // external usage
       if (closeCallback) {
