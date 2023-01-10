@@ -72,8 +72,8 @@ const handleWebSocketConnection = (ws, request, websocketMap) => {
   ws.on("message", (data) => {
     handleWebSocketMessage(ws, sessionUserName, sessionUserId, data);
   });
-  ws.on("close", () => {
-    handleWebSocketClose(ws, sessionUserName, sessionUserId);
+  ws.on("close", (code, reason) => {
+    handleWebSocketClose(code, reason, ws, sessionUserName, sessionUserId);
   });
 };
 
@@ -111,9 +111,13 @@ const handleWebSocketMessage = (ws, sessionUserName, sessionUserId, data) => {
   }
 };
 
-const handleWebSocketClose = (ws, sessionUserName, sessionUserId) => {
+const handleWebSocketClose = (code, reason, ws, sessionUserName, sessionUserId) => {
   console.log(
-    `[WebSocket] heard ${chalk.green`close`} event ${chalk.blue`from`} the user named ${chalk.green`${sessionUserName}`}`
+    `[WebSocket] heard ${chalk.green`close`} event (code: ${chalk.green`${
+      code ? code : "unknown close code"
+    }`}, reason: ${chalk.green`${
+      reason ? reason : "unknown close reason"
+    }`}) ${chalk.blue`from`} the user named ${chalk.green`${sessionUserName}`}`
   );
   websocketMap.delete(sessionUserId);
 };

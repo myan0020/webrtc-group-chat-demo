@@ -41,7 +41,7 @@ function _createSocket(_socketUrl, openCallback, closeCallback) {
     });
     socket.addEventListener("close", function (event) {
       console.debug(
-        "SocketService: client side heared websocket onclose event"
+        `SocketService: client side heared websocket onclose event, whose close code is ${event.code}`
       );
       // external usage
       if (closeCallback) {
