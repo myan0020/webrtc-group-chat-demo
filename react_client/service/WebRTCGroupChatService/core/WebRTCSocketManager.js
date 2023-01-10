@@ -58,7 +58,7 @@ function _destroySocket(_socketUrl) {
   if (!socket) {
     return;
   }
-  socket.close();
+  // socket.close();
   _socketMap.delete(_socketUrl);
 }
 

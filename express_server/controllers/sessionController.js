@@ -4,9 +4,9 @@ const sessionParser = session({
   secret: "$eCuRiTy",
   resave: false,
 });
-const sessionMap = new Map();
+const websocketMap = new Map();
 const authenticatedUserIds = new Set();
 
 exports.sessionParser = sessionParser;
-exports.sessionMap = sessionMap;
+exports.websocketMap = websocketMap;
 exports.authenticatedUserIds = authenticatedUserIds;

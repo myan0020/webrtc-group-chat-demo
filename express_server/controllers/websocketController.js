@@ -1,6 +1,6 @@
 const WebSocket = require("ws");
 const { v4: uuidv4 } = require("uuid");
-const sessionMap = require("./sessionController").sessionMap;
+const websocketMap = require("./sessionController").websocketMap;
 const rooms = require("./groupChatRoomController").rooms;
 const userRoomMap = require("./groupChatRoomController").userRoomMap;
 const GroupChatRoom = require("../models/groupChatRoom");
@@ -14,15 +14,15 @@ const chalk = require("chalk");
 
 exports.handleUpgrade = (request, socket, head) => {
   const pathname = request.url;
-  
-  if (pathname === '/') {
+
+  if (pathname === "/") {
     sessionParser(request, {}, function next() {
       if (!authenticatedUserIds.has(request.session.userId)) {
         socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
         socket.destroy();
         return;
       }
-  
+
       const wss = createWebSocket(request.session);
       wss.handleUpgrade(request, socket, head, function (ws) {
         console.log(`[WebSocket] will emit a ${chalk.yellow`connection`} event `);
@@ -40,14 +40,15 @@ const createWebSocket = (session) => {
 
   const wss = new WebSocket.Server({ noServer: true });
   wss.on("connection", function (ws, request) {
-    handleWebSocketConnection(ws, request, sessionMap);
+    handleWebSocketConnection(ws, request, websocketMap);
   });
 
   return wss;
 };
 
-const handleWebSocketConnection = (ws, request, sessionMap) => {
-  if (!request || !request.session || !sessionMap) {
+const handleWebSocketConnection = (ws, request, websocketMap) => {
+  if (!request || !request.session || !websocketMap) {
+    console.log(`[WebSocket] ${chalk.red`unexpected connection`} event`);
     return;
   }
 
@@ -64,7 +65,7 @@ const handleWebSocketConnection = (ws, request, sessionMap) => {
     return;
   }
 
-  sessionMap.set(sessionUserId, ws);
+  websocketMap.set(sessionUserId, ws);
   ws.userId = sessionUserId;
   ws.username = sessionUserName;
 
@@ -98,7 +99,7 @@ const handleWebSocketMessage = (ws, sessionUserName, sessionUserId, data) => {
       break;
     }
     case signalTypeEnum.LEAVE_ROOM: {
-      handleLeaveRoom(ws, sessionUserName, sessionUserId, payload);
+      handleLeaveRoom(ws, sessionUserId);
       break;
     }
     case signalTypeEnum.WEBRTC_NEW_PASSTHROUGH: {
@@ -114,7 +115,7 @@ const handleWebSocketClose = (ws, sessionUserName, sessionUserId) => {
   console.log(
     `[WebSocket] heard ${chalk.green`close`} event ${chalk.blue`from`} the user named ${chalk.green`${sessionUserName}`}`
   );
-  sessionMap.delete(sessionUserId);
+  websocketMap.delete(sessionUserId);
 };
 
 const handleCreateRoom = (ws, sessionUserName, sessionUserId, payload) => {
@@ -126,7 +127,7 @@ const handleCreateRoom = (ws, sessionUserName, sessionUserId, payload) => {
   // When a new GroupChatRoom is created,
   // broadcast the latest rooms info to each client
   //
-  sessionMap.forEach((ws, userId) => {
+  websocketMap.forEach((ws, userId) => {
     if (ws.readyState === WebSocket.OPEN) {
       sendSerializedSignalThroughWebsocket(ws, signalTypeEnum.UPDATE_ROOMS, {
         rooms: rooms,
@@ -166,7 +167,7 @@ const handleJoinRoom = (ws, sessionUserName, sessionUserId, payload) => {
   // notify others who are already in the joined room
   joinedRoom.participants.forEach(({ name: participantUserName }, participantUserId) => {
     if (participantUserId !== sessionUserId) {
-      const othersWebsocket = sessionMap.get(participantUserId);
+      const othersWebsocket = websocketMap.get(participantUserId);
       sendSerializedSignalThroughWebsocket(othersWebsocket, signalTypeEnum.WEBRTC_NEW_PEER_ARIVAL, {
         userId: sessionUserId,
         userName: sessionUserName,
@@ -182,7 +183,7 @@ const handleJoinRoom = (ws, sessionUserName, sessionUserId, payload) => {
   });
 };
 
-const handleLeaveRoom = (ws, sessionUserName, sessionUserId, payload) => {
+const handleLeaveRoom = (ws, sessionUserId) => {
   const leftRoomId = userRoomMap.get(sessionUserId);
   const leftRoom = rooms[leftRoomId];
 
@@ -200,7 +201,7 @@ const handleLeaveRoom = (ws, sessionUserName, sessionUserId, payload) => {
 
   leftRoom.participants.forEach((_, participantUserId) => {
     if (participantUserId !== sessionUserId) {
-      const otherWebsocket = sessionMap.get(participantUserId);
+      const otherWebsocket = websocketMap.get(participantUserId);
       sendSerializedSignalThroughWebsocket(otherWebsocket, signalTypeEnum.WEBRTC_NEW_PEER_LEAVE, {
         userId: sessionUserId,
       });
@@ -213,7 +214,7 @@ const handleLeaveRoom = (ws, sessionUserName, sessionUserId, payload) => {
   //
   if (leftRoom.participants.size === 0) {
     delete rooms[leftRoomId];
-    sessionMap.forEach((ws, _) => {
+    websocketMap.forEach((ws, _) => {
       if (ws.readyState === WebSocket.OPEN) {
         sendSerializedSignalThroughWebsocket(ws, signalTypeEnum.UPDATE_ROOMS, {
           rooms: rooms,
@@ -225,7 +226,7 @@ const handleLeaveRoom = (ws, sessionUserName, sessionUserId, payload) => {
 
 const handleWebRTCNewPassthrough = (ws, sessionUserName, sessionUserId, payload) => {
   if (!userRoomMap.has(sessionUserId) || !payload.to) return;
-  const websocketToPassThrough = sessionMap.get(payload.to);
+  const websocketToPassThrough = websocketMap.get(payload.to);
   const { sdp, iceCandidate } = payload;
 
   if ((sdp || iceCandidate) && websocketToPassThrough) {
@@ -252,3 +253,5 @@ const handleWebRTCNewPassthrough = (ws, sessionUserName, sessionUserId, payload)
     );
   }
 };
+
+exports.handleLeaveRoom = handleLeaveRoom;

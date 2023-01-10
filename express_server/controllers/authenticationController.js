@@ -1,7 +1,7 @@
 const chalk = require("chalk");
 const { v4: uuidv4 } = require("uuid");
 const sessionController = require("./sessionController");
-const sessionMap = sessionController.sessionMap;
+const websocketMap = sessionController.websocketMap;
 const authenticatedUserIds = sessionController.authenticatedUserIds;
 const signaling = require("../signaling/signaling");
 const sendSignalThroughResponse = signaling.sendThroughResponse;
@@ -9,6 +9,7 @@ const signalTypeEnum = signaling.typeEnum;
 const groupChatRoomController = require("./groupChatRoomController");
 const rooms = groupChatRoomController.rooms;
 const userRoomMap = groupChatRoomController.userRoomMap;
+const websocketController = require("./websocketController");
 
 exports.handleLogin = (req, res, next) => {
   // regenerate the session, which is good practice to help
@@ -36,8 +37,8 @@ exports.handleLogin = (req, res, next) => {
 };
 
 exports.handleLogout = (req, res, next) => {
-  const userId = req.session.userId;
-  const username = req.session.username;
+  const sessionUserId = req.session.userId;
+  const sessionUserName = req.session.username;
 
   // TODO:
   //
@@ -47,35 +48,50 @@ exports.handleLogout = (req, res, next) => {
   //
 
   console.log(
-    `[WebSocket] before logout action been executed, the connections' userIds are [${chalk.yellow`logString`}]`
+    `[HTTP] before logout action been executed, avaliable session are [${chalk.yellow`...`}]`
   );
-  for (let sessionUserId of Array.from(sessionMap.keys())) {
-    console.log(`[Connection-UserId] ${chalk.yellow`${sessionUserId}`}`);
+  for (let userId of Array.from(websocketMap.keys())) {
+    console.log(`[${chalk.yellow`${userId}`}]`);
   }
 
-  if (userId && userId.length > 0 && userRoomMap.get(userId)) {
-    const joinedRoomId = userRoomMap.get(userId);
-    rooms[joinedRoomId].deleteParticipant(userId);
-  }
+  // if (sessionUserId && sessionUserId.length > 0 && userRoomMap.get(sessionUserId)) {
+    // const joinedRoomId = userRoomMap.get(userId);
+    // rooms[joinedRoomId].deleteParticipant(userId);
+
+    // const leftRoomId = userRoomMap.get(sessionUserId);
+    // const leftRoom = rooms[leftRoomId];
+    // userRoomMap.delete(sessionUserId);
+    // leftRoom.deleteParticipant(sessionUserId);
+
+
+
+  // }
 
   // TODO:
   //
-  // Priority Level: Middle
+  // Priority Level: Low
   //
-  // this 'session.destroy' method is used incorrectly,
-  // and it will cause all sessions to be deleted
-  // after the first session.destroy being called
+  // this 'session.destroy' method may be used incorrectly,
+  // because 'req.session' regards each browser(eg: chrome, firefox ...) as one unique user,
+  // as a result, when you log out inside a browser, no matter how many tabs you has opened inside that browser,
+  // 'req.session' will think that they(tabs) log out
   //
 
   req.session.destroy(function () {
-    if (userId && userId.length > 0) {
-      authenticatedUserIds.delete(userId);
-      const ws = sessionMap.get(userId);
-      if (ws) {
-        console.log(`[WebSocket] will close connection to the user named ${username}`);
+    if (sessionUserId && sessionUserId.length > 0) {
+      authenticatedUserIds.delete(sessionUserId);
+
+      if (websocketMap.has(sessionUserId)) {
+        const ws = websocketMap.get(sessionUserId);
+        websocketController.handleLeaveRoom(ws, sessionUserId);
+
+        console.log(
+          `[WebSocket] will perform ${chalk.green`an active connection close`} to the user named ${sessionUserName}`
+        );
         ws.close();
+
+        websocketMap.delete(sessionUserId);
       }
-      sessionMap.delete(userId);
     }
 
     sendSignalThroughResponse(res, signalTypeEnum.LOG_OUT_SUCCESS);
