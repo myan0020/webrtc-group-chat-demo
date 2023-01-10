@@ -12,7 +12,7 @@ let _handleChatMessageReceived;
 
 function _sendChatMessageToAllPeer(peerConnectionMap, message) {
   if (!peerConnectionMap) {
-    console.log(
+    console.debug(
       `WebRTCGroupChatController: unexpected peerConnectionMap during chat messaging`,
       peerConnectionMap
     );
@@ -20,7 +20,7 @@ function _sendChatMessageToAllPeer(peerConnectionMap, message) {
   }
 
   if (!message || typeof message !== "string" || message.length === 0) {
-    console.log(`WebRTCGroupChatController: unexpected message during chat messaging`, message);
+    console.debug(`WebRTCGroupChatController: unexpected message during chat messaging`, message);
     return;
   }
 
@@ -31,7 +31,7 @@ function _sendChatMessageToAllPeer(peerConnectionMap, message) {
 
 function _sendChatMessageToPeer(message, peerId, peerConnection) {
   if (!message || typeof message !== "string" || message.length === 0) {
-    console.log(`WebRTCGroupChatController: unexpected message during chat messaging`, message);
+    console.debug(`WebRTCGroupChatController: unexpected message during chat messaging`, message);
     return;
   }
 
@@ -65,7 +65,7 @@ function _sendChatMessageToPeer(message, peerId, peerConnection) {
 function _handleSenderChatMessagingChannelOpen(peerId, dataChannel, message) {
   if (dataChannel.readyState === "open") {
     dataChannel.send(message);
-    console.log(
+    console.debug(
       `WebRTCGroupChatController: sent a chat starting message(${message}) to a peer(${peerId})`
     );
   }
@@ -74,13 +74,13 @@ function _handleSenderChatMessagingChannelOpen(peerId, dataChannel, message) {
 function _handleChatMessagingChannelMessage({ event, peerId, peerName, label }) {
   const { data: message } = event;
   if (typeof message !== "string") {
-    console.log(`WebRTCGroupChatController: unexpected 'data' type, it is not type of 'string'`);
+    console.debug(`WebRTCGroupChatController: unexpected 'data' type, it is not type of 'string'`);
     return;
   }
   if (_handleChatMessageReceived) {
     _handleChatMessageReceived({ peerId, peerName, text: message });
   }
-  console.log(
+  console.debug(
     `WebRTCGroupChatController: the '${
       label ? label : "unknown"
     }' labeled data channel's 'onmessage' fired with a chat message(${message})`
@@ -117,7 +117,7 @@ function _createDataChannelMap() {
 
     dataChannelMap.peerMap.set(peerId, peerSpecificObject);
 
-    console.log(
+    console.debug(
       `WebRTCGroupChatController: a new channel of`,
       channel,
       `with a label (${label})`,
@@ -174,7 +174,7 @@ const _sendFileTaskQueueMap = {
 // ( sender: file meta data && file buffer )
 function _sendFileToAllPeer(peerConnectionMap, files) {
   if (!peerConnectionMap) {
-    console.log(
+    console.debug(
       `WebRTCGroupChatController: unexpected peerConnectionMap during file meta data sending`,
       peerConnectionMap
     );
@@ -182,7 +182,7 @@ function _sendFileToAllPeer(peerConnectionMap, files) {
   }
 
   if (!files) {
-    console.log(`WebRTCGroupChatController: unexpected files during file meta data sending`, files);
+    console.debug(`WebRTCGroupChatController: unexpected files during file meta data sending`, files);
     return;
   }
 
@@ -198,7 +198,7 @@ function _sendFileToAllPeer(peerConnectionMap, files) {
 // ( sender: file meta data && file buffer )
 async function _sendFileToPeer(files, peerId, peerConnection) {
   if (!files) {
-    console.log(
+    console.debug(
       `WebRTCGroupChatController: unexpected files ( ${files} ) during file meta data sending`
     );
     return;
@@ -244,7 +244,7 @@ function _handleSenderFileMetaDataChannelOpen(
   if (fileMetaDataChannel.readyState === "open") {
     fileMetaDataChannel.send(JSON.stringify(preparedFileHashToMetaData));
 
-    console.log(
+    console.debug(
       `WebRTCGroupChatController: sent a file hash to meta data object of`,
       preparedFileHashToMetaData,
       `to a peer(${peerId})`
@@ -265,7 +265,7 @@ function _handleSenderFileMetaDataChannelMessage({
     fileMetaDataChannel.close();
     _sendFileBufferToPeer(fileHashToFile, peerId, peerConnection);
 
-    console.log(
+    console.debug(
       `WebRTCGroupChatController: received ACK of file meta data from a peer (${peerId}), close this file meta data channel and starting to send file buffers`,
       fileHashToFile
     );
@@ -275,7 +275,7 @@ function _handleSenderFileMetaDataChannelMessage({
 // ( sender: file buffer )
 async function _sendFileBufferToPeer(fileHashToFile, peerId, peerConnection) {
   if (!fileHashToFile) {
-    console.log(
+    console.debug(
       `WebRTCGroupChatController: unfound file hash to file object during file buffer sending`
     );
     return;
@@ -283,7 +283,7 @@ async function _sendFileBufferToPeer(fileHashToFile, peerId, peerConnection) {
 
   const checkingPassed = WebRTCFileDataStore.checkIfSendingMetaDataPrepared(fileHashToFile);
   if (!checkingPassed) {
-    console.log(
+    console.debug(
       `WebRTCGroupChatController: unexpected file hash to file of`,
       fileHashToFile,
       `because it cannot pass file hash to meta data preparation checking during file buffer sending`
@@ -345,20 +345,20 @@ function _createAndStoreDataChannel({
   onCloseHandler,
 }) {
   if (!peerId || peerId.length === 0 || !label || label.length === 0) {
-    console.log(
+    console.debug(
       `WebRTCGroupChatController: unexpected peerId( ${peerId} ) / label( ${label} ) during data channel creating`
     );
     return;
   }
   if (!peerConnection) {
-    console.log(
+    console.debug(
       `WebRTCGroupChatController: unfound peer connection of peer( ${peerId} ) during data channel creating`
     );
     return;
   }
 
   const dataChannel = peerConnection.createDataChannel(label);
-  console.log(
+  console.debug(
     `WebRTCGroupChatController: a new data channel of label(${label}) for a peer(${peerId}) has been created`,
     `and max message size is (${
       peerConnection.sctp ? peerConnection.sctp.maxMessageSize : "unknown"
@@ -463,7 +463,7 @@ function _cancelSenderFileSendingToAllPeer(fileHash) {
       channel.send(CANCEL_OF_FILE_BUFFER_MESSAGE);
       channel.close();
 
-      console.log(
+      console.debug(
         `WebRTCGroupChatController: sent a sending cancelled signal to a receiver peer (${peerId}), and closed the data channel`
       );
     }
@@ -473,7 +473,7 @@ function _cancelSenderFileSendingToAllPeer(fileHash) {
 // ( sender: file buffer )
 function _handleSenderFileBufferChannelOpen(event, peerId, dataChannel) {
   dataChannel.send(START_OF_FILE_BUFFER_MESSAGE);
-  console.log(
+  console.debug(
     `WebRTCGroupChatController: sent a starting signal to a receiver peer (${peerId}), so that the receiver can prepare to receive file buffer`
   );
 }
@@ -483,7 +483,7 @@ function _handleChannelClose(event, peerId) {
   const { target: dataChannel } = event;
   dataChannel.close();
 
-  console.log(
+  console.debug(
     `WebRTCGroupChatController: the (${dataChannel.label}) label channel for a peer (${peerId}) heard close event and has been closed`
   );
 }
@@ -495,7 +495,7 @@ function _handlePeerConnectionDataChannelEvent(event, peerId, peerName) {
     channel: { label },
   } = event;
 
-  console.log(
+  console.debug(
     `WebRTCGroupChatController: fired 'ondatachannel' with a channel of label (${label})`
   );
 
@@ -525,13 +525,13 @@ function _handleReceiverChannelFileMetaDataMessage(event, peerId, label) {
   const { data } = event;
 
   if (typeof data !== "string") {
-    console.log(`WebRTCGroupChatController: unexpected 'data' type, it is not type of 'string'`);
+    console.debug(`WebRTCGroupChatController: unexpected 'data' type, it is not type of 'string'`);
     return;
   }
 
   const fileHashToMetaData = JSON.parse(data);
 
-  console.log(
+  console.debug(
     `WebRTCGroupChatController: the '${
       label ? label : "unknown"
     }' labeled data channel's 'onmessage' fired with a file hash to meta data object of `,
@@ -558,21 +558,21 @@ async function _handleReceiverChannelFileBufferMessage(event, peerId) {
   const fileHash = label.split("-")?.[1];
 
   if (data === START_OF_FILE_BUFFER_MESSAGE) {
-    console.log(
+    console.debug(
       `WebRTCGroupChatController: received a signal of starting to send new file (${fileHash}) buffer from a peer(${peerId})`
     );
 
     WebRTCFileDataStore.deleteReceivingCancelled(peerId, fileHash);
     WebRTCFileDataStore.resetReceivingBuffer(peerId, fileHash);
   } else if (data === CANCEL_OF_FILE_BUFFER_MESSAGE) {
-    console.log(
+    console.debug(
       `WebRTCGroupChatController: received a cancel signal of a file (${fileHash}) buffer receiving process from a sender peer(${peerId})`
     );
 
     WebRTCFileDataStore.setReceivingCancelled(peerId, fileHash, true);
     WebRTCFileDataStore.resetReceivingBuffer(peerId, fileHash);
   } else {
-    console.log(
+    console.debug(
       `WebRTCGroupChatController: received a new file (${fileHash}) buffer of`,
       data,
       `from a sender peer(${peerId})`

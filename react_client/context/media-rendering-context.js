@@ -31,7 +31,7 @@ function MediaRenderingContextProvider({ children }) {
       setLocalMediaStream(mediaStream);
     });
     WebRTCGroupChatService.onPeerMediaStreamMapChanged((peerUserMediaStreamMap) => {
-      console.log(
+      console.debug(
         `onPeerMediaStreamMapChanged called with peer stream map size ${
           peerUserMediaStreamMap ? peerUserMediaStreamMap.size() : "unknown"
         }`

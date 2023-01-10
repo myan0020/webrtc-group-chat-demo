@@ -63,7 +63,7 @@ function FileTransceiver(props) {
           return;
         }
         if (file instanceof File === false) {
-          console.log(
+          console.debug(
             `FileTransceiver: unexpected type of params received from file Export handler`,
             file
           );

@@ -49,7 +49,7 @@ function _createReusableTransceiversMap(isAudio) {
 function _deletePeerTransceiver(peerId) {
   _reusableAudioTransceiversMap.delete(peerId);
   _reusableVideoTransceiversMap.delete(peerId);
-  console.log(
+  console.debug(
     `WebRTCGroupChatController: both reusable audio && video transceivers for a peer( ${peerId} ) deleted`
   );
 }
@@ -57,7 +57,7 @@ function _deletePeerTransceiver(peerId) {
 function _clearAllPeerTransceivers() {
   _reusableAudioTransceiversMap.clear();
   _reusableVideoTransceiversMap.clear();
-  console.log(`WebRTCGroupChatController: all reusable audio && video transceivers cleared`);
+  console.debug(`WebRTCGroupChatController: all reusable audio && video transceivers cleared`);
 }
 
 function _pauseAllTransceiverSending() {
@@ -111,7 +111,7 @@ const _peerUserMediaStreamMap = {
       const prevSize = this.peerMap.size;
       this.peerMap.delete(peerId);
       const curSize = this.peerMap.size;
-      console.log(
+      console.debug(
         `WebRTCGroupChatController: _peerUserMediaStreamMap delete executed, and its size changed from ${prevSize} to ${curSize}`
       );
     } else {
@@ -140,7 +140,7 @@ const _peerUserMediaStreamMap = {
     newMediaStream.addTrack(track);
     this.peerMap.set(peerId, newMediaStream);
 
-    console.log(
+    console.debug(
       `WebRTCGroupChatController: _peerUserMediaStreamMap size changed from ${prevSize} to ${this.peerMap.size}`
     );
 
@@ -152,11 +152,11 @@ const _peerUserMediaStreamMap = {
 
 function _handlePeerConnectionTrackEvent(event, peerId) {
   if (!(event.target instanceof RTCPeerConnection) || !event.track) {
-    console.log(`WebRTCGroupChatController: unexpected event target / track during 'ontrack'`);
+    console.debug(`WebRTCGroupChatController: unexpected event target / track during 'ontrack'`);
     return;
   }
   if (!peerId) {
-    console.log(`WebRTCGroupChatController: unexpected peerId ( ${peerId} ) during 'ontrack'`);
+    console.debug(`WebRTCGroupChatController: unexpected peerId ( ${peerId} ) during 'ontrack'`);
     return;
   }
 
@@ -185,13 +185,13 @@ function _setupTrackEventHandlers(track, peerId, peerConnection) {
 function _handleIncomingTrackUnmute(event, peerId) {
   const track = event.target;
   _peerUserMediaStreamMap.setTrack(peerId, track);
-  console.log(`WebRTCGroupChatController: unmute a track for a peer( ${peerId} )`, track);
+  console.debug(`WebRTCGroupChatController: unmute a track for a peer( ${peerId} )`, track);
 }
 
 function _handleIncomingTrackMute(event, peerId) {
   const track = event.target;
   _peerUserMediaStreamMap.deleteTrack(peerId, track.kind);
-  console.log(
+  console.debug(
     `WebRTCGroupChatController: muted a track for a peer( ${peerId}, kind(${track.kind}) )`,
     track
   );
@@ -200,7 +200,7 @@ function _handleIncomingTrackMute(event, peerId) {
 function _handleIncomingTrackEnded(event, peerId) {
   const track = event.target;
   _peerUserMediaStreamMap.deleteTrack(peerId, track.kind);
-  console.log(`WebRTCGroupChatController: ended a track for a peer( ${peerId} )`, track);
+  console.debug(`WebRTCGroupChatController: ended a track for a peer( ${peerId} )`, track);
 }
 
 /**
@@ -285,7 +285,7 @@ async function _createLocalMediaStream(
   }
 
   promise = promise.then((localUserMediaStream) => {
-    console.log(`WebRTCGroupChatController: local media stream created`);
+    console.debug(`WebRTCGroupChatController: local media stream created`);
 
     _localMediaStream = localUserMediaStream;
     if (_handleLocalUserMediaStreamChanged) {
@@ -309,7 +309,7 @@ async function _createLocalMediaStream(
 
 function _addLocalMediaStream(peerConnectionMap) {
   if (!_localMediaStream) {
-    console.log(
+    console.debug(
       `WebRTCGroupChatController: unexpected _localMediaStream of ${_localMediaStream} when adding local media stream to peer connection (peerId: ${peerId})`
     );
     return;
@@ -525,7 +525,7 @@ let _handleCallingStateChanged;
 
 function _startCalling(peerConnectionMap) {
   if (!_localMediaStreamPromise) {
-    console.log(`unexpected empty '_localMediaStreamPromise' during starting calling`);
+    console.debug(`unexpected empty '_localMediaStreamPromise' during starting calling`);
     return;
   }
 
@@ -535,7 +535,7 @@ function _startCalling(peerConnectionMap) {
       _addLocalMediaStream(peerConnectionMap);
     },
     (error) => {
-      console.log(
+      console.debug(
         `WebRTCGroupChatController: met error of ${error} when creating local media stream`
       );
       _changeCallingState(false);
@@ -557,7 +557,7 @@ function _hangUpCalling(isLeavingRoom) {
 }
 
 function _changeCallingState(changeToCalling) {
-  console.log(`WebRTCGroupChatController: change calling state to toCalling of ${changeToCalling}`);
+  console.debug(`WebRTCGroupChatController: change calling state to toCalling of ${changeToCalling}`);
 
   // change state to no calling
   if (!changeToCalling) {

@@ -16,7 +16,7 @@ import { GlobalContextProvider } from "context/global-context";
  * Displaying the current environment ('development' or 'production')
  */
 
-console.log(`[In ${process.env.NODE_ENV} mode]`);
+console.debug(`[In ${process.env.NODE_ENV} mode]`);
 
 /**
  * The root component to render in the application

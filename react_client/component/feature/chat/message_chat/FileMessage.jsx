@@ -236,7 +236,7 @@ export const fileMessagePropsBuilder = (isParentVisible, messageItem, localizedS
           return;
         }
         if (file instanceof File === false) {
-          console.log(
+          console.debug(
             `FileTransceiver: unexpected type of params received from file Export handler`,
             file
           );

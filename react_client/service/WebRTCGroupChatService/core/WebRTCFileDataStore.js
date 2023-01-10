@@ -26,7 +26,7 @@ let _handleReceivingRelatedDataChange;
 const _sendingRelatedData = {
   hashToConcatData: {},
   updateSendingStatus(isSendingStatusSending) {
-    console.log(
+    console.debug(
       `FileDataStore: the sending related data is updated to`,
       this,
       `by sending status of isSending(${isSendingStatusSending})`
@@ -48,7 +48,7 @@ const _sendingRelatedData = {
     });
 
     // unified log
-    console.log(
+    console.debug(
       `FileDataStore: the sending related data is updated to`,
       this,
       `with`,
@@ -92,7 +92,7 @@ const _receivingRelatedData = {
     });
 
     // unified log
-    console.log(
+    console.debug(
       `FileDataStore: the receiving related data updated to`,
       this,
       `with`,
@@ -136,7 +136,7 @@ function _prepareSendingMetaData(hashToFile) {
     };
   }
 
-  console.log(
+  console.debug(
     `FileDataStore: new sending file hash to file meta data object of`,
     _sendingHashToMetaData,
     `prepared`
@@ -155,7 +155,7 @@ function _checkIfSendingMetaDataPrepared(hashToFile) {
     }
   }
 
-  console.log(
+  console.debug(
     `FileDataStore: the current sending file hash to file meta data object of`,
     _sendingHashToMetaData,
     `is ${checkingPassed ? "" : "not"} prepared for file buffer sending`
@@ -242,7 +242,7 @@ function _createFileProgressMap(isSending) {
       hashToProgress[fileHash] = progress;
       this.peerMap.set(peerId, hashToProgress);
 
-      console.log(
+      console.debug(
         `FileDataStore: setting progress (${progress}) of a file (${fileHash}) for a peer (${peerId}) completed`
       );
 
@@ -267,7 +267,7 @@ function _createFileProgressMap(isSending) {
       const curProgress = this.getProgress(peerId, fileHash) + additionalProgress;
       this.setProgress(peerId, fileHash, curProgress);
 
-      console.log(
+      console.debug(
         `FileDataStore: adding the additional progress ( ${additionalProgress} ) for a given file hash ( ${fileHash} ) to a given peer ( ${peerId} ) completed`
       );
 
@@ -277,7 +277,7 @@ function _createFileProgressMap(isSending) {
     // reset the transceiving progress of a file for a specific peer to '0'
     resetProgress: function (peerId, fileHash) {
       this.setProgress(peerId, fileHash, 0);
-      console.log(
+      console.debug(
         `FileDataStore: resetting progress for a given file hash (${fileHash}) to a given peer (${peerId}) completed`
       );
     },
@@ -311,7 +311,7 @@ function _createFileProgressMap(isSending) {
 
 function _sendingHashToMinProgress(sendingHashToMetaData, sendingProgressMap) {
   if (!sendingHashToMetaData) {
-    console.log(`FileDataStore: sendingHashToMetaData not exist`);
+    console.debug(`FileDataStore: sendingHashToMetaData not exist`);
     return null;
   }
 
@@ -320,7 +320,7 @@ function _sendingHashToMinProgress(sendingHashToMetaData, sendingProgressMap) {
     const minProgress = sendingProgressMap.calculateMinProgress(fileHash);
     sendingHashToMinProgress[fileHash] = minProgress;
   });
-  console.log(
+  console.debug(
     `FileDataStore: when computing completed, the entire sending hash to sending min progress is`,
     sendingHashToMinProgress
   );
@@ -340,7 +340,7 @@ function _isSendingStatusSending(
   let isSending = false;
 
   if (!sendingHashToMinProgress || !sendingHashToMetaData) {
-    console.log(`FileDataStore: unexpected params when getting sending status`);
+    console.debug(`FileDataStore: unexpected params when getting sending status`);
     return isSending;
   }
 
@@ -353,7 +353,7 @@ function _isSendingStatusSending(
     }
     const minProgress = sendingHashToMinProgress[fileHash];
     if (!metaData || typeof metaData.size !== "number" || typeof minProgress !== "number") {
-      console.log(
+      console.debug(
         `FileDataStore: unexpected sending meta data for a file hash (${fileHash}) in a sending file hash to meta data of`,
         sendingHashToMetaData
       );
@@ -408,7 +408,7 @@ const _receivingHashToMetaDataMap = {
 
     this.peerMap.set(peerId, hashToMetaData);
 
-    console.log(
+    console.debug(
       `FileDataStore: overwritting with a receiving file hash to meta data object of`,
       hashToMetaData,
       `for a peer (${peerId}) completed`
@@ -425,7 +425,7 @@ const _receivingHashToMetaDataMap = {
     };
     this.overwriteHashToMetaData(peerId, merged);
 
-    console.log(
+    console.debug(
       `FileDataStore: merging a file hash to meta data object`,
       hashToMetaData,
       `into the current one(if exist) for a peer (${peerId}) has been completed`
@@ -447,7 +447,7 @@ const _receivingHashToMetaDataMap = {
 
 function _addReceivingBuffer(peerId, fileHash, buffer) {
   if (_receivingCancelledMap.getCancelled(peerId, fileHash)) {
-    console.log(
+    console.debug(
       `FileDataStore: a receiving buffer of a file (${fileHash}) for a peer (${peerId}) cancelled during adding it`
     );
     return;
@@ -549,12 +549,12 @@ const _IDBDatabaseVersion = 1;
 
 function _openIDB() {
   _IDBDatabasePromise = new Promise((resolve, reject) => {
-    console.log(`FileDataStore: indexedDB is opening ...`);
+    console.debug(`FileDataStore: indexedDB is opening ...`);
 
     const request = indexedDB.open(_IDBDatabaseName, _IDBDatabaseVersion);
 
     request.onupgradeneeded = function (event) {
-      console.log(`FileDataStore: indexedDB is upgrading ...`);
+      console.debug(`FileDataStore: indexedDB is upgrading ...`);
       switch (event.oldVersion) {
         case 0:
           // version 0 means that the client had no database, perform initialization
@@ -586,7 +586,7 @@ function _openIDB() {
     };
     request.onsuccess = function () {
       // ...the db is ready, use it...
-      console.log(`FileDataStore: indexedDB is now open`);
+      console.debug(`FileDataStore: indexedDB is now open`);
 
       const database = request.result;
       database.onversionchange = function () {
@@ -626,11 +626,11 @@ const _receivingBufferIDBPersistingSchedulerMap = {
   scheduleNextTask(peerId, fileHash, task) {
     let hashToPersistingPromiseChain = this.peerMap.get(peerId);
     if (!hashToPersistingPromiseChain) {
-      console.log(`FileDataStore: unfound file hash to persisting promise chain object`);
+      console.debug(`FileDataStore: unfound file hash to persisting promise chain object`);
       hashToPersistingPromiseChain = {};
     }
     if (!hashToPersistingPromiseChain[fileHash]) {
-      console.log(`FileDataStore: unfound persisting promise chain of a file (${fileHash})`);
+      console.debug(`FileDataStore: unfound persisting promise chain of a file (${fileHash})`);
 
       hashToPersistingPromiseChain[fileHash] = new Promise((resolve, _) => {
         const initialStartOffset = 0;
@@ -688,14 +688,14 @@ const _receivingHashToExporterMap = {
       let startOffset = fulFilledValue ? fulFilledValue.startOffset : undefined;
 
       if (startOffset === undefined) {
-        console.log(`FileDataStore: skipped an invalid startOffset of ${startOffset}`);
+        console.debug(`FileDataStore: skipped an invalid startOffset of ${startOffset}`);
         return;
       }
 
       return _addIDBReceivingBuffer(peerId, fileHash, IDBDatabase, buffer, startOffset);
     };
     _receivingBufferIDBPersistingSchedulerMap.scheduleNextTask(peerId, fileHash, addIDBBufferTask);
-    console.log(
+    console.debug(
       `FileDataStore: scheduled adding receiving buffer of a file (${fileHash}) for a peer (${peerId})`
     );
   },
@@ -713,7 +713,7 @@ const _receivingHashToExporterMap = {
       fileHash,
       resetIDBBufferTask
     );
-    console.log(
+    console.debug(
       `FileDataStore: scheduled resetting receiving buffer of a file (${fileHash}) for a peer (${peerId})`
     );
   },
@@ -732,7 +732,7 @@ function _addIDBReceivingBuffer(peerId, fileHash, IDBDatabase, buffer, startOffs
     let isOperationSuccessful = true;
 
     request.onsuccess = function (event) {
-      console.log(`FileDataStore: IDB request to add(put) receiving buffer onsuccess`, event);
+      console.debug(`FileDataStore: IDB request to add(put) receiving buffer onsuccess`, event);
     };
     request.onerror = function (event) {
       console.error(
@@ -745,7 +745,7 @@ function _addIDBReceivingBuffer(peerId, fileHash, IDBDatabase, buffer, startOffs
       console.error(`FileDataStore: IDB transaction to add(put) receiving buffer onerror`, event);
     };
     transaction.oncomplete = (event) => {
-      console.log(
+      console.debug(
         `FileDataStore: IDB transaction to add(put) receiving buffer of a file (${fileHash}) for a peer (${peerId}) from startOffset (${startOffset}) oncomplete`,
         isOperationSuccessful
       );
@@ -756,14 +756,14 @@ function _addIDBReceivingBuffer(peerId, fileHash, IDBDatabase, buffer, startOffs
       }
 
       if (_receivingCancelledMap.getCancelled(peerId, fileHash)) {
-        console.log(`FileDataStore: due to receiving cancelled`);
+        console.debug(`FileDataStore: due to receiving cancelled`);
 
         // perform IDB rollback because of a receiving file cancelled
         const transaction = IDBDatabase.transaction(_IDBReceivingBufferStoreName, "readwrite");
         const store = transaction.objectStore(_IDBReceivingBufferStoreName);
         const request = store.delete(_buildBufferId(peerId, fileHash, startOffset));
         request.onsuccess = function (event) {
-          console.log(
+          console.debug(
             `FileDataStore: IDB manaully rollbacking request to delete receiving buffer onsuccess`,
             event
           );
@@ -775,7 +775,7 @@ function _addIDBReceivingBuffer(peerId, fileHash, IDBDatabase, buffer, startOffs
           );
         };
         transaction.oncomplete = (event) => {
-          console.log(
+          console.debug(
             `FileDataStore: IDB manaully rollbacking transaction to delete receiving buffer of a file (${fileHash}) for a peer (${peerId}) from startOffset (${startOffset}) oncomplete`
           );
         };
@@ -814,11 +814,11 @@ function _mergeIDBReceivingBufferIfNeeded(peerId, fileHash, IDBDatabase) {
     console.error(`FileDataStore: IDB request to open cursor of receiving buffer onerror`, event);
   };
   request.onsuccess = function (event) {
-    console.log(`FileDataStore: IDB request to open cursor of receiving buffer onsuccess`, event);
+    console.debug(`FileDataStore: IDB request to open cursor of receiving buffer onsuccess`, event);
 
     const cursor = event.target.result;
     if (cursor) {
-      console.log(
+      console.debug(
         `FileDataStore: it is a valid cursor of receiving buffer including startOffset (${cursor.value.startOffset})`
       );
 
@@ -830,7 +830,7 @@ function _mergeIDBReceivingBufferIfNeeded(peerId, fileHash, IDBDatabase) {
 
       cursor.continue();
     } else {
-      console.log(
+      console.debug(
         `FileDataStore: ending up with a invalid cursor of receiving buffer, time to creat a file with a buffer wrapper list of`,
         bufferWrapperList
       );
@@ -856,7 +856,7 @@ function _mergeIDBReceivingBufferIfNeeded(peerId, fileHash, IDBDatabase) {
       });
 
       request.onsuccess = function (event) {
-        console.log(
+        console.debug(
           `FileDataStore: IDB request to add(put) a merged receiving file onsuccess`,
           event
         );
@@ -868,7 +868,7 @@ function _mergeIDBReceivingBufferIfNeeded(peerId, fileHash, IDBDatabase) {
         );
       };
       transaction.oncomplete = (event) => {
-        console.log(
+        console.debug(
           `FileDataStore: IDB transaction to add(put) a merged receiving file (${fileHash}) for a peer (${peerId}) oncomplete`,
           event
         );
@@ -891,7 +891,7 @@ function _mergeIDBReceivingBufferIfNeeded(peerId, fileHash, IDBDatabase) {
           );
         };
         request.onsuccess = function (event) {
-          console.log(
+          console.debug(
             `FileDataStore: IDB request to open cursor of receiving buffer onsuccess`,
             event
           );
@@ -918,11 +918,11 @@ function _getIDBReceivingFile(peerId, fileHash, IDBDatabase) {
     let file;
 
     request.onsuccess = (event) => {
-      console.log(`FileDataStore: IDB request to get a receiving file onsuccess`, event);
+      console.debug(`FileDataStore: IDB request to get a receiving file onsuccess`, event);
 
       const record = event.target.result;
       if (!record) {
-        console.log(
+        console.debug(
           `FileDataStore: unexpected empty record of receiving file (${fileHash}) for a peer (${peerId})`
         );
         return;
@@ -934,7 +934,7 @@ function _getIDBReceivingFile(peerId, fileHash, IDBDatabase) {
       isOperationSuccessful = false;
     };
     transaction.oncomplete = (event) => {
-      console.log(
+      console.debug(
         `FileDataStore: IDB transaction to get a receiving file (${fileHash}) for a peer (${peerId}) oncomplete`,
         event
       );
@@ -957,7 +957,7 @@ function _resetIDBAllReceivingBuffers(IDBDatabase) {
     let isOperationSuccessful = true;
 
     request.onsuccess = function (event) {
-      console.log(`FileDataStore: IDB request to clear all receiving buffers onsuccess`, event);
+      console.debug(`FileDataStore: IDB request to clear all receiving buffers onsuccess`, event);
     };
     request.onerror = function (event) {
       console.error(`FileDataStore: IDB request to clear all receiving buffers onerror`, event);
@@ -965,7 +965,7 @@ function _resetIDBAllReceivingBuffers(IDBDatabase) {
     };
 
     transaction.oncomplete = () => {
-      console.log(`FileDataStore: IDB transaction to clear all receiving buffers oncomplete`);
+      console.debug(`FileDataStore: IDB transaction to clear all receiving buffers oncomplete`);
 
       if (!isOperationSuccessful) {
         reject();
@@ -985,13 +985,13 @@ function _resetIDBReceivingBuffer(peerId, fileHash, IDBDatabase) {
     let isOperationSuccessful = true;
 
     request.onsuccess = function (event) {
-      console.log(`FileDataStore: IDB request to open cursor of receiving buffer onsuccess`, event);
+      console.debug(`FileDataStore: IDB request to open cursor of receiving buffer onsuccess`, event);
 
       const cursor = event.target.result;
       if (cursor) {
         const request = store.delete(cursor.primaryKey);
         request.onsuccess = function (event) {
-          console.log(`FileDataStore: IDB request to delete a receiving buffer onsuccess`, event);
+          console.debug(`FileDataStore: IDB request to delete a receiving buffer onsuccess`, event);
         };
         request.onerror = function (event) {
           console.error(`FileDataStore: IDB request to delete a receiving buffer onerror`, event);
@@ -1005,7 +1005,7 @@ function _resetIDBReceivingBuffer(peerId, fileHash, IDBDatabase) {
       isOperationSuccessful = false;
     };
     transaction.oncomplete = () => {
-      console.log(
+      console.debug(
         `FileDataStore: IDB transaction to open cursor and delete receiving buffer of a file (${fileHash}) for a peer (${peerId}) oncomplete`
       );
 
@@ -1035,7 +1035,7 @@ function _resetIDBReceivingBufferMergedFiles(fileIds, IDBDatabase) {
     if (isAllResetting) {
       const request = store.clear();
       request.onsuccess = function (event) {
-        console.log(
+        console.debug(
           `FileDataStore: IDB request to clear all receiving buffer merged files onsuccess`,
           event
         );
@@ -1053,7 +1053,7 @@ function _resetIDBReceivingBufferMergedFiles(fileIds, IDBDatabase) {
       request.onsuccess = function (event) {
         const cursor = event.target.result;
 
-        console.log(
+        console.debug(
           `FileDataStore: IDB request to open cursor of receiving buffer merged file 'onsuccess' with a primaryKey(${cursor.primaryKey})`,
           event
         );
@@ -1063,7 +1063,7 @@ function _resetIDBReceivingBufferMergedFiles(fileIds, IDBDatabase) {
           if (intersectingFileIds.includes(fileId)) {
             const request = store.delete(fileId);
             request.onsuccess = function (event) {
-              console.log(
+              console.debug(
                 `FileDataStore: IDB request to delete a receiving buffer merged file with fileId(${cursor.primaryKey}) onsuccess`,
                 event
               );
@@ -1091,7 +1091,7 @@ function _resetIDBReceivingBufferMergedFiles(fileIds, IDBDatabase) {
     }
 
     transaction.oncomplete = () => {
-      console.log(
+      console.debug(
         `FileDataStore: IDB transaction to delete receiving buffer merged files oncomplete`
       );
 

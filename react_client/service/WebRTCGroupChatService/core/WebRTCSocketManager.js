@@ -28,19 +28,19 @@ function _createSocket(_socketUrl, openCallback, closeCallback) {
   if (!socket) {
     socket = new WebSocket(_socketUrl);
     socket.addEventListener("open", function (event) {
-      console.log("SocketService: websocket connected");
+      console.debug("SocketService: websocket connected");
       // external usage
       if (openCallback) {
         openCallback(event);
       }
     });
     socket.addEventListener("error", function (event) {
-      console.log(
+      console.debug(
         "SocketService: client side heared websocket onerror event", event
       );
     });
     socket.addEventListener("close", function (event) {
-      console.log(
+      console.debug(
         "SocketService: client side heared websocket onclose event"
       );
       // external usage
