@@ -1,9 +1,11 @@
 function _ReconnectingWebSocket(url) {
   // Private state variables
   let ws;
+
   let forcedClose = false;
   let timedOut = false;
   const eventTarget = document.createElement("div");
+  const thisReconnectingWebSocket = this;
 
   this.url = url;
 
@@ -30,19 +32,19 @@ function _ReconnectingWebSocket(url) {
 
   // Wire up "on*" properties as event handlers
   eventTarget.addEventListener("open", (event) => {
-    this.onopen(event);
+    thisReconnectingWebSocket.onopen(event);
   });
   eventTarget.addEventListener("close", (event) => {
-    this.onclose(event);
+    thisReconnectingWebSocket.onclose(event);
   });
   eventTarget.addEventListener("connecting", (event) => {
-    this.onconnecting(event);
+    thisReconnectingWebSocket.onconnecting(event);
   });
   eventTarget.addEventListener("message", (event) => {
-    this.onmessage(event);
+    thisReconnectingWebSocket.onmessage(event);
   });
   eventTarget.addEventListener("error", (event) => {
-    this.onerror(event);
+    thisReconnectingWebSocket.onerror(event);
   });
 
   // Expose the API required by EventTarget
@@ -81,10 +83,10 @@ function _ReconnectingWebSocket(url) {
     ws.onopen = (event) => {
       // clearTimeout(openningTimeout);
 
-      console.debug("ReconnectingWebSocket", "onopen", this.url);
+      console.debug("ReconnectingWebSocket", "onopen", thisReconnectingWebSocket.url);
 
-      this.readyState = WebSocket.OPEN;
-      this.reconnectAttempts = 0;
+      thisReconnectingWebSocket.readyState = WebSocket.OPEN;
+      thisReconnectingWebSocket.reconnectAttempts = 0;
 
       const customEvent = generateEvent("open");
       customEvent.isReconnect = isReconnectAttempt;
@@ -98,7 +100,7 @@ function _ReconnectingWebSocket(url) {
       ws = null;
 
       if (forcedClose) {
-        this.readyState = WebSocket.CLOSED;
+        thisReconnectingWebSocket.readyState = WebSocket.CLOSED;
 
         const customEvent = generateEvent("close");
         customEvent.code = event.code;
@@ -106,7 +108,7 @@ function _ReconnectingWebSocket(url) {
         customEvent.wasClean = event.wasClean;
         eventTarget.dispatchEvent(customEvent);
       } else {
-        this.readyState = WebSocket.CONNECTING;
+        thisReconnectingWebSocket.readyState = WebSocket.CONNECTING;
 
         const customEvent = generateEvent("connecting");
         customEvent.code = event.code;
@@ -115,7 +117,7 @@ function _ReconnectingWebSocket(url) {
         eventTarget.dispatchEvent(customEvent);
 
         if (!isReconnectAttempt && !timedOut) {
-          console.debug("ReconnectingWebSocket", "onclose", this.url);
+          console.debug("ReconnectingWebSocket", "onclose", thisReconnectingWebSocket.url);
 
           const customEvent = generateEvent("close");
           customEvent.code = event.code;
@@ -125,19 +127,19 @@ function _ReconnectingWebSocket(url) {
         }
 
         const timeInterval =
-          this.reconnectInterval * Math.pow(this.reconnectDecay, this.reconnectAttempts);
+        thisReconnectingWebSocket.reconnectInterval * Math.pow(thisReconnectingWebSocket.reconnectDecay, thisReconnectingWebSocket.reconnectAttempts);
         setTimeout(
           function () {
-            this.reconnectAttempts++;
-            this.open(true);
+            thisReconnectingWebSocket.reconnectAttempts++;
+            thisReconnectingWebSocket.open(true);
           },
-          timeInterval > this.maxReconnectInterval ? this.maxReconnectInterval : timeInterval
+          timeInterval > thisReconnectingWebSocket.maxReconnectInterval ? thisReconnectingWebSocket.maxReconnectInterval : timeInterval
         );
       }
     };
 
     ws.onmessage = (event) => {
-      console.debug("ReconnectingWebSocket", "onmessage", this.url, event.data);
+      console.debug("ReconnectingWebSocket", "onmessage", thisReconnectingWebSocket.url, event.data);
 
       const customEvent = generateEvent("message");
       customEvent.data = event.data;
@@ -145,7 +147,7 @@ function _ReconnectingWebSocket(url) {
     };
 
     ws.onerror = (event) => {
-      console.debug("ReconnectingWebSocket", "onerror", this.url, event);
+      console.debug("ReconnectingWebSocket", "onerror", thisReconnectingWebSocket.url, event);
 
       const customEvent = generateEvent("error");
       eventTarget.dispatchEvent(customEvent);
