@@ -26,7 +26,7 @@ function _ReconnectingWebSocket(url) {
   this.reconnectDecay = 1.5;
 
   // The maximum time in milliseconds to wait for a connection to succeed before closing and retrying
-  this.openningTimeoutInterval = 2000;
+  // this.openningTimeoutInterval = 2000;
 
   // Wire up "on*" properties as event handlers
   eventTarget.addEventListener("open", (event) => {
@@ -69,17 +69,17 @@ function _ReconnectingWebSocket(url) {
 
     console.debug("ReconnectingWebSocket", "attempt-connect", this.url);
 
-    const localWs = ws;
-    const openningTimeout = setTimeout(function () {
-      console.debug("ReconnectingWebSocket", "connection-timeout", this.url);
+    // const localWs = ws;
+    // const openningTimeout = setTimeout(function () {
+    //   console.debug("ReconnectingWebSocket", "connection-timeout", this.url);
 
-      timedOut = true;
-      localWs.close();
-      timedOut = false;
-    }, this.openningTimeoutInterval);
+    //   timedOut = true;
+    //   localWs.close();
+    //   timedOut = false;
+    // }, this.openningTimeoutInterval);
 
     ws.onopen = (event) => {
-      clearTimeout(openningTimeout);
+      // clearTimeout(openningTimeout);
 
       console.debug("ReconnectingWebSocket", "onopen", this.url);
 
@@ -93,7 +93,7 @@ function _ReconnectingWebSocket(url) {
     };
 
     ws.onclose = (event) => {
-      clearTimeout(openningTimeout);
+      // clearTimeout(openningTimeout);
 
       ws = null;
 
