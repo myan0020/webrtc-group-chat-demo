@@ -1,4 +1,4 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSelector, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 
 import WebRTCGroupChatService from "service/WebRTCGroupChatService/WebRTCGroupChatService";
@@ -29,10 +29,7 @@ export const roomSlice = createSlice({
     },
     toggleNewRoomPopupVisibility: {
       reducer(sliceState, action) {
-        if (typeof action.payload !== "boolean") {
-          return;
-        }
-        sliceState.isNewRoomPopupVisible = action.payload;
+        sliceState.isNewRoomPopupVisible = !sliceState.isNewRoomPopupVisible;
       },
     },
     updateJoinedRoomId: {
@@ -104,4 +101,22 @@ export const { updateRoomList, toggleNewRoomPopupVisibility, updateJoinedRoomId,
 
 /* Selector */
 
-export const selectRoom = (state) => state.room;
+export const selectRoom = (state) => {
+  return state.room;
+};
+
+export const selectHasJoinedRoom = createSelector(selectRoom, (room) => {
+  return room.joinedRoomId.length > 0;
+});
+
+export const selectJoinedRoomName = createSelector(selectRoom, (room) => {
+  return room.joinedRoomName;
+});
+
+export const selectRoomList = createSelector(selectRoom, (room) => {
+  return room.roomList;
+});
+
+export const selectNewRoomPopupVisible = createSelector(selectRoom, (room) => {
+  return room.isNewRoomPopupVisible;
+});

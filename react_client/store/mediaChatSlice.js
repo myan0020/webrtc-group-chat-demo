@@ -1,4 +1,4 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSelector, createSlice } from "@reduxjs/toolkit";
 
 import WebRTCGroupChatService from "service/WebRTCGroupChatService/WebRTCGroupChatService";
 
@@ -101,20 +101,6 @@ export const mediaChatSlice = createSlice({
         return initialState;
       },
     },
-
-    // extraReducers: (builder) => {
-    //   builder
-    //     .addCase(toggleAudioEnabling.pending, (sliceState, action) => {
-    //       sliceState.requestStatus = requestStatus.loading;
-    //     })
-    //     .addCase(fetchInitialRoomList.fulfilled, (sliceState, action) => {
-    //       sliceState.requestStatus = requestStatus.idle;
-    //       if (action.payload.responseStatus !== 200) {
-    //         return;
-    //       }
-    //       sliceState.roomList = action.payload.roomList;
-    //     });
-    // },
   },
 });
 
@@ -242,3 +228,23 @@ export const {
 /* Selector */
 
 export const selectMediaChat = (state) => state.mediaChat;
+
+export const selectEnableVideoCallingInput = createSelector(selectMediaChat, (mediaChat) => {
+  return mediaChat.enableVideoCallingInput;
+});
+
+export const selectVideoCallingInputType = createSelector(selectMediaChat, (mediaChat) => {
+  return mediaChat.videoCallingInputType;
+});
+
+export const selectIsCalling = createSelector(selectMediaChat, (mediaChat) => {
+  return mediaChat.isCalling;
+});
+
+export const selectAudioRelated = createSelector(selectMediaChat, (mediaChat) => {
+  return mediaChat.audioRelated;
+});
+
+export const selectVideoRelated = createSelector(selectMediaChat, (mediaChat) => {
+  return mediaChat.videoRelated;
+});

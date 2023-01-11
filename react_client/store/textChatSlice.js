@@ -40,16 +40,6 @@ export const textChatSlice = createSlice({
         return initialState;
       },
     },
-
-    // extraReducers: (builder) => {
-    //   builder
-    //     .addCase(sendTextMessage.fulfilled, (sliceState, action) => {
-    //       sliceState.entites[action.payload.id] = action.payload;
-    //     })
-    //     .addCase(receiveTextMessage.fulfilled, (sliceState, action) => {
-    //       sliceState.entites[action.payload.id] = action.payload;
-    //     });
-    // },
   },
 });
 

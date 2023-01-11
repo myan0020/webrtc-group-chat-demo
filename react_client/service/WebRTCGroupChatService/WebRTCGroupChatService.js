@@ -13,9 +13,9 @@ import WebRTCMediaCallingManager from "./core/WebRTCMediaCallingManager.js";
 
 let _webSocketUrl;
 if (process.env.NODE_ENV === "production") {
-  _webSocketUrl = `wss://${location.hostname}`
+  _webSocketUrl = `wss://${location.hostname}`;
 } else {
-  _webSocketUrl = `ws://${location.hostname}:${env.EXPRESS_SERVER_PORT}`
+  _webSocketUrl = `ws://${location.hostname}:${env.EXPRESS_SERVER_PORT}`;
 }
 
 WebRTCPeerConnectionManager.webSocketUrl = _webSocketUrl;
@@ -29,6 +29,19 @@ WebRTCSignalingManager.onWebRTCNewPeerArivalInternally(
   WebRTCPeerConnectionManager.handleNewPeerArivalInternally
 );
 
+function _resetRTCRelatedState() {
+  WebRTCMediaCallingManager.hangUpCalling(true);
+  WebRTCMediaCallingManager.clearAllPeerTransceivers();
+  WebRTCPeerConnectionManager.closeALLPeerConnections();
+  WebRTCDataChannelManager.cancelSenderAllFileSending();
+  WebRTCDataChannelManager.clearAllFileBuffersReceived();
+  WebRTCDataChannelManager.clearAllReceivingFiles();
+
+  // TODO: need to clear sending&&receiving related data
+  WebRTCDataChannelManager.clearSendingRelatedData();
+  WebRTCDataChannelManager.clearReceivingRelatedData();
+}
+
 export default {
   /**
    * start
@@ -36,7 +49,7 @@ export default {
    * note: please call 'start' when a user has already signed in
    */
 
-  start: function () {
+  connect: function () {
     WebRTCSignalingManager.connect();
   },
 
@@ -45,6 +58,12 @@ export default {
    *
    * note: please call 'end' when a user is going to sign out
    */
+
+  disconnect: function () {
+    _resetRTCRelatedState();
+
+    WebRTCSignalingManager.disconnect();
+  },
 
   // end: function () {
   //
@@ -107,16 +126,7 @@ export default {
     WebRTCSignalingManager.joinRoomSignaling(roomId);
   },
   leaveRoom: function () {
-    WebRTCMediaCallingManager.hangUpCalling(true);
-    WebRTCMediaCallingManager.clearAllPeerTransceivers();
-    WebRTCPeerConnectionManager.closeALLPeerConnections();
-    WebRTCDataChannelManager.cancelSenderAllFileSending();
-    WebRTCDataChannelManager.clearAllFileBuffersReceived();
-    WebRTCDataChannelManager.clearAllReceivingFiles();
-
-    // TODO: need to clear sending&&receiving related data
-    WebRTCDataChannelManager.clearSendingRelatedData();
-    WebRTCDataChannelManager.clearReceivingRelatedData();
+    _resetRTCRelatedState();
 
     WebRTCSignalingManager.leaveRoomSignaling();
   },

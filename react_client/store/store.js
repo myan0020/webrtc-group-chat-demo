@@ -14,7 +14,6 @@ import mediaChatReducer, {
   updateVideoMuting,
 } from "./mediaChatSlice";
 import textChatReducer, { receiveTextMessage } from "./textChatSlice";
-import fileChatReducer from "./fileChatSlice";
 import WebRTCGroupChatService from "service/WebRTCGroupChatService/WebRTCGroupChatService";
 
 const combinedReducer = combineReducers({
@@ -22,7 +21,6 @@ const combinedReducer = combineReducers({
   room: roomReducer,
   mediaChat: mediaChatReducer,
   textChat: textChatReducer,
-  fileChat: fileChatReducer,
 },);
 
 const rootReducer = (state, action) => {
@@ -42,6 +40,7 @@ WebRTCGroupChatService.onRoomsInfoUpdated((payload) => {
     store.dispatch(updateRoomList(rooms));
   }
 });
+
 WebRTCGroupChatService.onJoinRoomInSuccess((payload) => {
   const roomId = payload.roomId;
   const roomName = payload.roomName;
@@ -49,6 +48,7 @@ WebRTCGroupChatService.onJoinRoomInSuccess((payload) => {
     store.dispatch(updateJoinedRoomId({ roomId, roomName }));
   }
 });
+
 WebRTCGroupChatService.onLeaveRoomInSuccess((payload) => {
   store.dispatch(updateJoinedRoomId({ roomId: "", roomName: "" }));
 });

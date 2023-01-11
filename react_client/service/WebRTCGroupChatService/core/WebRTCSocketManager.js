@@ -1,7 +1,207 @@
-// const _socketHost = location.hostname;
-// const _socketPort = "3002"; // websocket port number should same as mock express server port number
-// const _socketUrl = `ws://${_socketHost}:${_socketPort}`;
-// const _socket = new WebSocket(_socketUrl);
+function _ReconnectingWebSocket(url) {
+  // Private state variables
+  let ws;
+  let forcedClose = false;
+  let timedOut = false;
+  const eventTarget = document.createElement("div");
+
+  this.url = url;
+
+  this.reconnectAttempts = 0;
+
+  this.maxReconnectAttempts = null;
+
+  this.readyState = WebSocket.CONNECTING;
+
+  // The number of attempted reconnects since starting, or the last successful connection
+  this.reconnectAttempts = 0;
+
+  // The number of milliseconds to delay before attempting to reconnect
+  this.reconnectInterval = 1000;
+
+  // The maximum number of milliseconds to delay a reconnection attempt
+  this.maxReconnectInterval = 30 * 1000;
+
+  // The rate of increase of the reconnect delay. Allows reconnect attempts to back off when problems persist
+  this.reconnectDecay = 1.5;
+
+  // The maximum time in milliseconds to wait for a connection to succeed before closing and retrying
+  this.openningTimeoutInterval = 2000;
+
+  // Wire up "on*" properties as event handlers
+  eventTarget.addEventListener("open", (event) => {
+    this.onopen(event);
+  });
+  eventTarget.addEventListener("close", (event) => {
+    this.onclose(event);
+  });
+  eventTarget.addEventListener("connecting", (event) => {
+    this.onconnecting(event);
+  });
+  eventTarget.addEventListener("message", (event) => {
+    this.onmessage(event);
+  });
+  eventTarget.addEventListener("error", (event) => {
+    this.onerror(event);
+  });
+
+  // Expose the API required by EventTarget
+  this.addEventListener = eventTarget.addEventListener.bind(eventTarget);
+  this.removeEventListener = eventTarget.removeEventListener.bind(eventTarget);
+  this.dispatchEvent = eventTarget.dispatchEvent.bind(eventTarget);
+
+  function generateEvent(eventName) {
+    const event = new CustomEvent(eventName);
+    return event;
+  }
+
+  this.open = function (isReconnectAttempt) {
+    ws = new WebSocket(this.url);
+
+    if (isReconnectAttempt) {
+      if (this.maxReconnectAttempts && this.reconnectAttempts > this.maxReconnectAttempts) {
+        return;
+      }
+    } else {
+      eventTarget.dispatchEvent(generateEvent("connecting"));
+      this.reconnectAttempts = 0;
+    }
+
+    console.debug("ReconnectingWebSocket", "attempt-connect", this.url);
+
+    const localWs = ws;
+    const openningTimeout = setTimeout(function () {
+      console.debug("ReconnectingWebSocket", "connection-timeout", this.url);
+
+      timedOut = true;
+      localWs.close();
+      timedOut = false;
+    }, this.openningTimeoutInterval);
+
+    ws.onopen = (event) => {
+      clearTimeout(openningTimeout);
+
+      console.debug("ReconnectingWebSocket", "onopen", this.url);
+
+      this.readyState = WebSocket.OPEN;
+      this.reconnectAttempts = 0;
+
+      const customEvent = generateEvent("open");
+      customEvent.isReconnect = isReconnectAttempt;
+      isReconnectAttempt = false;
+      eventTarget.dispatchEvent(customEvent);
+    };
+
+    ws.onclose = (event) => {
+      clearTimeout(openningTimeout);
+
+      ws = null;
+
+      if (forcedClose) {
+        this.readyState = WebSocket.CLOSED;
+
+        const customEvent = generateEvent("close");
+        customEvent.code = event.code;
+        customEvent.reason = event.reason;
+        customEvent.wasClean = event.wasClean;
+        eventTarget.dispatchEvent(customEvent);
+      } else {
+        this.readyState = WebSocket.CONNECTING;
+
+        const customEvent = generateEvent("connecting");
+        customEvent.code = event.code;
+        customEvent.reason = event.reason;
+        customEvent.wasClean = event.wasClean;
+        eventTarget.dispatchEvent(customEvent);
+
+        if (!isReconnectAttempt && !timedOut) {
+          console.debug("ReconnectingWebSocket", "onclose", this.url);
+
+          const customEvent = generateEvent("close");
+          customEvent.code = event.code;
+          customEvent.reason = event.reason;
+          customEvent.wasClean = event.wasClean;
+          eventTarget.dispatchEvent(customEvent);
+        }
+
+        const timeInterval =
+          this.reconnectInterval * Math.pow(this.reconnectDecay, this.reconnectAttempts);
+        setTimeout(
+          function () {
+            this.reconnectAttempts++;
+            this.open(true);
+          },
+          timeInterval > this.maxReconnectInterval ? this.maxReconnectInterval : timeInterval
+        );
+      }
+    };
+
+    ws.onmessage = (event) => {
+      console.debug("ReconnectingWebSocket", "onmessage", this.url, event.data);
+
+      const customEvent = generateEvent("message");
+      customEvent.data = event.data;
+      eventTarget.dispatchEvent(customEvent);
+    };
+
+    ws.onerror = (event) => {
+      console.debug("ReconnectingWebSocket", "onerror", this.url, event);
+
+      const customEvent = generateEvent("error");
+      eventTarget.dispatchEvent(customEvent);
+    };
+  };
+
+  this.open(false);
+
+  this.send = function (data) {
+    if (ws) {
+      return ws.send(data);
+    } else {
+      throw "INVALID_STATE_ERR : Pausing to reconnect websocket";
+    }
+  };
+
+  this.close = function (code, reason) {
+    // Default CLOSE_NORMAL code
+    if (typeof code == "undefined") {
+      code = 1000;
+    }
+    forcedClose = true;
+    if (ws) {
+      ws.close(code, reason);
+    }
+  };
+
+  /**
+   * Additional public API method to refresh the connection if still open (close, re-open).
+   * For example, if the app suspects bad data / missed heart beats, it can try to refresh.
+   */
+  this.refresh = function () {
+    if (ws) {
+      ws.close();
+    }
+  };
+}
+
+/**
+ * An event listener to be called when the WebSocket connection's readyState changes to OPEN;
+ * this indicates that the connection is ready to send and receive data.
+ */
+_ReconnectingWebSocket.prototype.onopen = function (event) {};
+/** An event listener to be called when the WebSocket connection's readyState changes to CLOSED. */
+_ReconnectingWebSocket.prototype.onclose = function (event) {};
+/** An event listener to be called when a connection begins being attempted. */
+_ReconnectingWebSocket.prototype.onconnecting = function (event) {};
+/** An event listener to be called when a message is received from the server. */
+_ReconnectingWebSocket.prototype.onmessage = function (event) {};
+/** An event listener to be called when an error occurs. */
+_ReconnectingWebSocket.prototype.onerror = function (event) {};
+
+_ReconnectingWebSocket.CONNECTING = WebSocket.CONNECTING;
+_ReconnectingWebSocket.OPEN = WebSocket.OPEN;
+_ReconnectingWebSocket.CLOSING = WebSocket.CLOSING;
+_ReconnectingWebSocket.CLOSED = WebSocket.CLOSED;
 
 // This signal message type list match the same one on server side
 const _typeEnum = {
@@ -26,7 +226,8 @@ const _socketMap = new Map();
 function _createSocket(_socketUrl, openCallback, closeCallback) {
   let socket = _socketMap.get(_socketUrl);
   if (!socket) {
-    socket = new WebSocket(_socketUrl);
+    socket = new _ReconnectingWebSocket(_socketUrl);
+
     socket.addEventListener("open", function (event) {
       console.debug("SocketService: websocket connected");
       // external usage
@@ -34,9 +235,11 @@ function _createSocket(_socketUrl, openCallback, closeCallback) {
         openCallback(event);
       }
     });
+
     socket.addEventListener("error", function (event) {
       console.debug("SocketService: client side heared websocket onerror event", event);
     });
+
     socket.addEventListener("close", function (event) {
       console.debug(
         `SocketService: client side heared websocket onclose event (code: ${event.code}; reason: ${event.reason})`
@@ -45,8 +248,8 @@ function _createSocket(_socketUrl, openCallback, closeCallback) {
       if (closeCallback) {
         closeCallback(event);
       }
-      _destroySocket(_socketUrl);
     });
+
     _socketMap.set(_socketUrl, socket);
   }
 }
@@ -56,7 +259,7 @@ function _destroySocket(_socketUrl) {
   if (!socket) {
     return;
   }
-  // socket.close();
+  socket.close();
   _socketMap.delete(_socketUrl);
 }
 

@@ -12,6 +12,11 @@ const sessionParser = require("./sessionController").sessionParser;
 const authenticatedUserIds = require("./sessionController").authenticatedUserIds;
 const chalk = require("chalk");
 
+const wss = new WebSocket.Server({ noServer: true });
+wss.on("connection", function (ws, request, client) {
+  handleWebSocketConnection(ws, request.session, websocketMap);
+});
+
 exports.handleUpgrade = (request, socket, head) => {
   const pathname = request.url;
 
@@ -23,7 +28,6 @@ exports.handleUpgrade = (request, socket, head) => {
         return;
       }
 
-      const wss = createWebSocket(request.session);
       wss.handleUpgrade(request, socket, head, function (ws) {
         console.log(`[WebSocket] will emit a ${chalk.yellow`connection`} event `);
         wss.emit("connection", ws, request);
@@ -35,25 +39,15 @@ exports.handleUpgrade = (request, socket, head) => {
   }
 };
 
-const createWebSocket = (session) => {
-  console.log(`[WebSocket] will be created to the user named ${chalk.green`${session.username}`}`);
 
-  const wss = new WebSocket.Server({ noServer: true });
-  wss.on("connection", function (ws, request) {
-    handleWebSocketConnection(ws, request, websocketMap);
-  });
-
-  return wss;
-};
-
-const handleWebSocketConnection = (ws, request, websocketMap) => {
-  if (!request || !request.session || !websocketMap) {
+const handleWebSocketConnection = (ws, session, websocketMap) => {
+  if (!ws || !session || !websocketMap) {
     console.log(`[WebSocket] ${chalk.red`unexpected connection`} event`);
     return;
   }
 
-  const sessionUserName = request.session.username;
-  const sessionUserId = request.session.userId;
+  const sessionUserName = session.username;
+  const sessionUserId = session.userId;
 
   console.log(
     `[WebSocket] ${chalk.green`connection`} event ${chalk.blue`from`} the user named ${chalk.green`${
@@ -70,9 +64,15 @@ const handleWebSocketConnection = (ws, request, websocketMap) => {
   ws.username = sessionUserName;
 
   ws.on("message", (data) => {
+    if (!authenticatedUserIds.has(sessionUserId)) {
+      return;
+    }
     handleWebSocketMessage(ws, sessionUserName, sessionUserId, data);
   });
   ws.on("close", (code, reason) => {
+    if (!authenticatedUserIds.has(sessionUserId)) {
+      return;
+    }
     handleWebSocketClose(code, reason, ws, sessionUserName, sessionUserId);
   });
 };
@@ -119,6 +119,10 @@ const handleWebSocketClose = (code, reason, ws, sessionUserName, sessionUserId) 
       reason ? reason : "unknown close reason"
     }`}) ${chalk.blue`from`} the user named ${chalk.green`${sessionUserName}`}`
   );
+
+  // side effects
+  handleLeaveRoom(ws, sessionUserId);
+
   websocketMap.delete(sessionUserId);
 };
 

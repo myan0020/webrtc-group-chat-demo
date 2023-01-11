@@ -2,7 +2,7 @@ import React, { useContext } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
 
-import { selectAuth } from "store/authSlice";
+import { selectAuthenticatedUserName } from "store/authSlice";
 import GoBackNavigator from "./GoBackNavigator";
 import NewRoomNavigator from "./NewRoomNavigator";
 import SignoutNavigator from "./SignoutNavigator";
@@ -113,7 +113,7 @@ const MemorizedNavigationBar = React.memo(NavigationBarToMemo, arePropsEqual);
 
 export default function NavigationBar() {
   const { localizedStrings } = useContext(GlobalContext);
-  const { authenticatedUserName } = useSelector(selectAuth);
+  const authenticatedUserName = useSelector(selectAuthenticatedUserName);
   return (
     <MemorizedNavigationBar
       localizedStrings={localizedStrings}

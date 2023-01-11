@@ -2,7 +2,11 @@ import React, { useContext } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 
-import { toggleNewRoomPopupVisibility, selectRoom } from "store/roomSlice";
+import {
+  toggleNewRoomPopupVisibility,
+  selectHasJoinedRoom,
+  selectJoinedRoomName,
+} from "store/roomSlice";
 import { localizableStringKeyEnum } from "resource/string/localizable-strings";
 import { GlobalContext } from "context/global-context";
 
@@ -41,13 +45,14 @@ const Button = styled.button`
 
 function NewRoomNavigatorToMemo({ localizedStrings }) {
   const dispatch = useDispatch();
-  const { isNewRoomPopupVisible, joinedRoomId, joinedRoomName } = useSelector(selectRoom);
+
+  const hasJoinedRoom = useSelector(selectHasJoinedRoom);
+  const joinedRoomName = useSelector(selectJoinedRoomName);
 
   const handleNewRoomPopupVisibilityToggled = () => {
-    dispatch(toggleNewRoomPopupVisibility(!isNewRoomPopupVisible));
+    dispatch(toggleNewRoomPopupVisibility());
   };
 
-  const hasJoinedRoom = joinedRoomId && joinedRoomId.length > 0;
   const title = hasJoinedRoom
     ? joinedRoomName
     : localizedStrings[localizableStringKeyEnum.NAVIGATION_ROOM_LIST_TITLE];

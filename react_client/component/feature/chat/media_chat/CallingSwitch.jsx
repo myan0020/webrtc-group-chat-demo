@@ -5,8 +5,8 @@ import { useDispatch, useSelector } from "react-redux";
 import SingleTabSwitch, {
   singleTabSwitchOptionBuilder,
   singleTabSwitchPropsBuilder,
-} from "component/generic/switch/SingleTabSwitch";
-import { startCalling, selectMediaChat, hangUpCalling } from "store/mediaChatSlice";
+} from "../../../generic/switch/SingleTabSwitch";
+import { startCalling, hangUpCalling, selectIsCalling } from "store/mediaChatSlice";
 import startCallingUrl from "resource/image/start_calling_3x.png";
 import hangUpCallingUrl from "resource/image/hang_up_calling_3x.png";
 
@@ -23,7 +23,7 @@ export const CallingSwitchPropsBuilder = ({}) => {
 
 export default function CallingSwitch({}) {
   const dispatch = useDispatch();
-  const { isCalling } = useSelector(selectMediaChat);
+  const isCalling = useSelector(selectIsCalling);
 
   const startCallingOption = singleTabSwitchOptionBuilder({
     switchOptionBorderColor: "rgb(0, 150, 136)",

@@ -2,7 +2,7 @@ import React from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
 
-import { selectMediaChat } from "store/mediaChatSlice";
+import { selectIsCalling } from "store/mediaChatSlice";
 import MediaConstraintCheckBox from "./MediaConstraintCheckBox";
 import MediaConstraintSwitch from "./MediaConstraintSwitch";
 
@@ -32,7 +32,7 @@ export const MediaConstraintCheckableSwitchPropsBuilder = ({}) => {
 };
 
 export default function MediaConstraintCheckableSwitch({}) {
-  const { isCalling } = useSelector(selectMediaChat);
+  const isCalling = useSelector(selectIsCalling);
   const borderColor = isCalling ? "#C4C4C4" : "rgb(33, 150, 243)";
   return (
     <Wrapper borderColor={borderColor}>

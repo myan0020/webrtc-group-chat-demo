@@ -2,14 +2,15 @@ import React, { useContext, useState } from "react";
 import styled from "styled-components";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate } from "react-router-dom";
-import { RotatingLines } from "react-loader-spinner";
+// import { RotatingLines } from "react-loader-spinner";
 
 import {
-  selectRoom,
-  requestStatus,
   toggleNewRoomPopupVisibility,
   joinRoom,
   createRoom,
+  selectHasJoinedRoom,
+  selectNewRoomPopupVisible,
+  selectRoomList,
 } from "store/roomSlice";
 import closeImageUrl from "resource/image/close_3x.png";
 import { localizableStringKeyEnum } from "resource/string/localizable-strings";
@@ -169,9 +170,15 @@ const RoomItemButton = styled.button`
   margin-right: 38px;
 `;
 
-function RoomListToMemo({ localizedStrings, newRoomNameInputValue, setNewRoomNameInputValue }) {
+function RoomListToMemo({
+  localizedStrings,
+  newRoomNameInputValue,
+  setNewRoomNameInputValue,
+}) {
   const dispatch = useDispatch();
-  const { roomList, isNewRoomPopupVisible } = useSelector(selectRoom);
+
+  const isNewRoomPopupVisible = useSelector(selectNewRoomPopupVisible);
+  const roomList = useSelector(selectRoomList);
 
   const newRoomPopupBackgroundVisibility = isNewRoomPopupVisible ? "visible" : "hidden";
   const newRoomPopupBackgroundOpacity = isNewRoomPopupVisible ? 1 : 0;
@@ -182,7 +189,7 @@ function RoomListToMemo({ localizedStrings, newRoomNameInputValue, setNewRoomNam
 
   const handleNewRoomPopupVisibilityToggled = () => {
     setNewRoomNameInputValue("");
-    dispatch(toggleNewRoomPopupVisibility(!isNewRoomPopupVisible));
+    dispatch(toggleNewRoomPopupVisibility());
   };
 
   const handleNewRoomNameInputChanged = (e) => {
@@ -277,30 +284,20 @@ const arePropsEqual = (prevProps, nextProps) => {
     prevProps.setNewRoomNameInputValue,
     nextProps.setNewRoomNameInputValue
   );
-  return isLocalizedStringEqual && isNewRoomNameInputValueEqual && isSetNewRoomNameInputValueEqual;
+  return (
+    isLocalizedStringEqual &&
+    isNewRoomNameInputValueEqual &&
+    isSetNewRoomNameInputValueEqual
+  );
 };
 
 const MemorizedRoomList = React.memo(RoomListToMemo, arePropsEqual);
 
 export default function RoomList() {
-  const { requestStatus: loadingStatus, joinedRoomId } = useSelector(selectRoom);
+  const hasJoinedRoom = useSelector(selectHasJoinedRoom);
   const { localizedStrings } = useContext(GlobalContext);
   const [newRoomNameInputValue, setNewRoomNameInputValue] = useState("");
 
-  if (loadingStatus === requestStatus.loading) {
-    return (
-      <RotatingLines
-        strokeColor='grey'
-        strokeWidth='5'
-        animationDuration='0.75'
-        width='20'
-        height='20'
-        visible={true}
-      />
-    );
-  }
-
-  const hasJoinedRoom = joinedRoomId && joinedRoomId.length > 0;
   if (hasJoinedRoom) {
     return <Navigate to={"/chat-room"} />;
   }

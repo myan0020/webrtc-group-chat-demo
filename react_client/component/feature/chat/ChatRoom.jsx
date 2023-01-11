@@ -3,7 +3,7 @@ import styled from "styled-components";
 import { Navigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 
-import { selectRoom } from "store/roomSlice";
+import { selectHasJoinedRoom } from "store/roomSlice";
 import MediaController from "./media_chat/MediaController";
 import MediaRenderer from "./media_chat/MediaRenderer";
 import MessageTypeSwitch from "./message_chat/MessageTypeSwitch";
@@ -67,10 +67,9 @@ const MessageSenderContainer = styled.div`
 `;
 
 export default function ChatRoom() {
-  const { joinedRoomId } = useSelector(selectRoom);
+  const hasJoinedRoom = useSelector(selectHasJoinedRoom);
 
-  const shouldLeaveRoom = !joinedRoomId || joinedRoomId.length === 0;
-  if (shouldLeaveRoom) {
+  if (!hasJoinedRoom) {
     return <Navigate to={"/room-list"} />;
   }
 

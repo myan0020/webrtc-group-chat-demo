@@ -7,8 +7,6 @@ const signaling = require("../signaling/signaling");
 const sendSignalThroughResponse = signaling.sendThroughResponse;
 const signalTypeEnum = signaling.typeEnum;
 const groupChatRoomController = require("./groupChatRoomController");
-const rooms = groupChatRoomController.rooms;
-const userRoomMap = groupChatRoomController.userRoomMap;
 const websocketController = require("./websocketController");
 
 exports.handleLogin = (req, res, next) => {
@@ -40,30 +38,12 @@ exports.handleLogout = (req, res, next) => {
   const sessionUserId = req.session.userId;
   const sessionUserName = req.session.username;
 
-  // TODO:
-  //
-  // Priority Level: Middle
-  //
-  // WebSocket connection does not close at a right moment or for a right user
-  //
-
   console.log(
     `[HTTP] before logout action been executed, avaliable session are [${chalk.yellow`...`}]`
   );
   for (let userId of Array.from(websocketMap.keys())) {
     console.log(`[${chalk.yellow`${userId}`}]`);
   }
-
-  // if (sessionUserId && sessionUserId.length > 0 && userRoomMap.get(sessionUserId)) {
-    // const joinedRoomId = userRoomMap.get(userId);
-    // rooms[joinedRoomId].deleteParticipant(userId);
-
-    // const leftRoomId = userRoomMap.get(sessionUserId);
-    // const leftRoom = rooms[leftRoomId];
-    // userRoomMap.delete(sessionUserId);
-    // leftRoom.deleteParticipant(sessionUserId);
-
-
 
   // }
 
@@ -88,9 +68,6 @@ exports.handleLogout = (req, res, next) => {
         console.log(
           `[WebSocket] will perform ${chalk.green`an active connection close`} to the user named ${sessionUserName}`
         );
-        ws.close();
-
-        websocketMap.delete(sessionUserId);
       }
     }
 

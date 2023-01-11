@@ -1,7 +1,7 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSelector, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 
-import { fetchInitialRoomList, leaveRoom, selectRoom } from "./roomSlice";
+import { fetchInitialRoomList } from "./roomSlice";
 import WebRTCGroupChatService from "service/WebRTCGroupChatService/WebRTCGroupChatService";
 
 export const requestStatus = {
@@ -12,7 +12,6 @@ export const requestStatus = {
 };
 
 const initialState = {
-  isVerifyingAuth: false,
   authenticated: false,
   authenticatedUserName: "",
   authenticatedUserId: "",
@@ -31,18 +30,6 @@ export const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(verifyAuthentication.pending, (sliceState, action) => {
-        sliceState.isVerifyingAuth = true;
-      })
-      .addCase(verifyAuthentication.fulfilled, (sliceState, action) => {
-        sliceState.isVerifyingAuth = false;
-        const result = action.payload.result;
-        if (result) {
-          sliceState.authenticated = true;
-          sliceState.authenticatedUserName = "verified user name";
-          sliceState.authenticatedUserId = "verified user id";
-        }
-      })
       .addCase(requestToSignin.pending, (sliceState, action) => {
         sliceState.requestStatus = requestStatus.loading;
       })
@@ -72,21 +59,6 @@ export const authSlice = createSlice({
 
 /* Thunk action creator */
 
-export const verifyAuthentication = createAsyncThunk(
-  "auth/verifyAuthentication",
-  async (_, thunkAPI) => {
-    const result = await new Promise((resolve) =>
-      setTimeout(() => {
-        resolve(true);
-      }, 3000)
-    );
-
-    return {
-      result: false,
-    };
-  }
-);
-
 export const requestToSignin = createAsyncThunk(
   "auth/requestToSignin",
   async (userName, thunkAPI) => {
@@ -107,7 +79,7 @@ export const requestToSignin = createAsyncThunk(
 
     // side effects
     thunkAPI.dispatch(fetchInitialRoomList());
-    WebRTCGroupChatService.start();
+    WebRTCGroupChatService.connect();
 
     return {
       responseStatus: response.status,
@@ -127,6 +99,9 @@ export const requestToSignout = createAsyncThunk("auth/requestToSignout", async 
     return;
   }
 
+  // side effects
+  WebRTCGroupChatService.disconnect();
+
   return {
     responseStatus: response.status,
   };
@@ -143,3 +118,11 @@ export const { reset } = authSlice.actions;
 /* Selector */
 
 export const selectAuth = (state) => state.auth;
+
+export const selectAuthenticated = createSelector(selectAuth, (auth) => {
+  return auth.authenticated;
+});
+
+export const selectAuthenticatedUserName = createSelector(selectAuth, (auth) => {
+  return auth.authenticatedUserName;
+});

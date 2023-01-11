@@ -3,10 +3,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { Navigate, Outlet } from "react-router-dom";
 import styled from "styled-components";
 
-import { requestToSignout, selectAuth } from "store/authSlice";
+import { requestToSignout, selectAuthenticated } from "store/authSlice";
 import NavigationBar from "../navigation/NavigationBar";
 import useBeforeunload from "hook/use-beforeunload";
-import { leaveRoom } from "store/roomSlice";
 
 const Wrapper = styled.div`
   width: 100%;
@@ -27,9 +26,9 @@ const OutletContainer = styled.div`
 
 export default function RequireAuth({ children, redirectTo }) {
   const dispatch = useDispatch();
-  const { authenticated } = useSelector(selectAuth);
+  const authenticated = useSelector(selectAuthenticated);
+
   useBeforeunload(() => {
-    dispatch(leaveRoom());
     dispatch(requestToSignout());
   });
 
@@ -38,6 +37,7 @@ export default function RequireAuth({ children, redirectTo }) {
     // trying to go to when they were redirected. This allows us to send them
     // along to that page after they login, which is a nicer user experience
     // than dropping them off on the home page.
+
     return (
       <Navigate
         to='/signin'

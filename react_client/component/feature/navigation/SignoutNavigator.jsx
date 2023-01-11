@@ -4,7 +4,6 @@ import styled from "styled-components";
 
 import { requestToSignout } from "store/authSlice";
 import { localizableStringKeyEnum } from "resource/string/localizable-strings";
-import { leaveRoom } from "store/roomSlice";
 import { GlobalContext } from "context/global-context";
 import { reset as resetTextChatSlice } from "store/textChatSlice";
 import { reset as resetMediaChatSlice } from "store/mediaChatSlice";
@@ -42,9 +41,6 @@ function SignoutNavigatorToMemo({
     // message
     dispatch(resetTextChatSlice());
     resetMessageContext();
-
-    // room
-    dispatch(leaveRoom());
 
     // auth
     dispatch(requestToSignout());

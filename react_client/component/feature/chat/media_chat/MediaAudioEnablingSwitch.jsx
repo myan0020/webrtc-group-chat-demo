@@ -6,7 +6,7 @@ import SingleTabSwitch, {
   singleTabSwitchOptionBuilder,
   singleTabSwitchPropsBuilder,
 } from "../../../generic/switch/SingleTabSwitch";
-import { selectMediaChat, toggleAudioEnabling } from "store/mediaChatSlice";
+import { selectAudioRelated, toggleAudioEnabling } from "store/mediaChatSlice";
 import enableAudioUrl from "resource/image/enable_audio_3x.png";
 import disableAudioUrl from "resource/image/disable_audio_3x.png";
 import audioEnablingDisabledUrl from "resource/image/audio_enabling_disabled_3x.png";
@@ -24,9 +24,7 @@ export const MediaAudioEnablingSwitchPropsBuilder = ({}) => {
 
 export default function MediaAudioEnablingSwitch({}) {
   const dispatch = useDispatch();
-  const {
-    audioRelated: { isAudioEnablingAvaliable, isAudioEnabled },
-  } = useSelector(selectMediaChat);
+  const { isAudioEnablingAvaliable, isAudioEnabled } = useSelector(selectAudioRelated);
 
   const enableAudioOption = singleTabSwitchOptionBuilder({
     switchOptionBorderColor: "rgb(0, 150, 136)",

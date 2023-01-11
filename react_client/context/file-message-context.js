@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 
 import WebRTCGroupChatService from "service/WebRTCGroupChatService/WebRTCGroupChatService";
-import { selectAuth } from "store/authSlice";
+import { selectAuthenticated, selectAuthenticatedUserName } from "store/authSlice";
 
 const FileMessageContext = React.createContext();
 FileMessageContext.displayName = "FileMessageContext";
@@ -112,7 +112,8 @@ function FileMessageContextProvider({ children }) {
   const [inputFiles, setInputFiles] = useState(null);
   const [isSendingStatusSending, setIsSendingStatusSending] = useState(false);
   const [messageContainer, setMessageContainer] = useState(null);
-  const { authenticatedUserId, authenticatedUserName } = useSelector(selectAuth);
+  const authenticatedUserId = useSelector(selectAuthenticated);
+  const authenticatedUserName = useSelector(selectAuthenticatedUserName);
 
   const messageContainerRef = useRef(messageContainer);
   messageContainerRef.current = messageContainer;

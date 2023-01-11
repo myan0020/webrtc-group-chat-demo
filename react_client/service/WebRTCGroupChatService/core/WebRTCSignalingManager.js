@@ -129,7 +129,9 @@ function _connect() {
 }
 
 function _disconnect() {
-  _leaveRoomSignaling();
+  // _leaveRoomSignaling();
+
+  WebRTCSocketManager.destroySocket(_webSocketUrl)
 }
 
 function _loginSignaling(username) {

@@ -5,9 +5,11 @@ import styled from "styled-components";
 import MultiTabSwitch, {
   multiTabSwitchTabBuilder,
   multiTabSwitchPropsBuilder,
-} from "component/generic/switch/MultiTabSwitch";
+} from "../../../generic/switch/MultiTabSwitch";
 import {
-  selectMediaChat,
+  selectEnableVideoCallingInput,
+  selectIsCalling,
+  selectVideoCallingInputType,
   updateVideoCallingInputType,
   videoCallingInputTypeEnum,
 } from "store/mediaChatSlice";
@@ -21,8 +23,9 @@ const Wrapper = styled.div`
 
 function MediaConstraintSwitchToMemo({ localizedStrings }) {
   const dispatch = useDispatch();
-  const { enableVideoCallingInput, videoCallingInputType, isCalling } =
-    useSelector(selectMediaChat);
+  const isCalling = useSelector(selectIsCalling);
+  const enableVideoCallingInput = useSelector(selectEnableVideoCallingInput);
+  const videoCallingInputType = useSelector(selectVideoCallingInputType);
 
   const switchEnabled = !isCalling && enableVideoCallingInput;
   const cameraTab = multiTabSwitchTabBuilder({

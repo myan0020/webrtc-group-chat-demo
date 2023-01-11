@@ -6,7 +6,7 @@ import SingleTabSwitch, {
   singleTabSwitchOptionBuilder,
   singleTabSwitchPropsBuilder,
 } from "../../../generic/switch/SingleTabSwitch";
-import { selectMediaChat, toggleVideoEnabling } from "store/mediaChatSlice";
+import { selectVideoRelated, toggleVideoEnabling } from "store/mediaChatSlice";
 import enableVideoUrl from "resource/image/enable_video_3x.png";
 import disableVideoUrl from "resource/image/disable_video_3x.png";
 import videoEnablingDisabledUrl from "resource/image/video_enabling_disabled_3x.png";
@@ -24,9 +24,7 @@ export const MediaVideoEnablingSwitchPropsBuilder = ({}) => {
 
 export default function MediaVideoEnablingSwitch({}) {
   const dispatch = useDispatch();
-  const {
-    videoRelated: { isVideoEnablingAvaliable, isVideoEnabled },
-  } = useSelector(selectMediaChat);
+  const { isVideoEnablingAvaliable, isVideoEnabled } = useSelector(selectVideoRelated);
 
   const enableVideoOption = singleTabSwitchOptionBuilder({
     switchOptionBorderColor: "rgb(0, 150, 136)",

@@ -2,7 +2,7 @@ import React, { useContext } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 
-import { selectRoom, leaveRoom } from "store/roomSlice";
+import { leaveRoom, selectHasJoinedRoom } from "store/roomSlice";
 import goBackImageUrl from "resource/image/go_back_3x.png";
 import { GlobalContext } from "context/global-context";
 import { reset as resetTextChatSlice } from "store/textChatSlice";
@@ -62,10 +62,9 @@ const arePropsEqual = (prevProps, nextProps) => {
 const MemorizedGoBackNavigator = React.memo(GoBackNavigatorToMemo, arePropsEqual);
 
 export default function GoBackNavigator() {
-  const { joinedRoomId } = useSelector(selectRoom);
+  const hasJoinedRoom = useSelector(selectHasJoinedRoom);
   const { resetMediaRenderingContext, resetMessageContext } = useContext(GlobalContext);
 
-  const hasJoinedRoom = joinedRoomId && joinedRoomId.length > 0;
   const visibility = !hasJoinedRoom ? "hidden" : "visible";
 
   return (
