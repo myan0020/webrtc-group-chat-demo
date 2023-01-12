@@ -39,7 +39,6 @@ exports.handleUpgrade = (request, socket, head) => {
   }
 };
 
-
 const handleWebSocketConnection = (ws, session, websocketMap) => {
   if (!ws || !session || !websocketMap) {
     console.log(`[WebSocket] ${chalk.red`unexpected connection`} event`);
@@ -99,7 +98,7 @@ const handleWebSocketMessage = (ws, sessionUserName, sessionUserId, data) => {
       break;
     }
     case signalTypeEnum.LEAVE_ROOM: {
-      handleLeaveRoom(ws, sessionUserId);
+      handleLeaveRoom(ws, sessionUserId, sessionUserName);
       break;
     }
     case signalTypeEnum.WEBRTC_NEW_PASSTHROUGH: {
@@ -120,8 +119,10 @@ const handleWebSocketClose = (code, reason, ws, sessionUserName, sessionUserId) 
     }`}) ${chalk.blue`from`} the user named ${chalk.green`${sessionUserName}`}`
   );
 
+  // TODO: need to handle unwanted onclose event (keep alive timeout, network issue, ...)
+
   // side effects
-  handleLeaveRoom(ws, sessionUserId);
+  // handleLeaveRoom(ws, sessionUserId);
 
   websocketMap.delete(sessionUserId);
 };
@@ -191,11 +192,16 @@ const handleJoinRoom = (ws, sessionUserName, sessionUserId, payload) => {
   });
 };
 
-const handleLeaveRoom = (ws, sessionUserId) => {
+const handleLeaveRoom = (ws, sessionUserId, sessionUserName) => {
   const leftRoomId = userRoomMap.get(sessionUserId);
   const leftRoom = rooms[leftRoomId];
 
   if (!leftRoom) {
+    console.log(
+      `[WebSocket] handleLeaveRoom failed for the user named ${chalk.green`${
+        sessionUserName ? sessionUserName : "unknown"
+      }`}, because left room not existed`
+    );
     return;
   }
 
