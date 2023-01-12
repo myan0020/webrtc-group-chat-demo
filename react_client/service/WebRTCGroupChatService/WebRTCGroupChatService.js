@@ -44,9 +44,9 @@ function _resetRTCRelatedState() {
 
 export default {
   /**
-   * start
+   * connect
    *
-   * note: please call 'start' when a user has already signed in
+   * note: please call 'connect' when a user has already signed in
    */
 
   connect: function () {
@@ -54,64 +54,15 @@ export default {
   },
 
   /**
-   * end
+   * disconnect
    *
-   * note: please call 'end' when a user is going to sign out
+   * note: please call 'disconnect' when a user has just signed out
    */
 
   disconnect: function () {
     _resetRTCRelatedState();
 
     WebRTCSignalingManager.disconnect();
-  },
-
-  // end: function () {
-  //
-  // TODO:
-  //
-  // Priority Level: Middle
-  //
-  // a error is found when logout, then re-login + join room + start calling,
-  // react_devtools_backend.js:4026 WebRTCGroupChatController: Found an error with message of InvalidStateError: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote answer sdp: Called in wrong state: stable during 'setRemoteDescription' or 'setLocalDescription'
-  //
-
-  // WebRTCMediaCallingManager.hangUpCalling(true);
-  // WebRTCMediaCallingManager.clearAllPeerTransceivers();
-  // WebRTCPeerConnectionManager.closeALLPeerConnections();
-  // WebRTCDataChannelManager.clearAllReceivingFiles();
-  // WebRTCSignalingManager.disconnect();
-  // },
-
-  /**
-   * Login && Logout
-   */
-
-  // actions
-  login: function (userName) {
-    WebRTCSignalingManager.loginSignaling(userName);
-  },
-  logout: function () {
-    //
-    // TODO:
-    //
-    // Priority Level: Middle
-    //
-    // a error is found when logout, then re-login + join room + start calling,
-    // react_devtools_backend.js:4026 WebRTCGroupChatController: Found an error with message of InvalidStateError: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote answer sdp: Called in wrong state: stable during 'setRemoteDescription' or 'setLocalDescription'
-    //
-
-    WebRTCMediaCallingManager.hangUpCalling(true);
-    WebRTCMediaCallingManager.clearAllPeerTransceivers();
-    WebRTCPeerConnectionManager.closeALLPeerConnections();
-    WebRTCDataChannelManager.clearAllReceivingFiles();
-    WebRTCSignalingManager.logoutSignaling();
-  },
-  // listeners
-  onLoginInSuccess: function (handler) {
-    WebRTCSignalingManager.onLoginInSuccess(handler);
-  },
-  onLogoutInSuccess: function (handler) {
-    WebRTCSignalingManager.onLogoutInSuccess(handler);
   },
 
   /**

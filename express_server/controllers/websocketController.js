@@ -119,11 +119,6 @@ const handleWebSocketClose = (code, reason, ws, sessionUserName, sessionUserId) 
     }`}) ${chalk.blue`from`} the user named ${chalk.green`${sessionUserName}`}`
   );
 
-  // TODO: need to handle unwanted onclose event (keep alive timeout, network issue, ...)
-
-  // side effects
-  // handleLeaveRoom(ws, sessionUserId);
-
   websocketMap.delete(sessionUserId);
 };
 

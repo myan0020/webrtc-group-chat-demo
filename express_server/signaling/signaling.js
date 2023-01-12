@@ -5,6 +5,7 @@ const typeEnum = {
   LOG_IN_SUCCESS: 1,
   LOG_OUT_SUCCESS: 2,
 
+  // Chat room singals
   GET_ROOMS: 0,
   CREATE_ROOM: 3,
   UPDATE_ROOMS: 4,
