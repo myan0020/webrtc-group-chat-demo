@@ -62,6 +62,8 @@ function _ReconnectingWebSocket(url) {
   }
 
   function attemptToSend(data, resendAttempts) {
+    console.debug("ReconnectingWebSocket", "attempt-send", data, `resendAttempts(${resendAttempts})`);
+
     if (!ws) {
       throw "INVALID_STATE_ERR : Pausing to reconnect websocket";
     }
@@ -76,6 +78,7 @@ function _ReconnectingWebSocket(url) {
     }
 
     ws.send(data);
+    console.debug("ReconnectingWebSocket", "attempt-send-success", data, `resendAttempts(${resendAttempts})`);
   }
 
   this.open = function (isReconnectAttempt) {
