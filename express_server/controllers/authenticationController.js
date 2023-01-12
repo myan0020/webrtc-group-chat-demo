@@ -6,7 +6,6 @@ const authenticatedUserIds = sessionController.authenticatedUserIds;
 const signaling = require("../signaling/signaling");
 const sendSignalThroughResponse = signaling.sendThroughResponse;
 const signalTypeEnum = signaling.typeEnum;
-const groupChatRoomController = require("./groupChatRoomController");
 const websocketController = require("./websocketController");
 
 exports.handleLogin = (req, res, next) => {

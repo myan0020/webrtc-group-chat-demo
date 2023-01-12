@@ -22,9 +22,7 @@ const typeEnum = {
 const createMessage = (selectedType, payload) => {
   const typeValueSet = new Set(Object.values(typeEnum));
   if (!typeValueSet.has(selectedType)) {
-    console.log(
-      chalk.red`'createMessage' has received a wrong 'selectedType'( ${selectedType} )`
-    );
+    console.log(chalk.red`'createMessage' has received a wrong 'selectedType'( ${selectedType} )`);
     return null;
   }
 
@@ -40,8 +38,7 @@ const createSerializedMessage = (selectedType, payload) => {
 };
 
 const findTypeNameByTypeValue = (typeValue) => {
-  for (let typeName in typeEnum)
-    if (typeEnum[typeName] === typeValue) return typeName;
+  for (let typeName in typeEnum) if (typeEnum[typeName] === typeValue) return typeName;
   return undefined;
 };
 
@@ -51,17 +48,13 @@ exports.findTypeNameByTypeValue = findTypeNameByTypeValue;
 
 exports.sendThroughResponse = (res, selectedType, payload) => {
   if (!res) {
-    console.log(
-      chalk.red`Response cannot be sent because 'res' param is Null`
-    );
+    console.log(chalk.red`Response cannot be sent because 'res' param is Null`);
     return;
   }
 
   const message = createMessage(selectedType, payload);
   if (!message) {
-    console.log(
-      chalk.red`Response cannot be sent because the outgoing message is Null`
-    );
+    console.log(chalk.red`Response cannot be sent because the outgoing message is Null`);
     return;
   }
 
@@ -82,7 +75,9 @@ exports.sendThroughResponse = (res, selectedType, payload) => {
 exports.sendThroughWebsocket = (websocket, selectedType, payload) => {
   if (!websocket) {
     console.log(
-      chalk.red`[WebSocket] msg cannot be sent because 'websocket' param is Null`
+      chalk.red`[WebSocket] msg of type(${selectedType}) and of payload(${JSON.stringify(
+        payload
+      )}) cannot be sent because 'websocket' param is Null`
     );
     return;
   }
