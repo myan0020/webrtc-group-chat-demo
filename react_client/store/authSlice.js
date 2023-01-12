@@ -123,6 +123,10 @@ export const selectAuthenticated = createSelector(selectAuth, (auth) => {
   return auth.authenticated;
 });
 
+export const selectAuthenticatedUserId = createSelector(selectAuth, (auth) => {
+  return auth.authenticatedUserId;
+});
+
 export const selectAuthenticatedUserName = createSelector(selectAuth, (auth) => {
   return auth.authenticatedUserName;
 });
