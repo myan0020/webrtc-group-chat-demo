@@ -9,8 +9,6 @@ function _ReconnectingWebSocket(url) {
 
   this.url = url;
 
-  this.reconnectAttempts = 0;
-
   this.maxReconnectAttempts = null;
 
   this.readyState = WebSocket.CONNECTING;
@@ -29,6 +27,12 @@ function _ReconnectingWebSocket(url) {
 
   // The maximum time in milliseconds to wait for a connection to succeed before closing and retrying
   // this.openningTimeoutInterval = 2000;
+
+  this.resendInterval = 1000;
+
+  this.resendDecay = 1.5;
+
+  this.maxResendInterval = 5 * 1000;
 
   // Wire up "on*" properties as event handlers
   eventTarget.addEventListener("open", (event) => {
@@ -55,6 +59,23 @@ function _ReconnectingWebSocket(url) {
   function generateEvent(eventName) {
     const event = new CustomEvent(eventName);
     return event;
+  }
+
+  function attemptToSend(data, resendAttempts) {
+    if (!ws) {
+      throw "INVALID_STATE_ERR : Pausing to reconnect websocket";
+    }
+
+    if (ws.readyState !== 1) {
+      const timeInterval =
+        thisReconnectingWebSocket.resendInterval *
+        Math.pow(thisReconnectingWebSocket.resendDecay, resendAttempts);
+      setTimeout(() => {
+        attemptToSend(data, resendAttempts + 1);
+      }, timeInterval);
+    }
+
+    ws.send(data);
   }
 
   this.open = function (isReconnectAttempt) {
@@ -127,19 +148,30 @@ function _ReconnectingWebSocket(url) {
         }
 
         const timeInterval =
-        thisReconnectingWebSocket.reconnectInterval * Math.pow(thisReconnectingWebSocket.reconnectDecay, thisReconnectingWebSocket.reconnectAttempts);
+          thisReconnectingWebSocket.reconnectInterval *
+          Math.pow(
+            thisReconnectingWebSocket.reconnectDecay,
+            thisReconnectingWebSocket.reconnectAttempts
+          );
         setTimeout(
           function () {
             thisReconnectingWebSocket.reconnectAttempts++;
             thisReconnectingWebSocket.open(true);
           },
-          timeInterval > thisReconnectingWebSocket.maxReconnectInterval ? thisReconnectingWebSocket.maxReconnectInterval : timeInterval
+          timeInterval > thisReconnectingWebSocket.maxReconnectInterval
+            ? thisReconnectingWebSocket.maxReconnectInterval
+            : timeInterval
         );
       }
     };
 
     ws.onmessage = (event) => {
-      console.debug("ReconnectingWebSocket", "onmessage", thisReconnectingWebSocket.url, event.data);
+      console.debug(
+        "ReconnectingWebSocket",
+        "onmessage",
+        thisReconnectingWebSocket.url,
+        event.data
+      );
 
       const customEvent = generateEvent("message");
       customEvent.data = event.data;
@@ -157,11 +189,7 @@ function _ReconnectingWebSocket(url) {
   this.open(false);
 
   this.send = function (data) {
-    if (ws) {
-      return ws.send(data);
-    } else {
-      throw "INVALID_STATE_ERR : Pausing to reconnect websocket";
-    }
+    attemptToSend(data, 0);
   };
 
   this.close = function (code, reason) {
