@@ -11,15 +11,9 @@ import WebRTCPeerConnectionManager from "./core/WebRTCPeerConnectionManager.js";
 import WebRTCDataChannelManager from "./core/WebRTCDataChannelManager.js";
 import WebRTCMediaCallingManager from "./core/WebRTCMediaCallingManager.js";
 
-let _webSocketUrl;
-if (process.env.NODE_ENV === "production") {
-  _webSocketUrl = `wss://${location.hostname}`;
-} else {
-  _webSocketUrl = `ws://${location.hostname}:${env.EXPRESS_SERVER_PORT}`;
-}
-
-WebRTCPeerConnectionManager.webSocketUrl = _webSocketUrl;
-WebRTCSignalingManager.webSocketUrl = _webSocketUrl;
+/**
+ *  Preparations
+ */
 
 WebRTCSignalingManager.onWebRTCNewPeerLeaved(WebRTCPeerConnectionManager.handleNewPeerLeave);
 WebRTCSignalingManager.onWebRTCNewPassthroughArival(
@@ -49,7 +43,29 @@ export default {
    * note: please call 'connect' when a user has already signed in
    */
 
-  connect: function () {
+  connect: function (webSocketUrl) {
+    let url = webSocketUrl;
+
+    if (typeof url !== "string" || url.length === 0) {
+      console.debug(
+        `WebRTCGroupChatService: coonecting failed because of invalid WebSocket url`,
+        url
+      );
+
+      if (process.env.NODE_ENV === "production") {
+        url = `wss://${location.hostname}`;
+      } else {
+        url = `ws://${location.hostname}:${env.EXPRESS_SERVER_PORT}`;
+      }
+
+      console.debug(
+        `WebRTCGroupChatService: will use a default WebSocket url to coonect failed`,
+        url
+      );
+    }
+
+    WebRTCPeerConnectionManager.webSocketUrl = url;
+    WebRTCSignalingManager.webSocketUrl = url;
     WebRTCSignalingManager.connect();
   },
 
@@ -62,6 +78,7 @@ export default {
   disconnect: function () {
     _resetRTCRelatedState();
 
+    WebRTCSignalingManager.webSocketUrl = undefined;
     WebRTCSignalingManager.disconnect();
   },
 

@@ -1,20 +1,9 @@
-import axios from "axios";
 import WebRTCSocketManager from "./WebRTCSocketManager.js";
 
-let _selfId;
 let _webSocketUrl;
-
-const _httpSignalTypeEnum = {
-  // Session singals
-  LOG_IN_SUCCESS: 1,
-  LOG_OUT_SUCCESS: 2,
-};
 
 let _handleWebSocketOpened;
 let _handleWebSocketClosed;
-
-let _handleLoginSuccess;
-let _handleLogoutSuccess;
 
 let _handleJoinRoomSuccess;
 let _handleRoomsUpdated;
@@ -95,6 +84,11 @@ function _handleSocketNewWebRTCPeerLeave(payload) {
 }
 
 function _connect() {
+  if (typeof _webSocketUrl !== "string" || _webSocketUrl.length === 0) {
+    console.debug(`WebRTCSignalingManager: connecting failed because of WebSocket url`, _webSocketUrl);
+    return;
+  }
+
   WebRTCSocketManager.createSocket(_webSocketUrl, _handleSocketOpen, _handleSocketClose);
   WebRTCSocketManager.registerMessageEvent(
     _webSocketUrl,
@@ -129,96 +123,7 @@ function _connect() {
 }
 
 function _disconnect() {
-  // _leaveRoomSignaling();
-
   WebRTCSocketManager.destroySocket(_webSocketUrl)
-}
-
-function _loginSignaling(username) {
-  const passChecking = _checkUserName(username);
-  const config = {
-    url: "/api/login",
-    method: "POST",
-    data: {
-      username: passChecking ? username : "unknownUserName",
-    },
-  };
-  axios(config)
-    .then((response) => {
-      const type = response.data.type;
-      const payload = response.data.payload;
-      const userId = payload.userId;
-      const passChecking = _checkUserId(userId);
-      if (!passChecking) return;
-      _selfId = userId;
-      if (type === _httpSignalTypeEnum.LOG_IN_SUCCESS) {
-        WebRTCSocketManager.createSocket(_webSocketUrl, _handleSocketOpen, _handleSocketClose);
-        WebRTCSocketManager.registerMessageEvent(
-          _webSocketUrl,
-          WebRTCSocketManager.typeEnum.UPDATE_ROOMS,
-          _handleSocketUpdateRooms
-        );
-        WebRTCSocketManager.registerMessageEvent(
-          _webSocketUrl,
-          WebRTCSocketManager.typeEnum.JOIN_ROOM_SUCCESS,
-          _handleSocketJoinRoomSuccess
-        );
-        WebRTCSocketManager.registerMessageEvent(
-          _webSocketUrl,
-          WebRTCSocketManager.typeEnum.LEAVE_ROOM_SUCCESS,
-          _handleSocketLeaveRoomSuccess
-        );
-        WebRTCSocketManager.registerMessageEvent(
-          _webSocketUrl,
-          WebRTCSocketManager.typeEnum.WEBRTC_NEW_PEER_ARIVAL,
-          _handleSocketNewWebRTCPeerArival
-        );
-        WebRTCSocketManager.registerMessageEvent(
-          _webSocketUrl,
-          WebRTCSocketManager.typeEnum.WEBRTC_NEW_PASSTHROUGH,
-          _handleSocketNewWebRTCPassthroughArival
-        );
-        WebRTCSocketManager.registerMessageEvent(
-          _webSocketUrl,
-          WebRTCSocketManager.typeEnum.WEBRTC_NEW_PEER_LEAVE,
-          _handleSocketNewWebRTCPeerLeave
-        );
-        // the first time rooms info updating should be transfored through axios
-        // rather than websocket, because websocket hasn't been opened right now
-        if (_handleLoginSuccess) {
-          _handleLoginSuccess(payload);
-        }
-        if (_handleRoomsUpdated) {
-          _handleRoomsUpdated(payload);
-        }
-      }
-    })
-    .catch((error) => {
-      console.error(error);
-    });
-}
-
-function _logoutSignaling() {
-  _leaveRoomSignaling();
-
-  const config = {
-    url: "/logout",
-    method: "POST",
-  };
-  axios(config)
-    .then((response) => {
-      const type = response.data.type;
-      if (type === _httpSignalTypeEnum.LOG_OUT_SUCCESS) {
-        console.debug("WebRTCGroupChatController: LOG_OUT_SUCCESS signal received");
-
-        if (_handleLogoutSuccess) {
-          _handleLogoutSuccess();
-        }
-      }
-    })
-    .catch((error) => {
-      console.error(error);
-    });
 }
 
 /**
@@ -270,15 +175,6 @@ function _checkUserId(id) {
 }
 
 export default {
-  connect: function () {
-    _connect();
-  },
-  disconnect: function () {
-    _disconnect();
-  },
-
-  selfId: _selfId,
-
   /**
    * @param {String} url
    */
@@ -286,8 +182,14 @@ export default {
     _webSocketUrl = url;
   },
 
-  loginSignaling: _loginSignaling,
-  logoutSignaling: _logoutSignaling,
+  connect: function () {
+    _connect();
+  },
+
+  disconnect: function () {
+    _disconnect();
+  },
+
   createNewRoomSignaling: _createNewRoomSignaling,
   joinRoomSignaling: _joinRoomSignaling,
   leaveRoomSignaling: _leaveRoomSignaling,
@@ -297,13 +199,6 @@ export default {
   },
   onWebSocketClose: function (handler) {
     _handleWebSocketClosed = handler;
-  },
-
-  onLoginInSuccess: function (handler) {
-    _handleLoginSuccess = handler;
-  },
-  onLogoutInSuccess: function (handler) {
-    _handleLogoutSuccess = handler;
   },
 
   onJoinRoomInSuccess: function (handler) {
