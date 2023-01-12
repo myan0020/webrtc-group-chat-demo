@@ -75,10 +75,11 @@ function _ReconnectingWebSocket(url) {
       setTimeout(() => {
         attemptToSend(data, resendAttempts + 1);
       }, timeInterval);
+      return;
     }
 
     ws.send(data);
-    console.debug("ReconnectingWebSocket", "attempt-send-success", data, `resendAttempts(${resendAttempts})`);
+    console.debug("ReconnectingWebSocket", "attempt-send-success", data, ws, `resendAttempts(${resendAttempts})`);
   }
 
   this.open = function (isReconnectAttempt) {
