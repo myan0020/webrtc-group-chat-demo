@@ -64,11 +64,11 @@ function _ReconnectingWebSocket(url) {
   function attemptToSend(data, resendAttempts) {
     console.debug("ReconnectingWebSocket", "attempt-send", data, `resendAttempts(${resendAttempts})`);
 
-    if (!ws) {
-      throw "INVALID_STATE_ERR : Pausing to reconnect websocket";
-    }
+    // if (!ws) {
+    //   throw "INVALID_STATE_ERR : Pausing to reconnect websocket";
+    // }
 
-    if (ws.readyState !== 1) {
+    if (!ws || ws.readyState !== 1) {
       const timeInterval =
         thisReconnectingWebSocket.resendInterval *
         Math.pow(thisReconnectingWebSocket.resendDecay, resendAttempts);
