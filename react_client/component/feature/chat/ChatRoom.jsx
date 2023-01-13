@@ -67,7 +67,7 @@ const MessageSenderContainer = styled.div`
 `;
 
 export default function ChatRoom() {
-  const hasJoinedRoom = useSelector(selectHasJoinedRoom);
+  const hasJoinedRoom = useSelector(selectHasJoinedRoom,);
 
   if (!hasJoinedRoom) {
     return <Navigate to={"/room-list"} />;

@@ -18,22 +18,33 @@ wss.on("connection", function (ws, request, client) {
 });
 
 exports.handleUpgrade = (request, socket, head) => {
+  console.log(`[HTTP] heard websocket upgrade event`);
+
   const pathname = request.url;
 
   if (pathname === "/") {
     sessionParser(request, {}, function next() {
       if (!authenticatedUserIds.has(request.session.userId)) {
+        console.log(
+          `[HTTP] websocket upgrade event ignored beacause of the unauthorized id(${request.session.userId})`
+        );
+
         socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
         socket.destroy();
         return;
       }
 
       wss.handleUpgrade(request, socket, head, function (ws) {
-        console.log(`[WebSocket] will emit a ${chalk.yellow`connection`} event `);
+        console.log(
+          `[HTTP] websocket upgrade event has passed checking, will emit a websocket ${chalk.yellow`connection`} event`
+        );
+
         wss.emit("connection", ws, request);
       });
     });
   } else {
+    console.log(`[HTTP] websocket upgrade event ignored beacause of the wrong path(${pathname})`);
+
     socket.destroy();
     return;
   }
@@ -69,9 +80,6 @@ const handleWebSocketConnection = (ws, session, websocketMap) => {
     handleWebSocketMessage(ws, sessionUserName, sessionUserId, data);
   });
   ws.on("close", (code, reason) => {
-    if (!authenticatedUserIds.has(sessionUserId)) {
-      return;
-    }
     handleWebSocketClose(code, reason, ws, sessionUserName, sessionUserId);
   });
 };

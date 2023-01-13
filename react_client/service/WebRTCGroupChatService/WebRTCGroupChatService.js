@@ -59,7 +59,7 @@ export default {
       }
 
       console.debug(
-        `WebRTCGroupChatService: will use a default WebSocket url to coonect failed`,
+        `WebRTCGroupChatService: will use a default WebSocket url to coonect`,
         url
       );
     }
@@ -78,8 +78,8 @@ export default {
   disconnect: function () {
     _resetRTCRelatedState();
 
-    WebRTCSignalingManager.webSocketUrl = undefined;
     WebRTCSignalingManager.disconnect();
+    WebRTCSignalingManager.webSocketUrl = undefined;
   },
 
   /**
