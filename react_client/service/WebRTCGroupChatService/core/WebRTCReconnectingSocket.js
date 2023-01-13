@@ -122,11 +122,14 @@ function WebRTCReconnectingSocket(url) {
       if (forcedClose) {
         thisReconnectingSocket.readyState = WebSocket.CLOSED;
 
-        const customEvent = generateEvent("close");
-        customEvent.code = event.code;
-        customEvent.reason = event.reason;
-        customEvent.wasClean = event.wasClean;
-        eventTarget.dispatchEvent(customEvent);
+        const customCloseEvent = generateEvent("close");
+        customCloseEvent.code = event.code;
+        customCloseEvent.reason = event.reason;
+        customCloseEvent.wasClean = event.wasClean;
+        eventTarget.dispatchEvent(customCloseEvent);
+
+        const customRemoveEvent = generateEvent("remove");
+        eventTarget.dispatchEvent(customRemoveEvent);
       } else {
         thisReconnectingSocket.readyState = WebSocket.CONNECTING;
 

@@ -43,10 +43,16 @@ function _createSocket(socketUrl, openCallback, closeCallback) {
         closeCallback(event);
       }
     };
+    const removeEventListener = function (event) {
+      _removeSocketListeners(socketUrl);
+    };
 
     socket.addEventListener("open", openEventListener);
     socket.addEventListener("error", errorEventListener);
     socket.addEventListener("close", closeEventListener);
+    socket.addEventListener("remove", removeEventListener, {
+      once: true,
+    });
 
     _eventListenerMap.set(socketUrl, {
       open: openEventListener,
@@ -58,22 +64,21 @@ function _createSocket(socketUrl, openCallback, closeCallback) {
   }
 }
 
-function _destroySocket(socketUrl) {
-  const socket = _socketMap.get(socketUrl);
-
-  if (socket) {
-    socket.close();
-    _socketMap.delete(socketUrl);
-  }
-
+function _removeSocketListeners(socketUrl) {
   if (!_eventListenerMap.has(socketUrl)) {
     return;
   }
+  if (!_socketMap.has(socketUrl)) {
+    return;
+  }
 
-  const openEventListener = _eventListenerMap.get(socketUrl)?.open;
-  const errorEventListener = _eventListenerMap.get(socketUrl)?.error;
-  const closeEventListener = _eventListenerMap.get(socketUrl)?.close;
-  const messageEventListeners = _eventListenerMap.get(socketUrl)?.message;
+  const eventListenerContainer = _eventListenerMap.get(socketUrl);
+  const socket = _socketMap.get(socketUrl);
+
+  const openEventListener = eventListenerContainer.open;
+  const errorEventListener = eventListenerContainer.error;
+  const closeEventListener = eventListenerContainer.close;
+  const messageEventListeners = eventListenerContainer.message;
 
   if (openEventListener) {
     socket.removeEventListener("open", openEventListener);
@@ -93,7 +98,18 @@ function _destroySocket(socketUrl) {
     });
   }
 
+  _socketMap.delete(socketUrl);
   _eventListenerMap.delete(socketUrl);
+
+  console.debug(`SocketService: websocket listeners removed`);
+}
+
+function _destroySocket(socketUrl) {
+  const socket = _socketMap.get(socketUrl);
+  if (!socket) {
+    return;
+  }
+  socket.close();
 }
 
 function _registerMessageEvent(socketUrl, regisType, regisCallback) {
@@ -110,7 +126,7 @@ function _registerMessageEvent(socketUrl, regisType, regisCallback) {
       return;
     }
     regisCallback(payload);
-  }
+  };
   socket.addEventListener("message", messageEventListener);
 
   if (!_eventListenerMap.has(socketUrl)) {
