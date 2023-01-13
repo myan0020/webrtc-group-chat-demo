@@ -25,14 +25,14 @@ function _createSocket(socketUrl, openCallback, closeCallback) {
     socket = new WebRTCReconnectingSocket(socketUrl);
 
     const openEventListener = function (event) {
-      console.debug("SocketService: websocket connected");
+      console.debug(`SocketService: websocket connected`);
       // external usage
       if (openCallback) {
         openCallback(event);
       }
     };
     const errorEventListener = function (event) {
-      console.debug("SocketService: client side heared websocket onerror event", event);
+      console.debug(`SocketService: client side heared websocket onerror event`, event);
     };
     const closeEventListener = function (event) {
       console.debug(
