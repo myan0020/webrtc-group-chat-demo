@@ -1,4 +1,4 @@
-function WebRTCReconnectingSocket(url) {
+function WebRTCReconnectingAliveSocket(url) {
   // Private state variables
   let ws;
   let forcedClose = false;
@@ -217,19 +217,19 @@ function WebRTCReconnectingSocket(url) {
  * An event listener to be called when the WebSocket connection's readyState changes to OPEN;
  * this indicates that the connection is ready to send and receive data.
  */
-WebRTCReconnectingSocket.prototype.onopen = function (event) {};
+WebRTCReconnectingAliveSocket.prototype.onopen = function (event) {};
 /** An event listener to be called when the WebSocket connection's readyState changes to CLOSED. */
-WebRTCReconnectingSocket.prototype.onclose = function (event) {};
+WebRTCReconnectingAliveSocket.prototype.onclose = function (event) {};
 /** An event listener to be called when a connection begins being attempted. */
-WebRTCReconnectingSocket.prototype.onconnecting = function (event) {};
+WebRTCReconnectingAliveSocket.prototype.onconnecting = function (event) {};
 /** An event listener to be called when a message is received from the server. */
-WebRTCReconnectingSocket.prototype.onmessage = function (event) {};
+WebRTCReconnectingAliveSocket.prototype.onmessage = function (event) {};
 /** An event listener to be called when an error occurs. */
-WebRTCReconnectingSocket.prototype.onerror = function (event) {};
+WebRTCReconnectingAliveSocket.prototype.onerror = function (event) {};
 
-WebRTCReconnectingSocket.CONNECTING = WebSocket.CONNECTING;
-WebRTCReconnectingSocket.OPEN = WebSocket.OPEN;
-WebRTCReconnectingSocket.CLOSING = WebSocket.CLOSING;
-WebRTCReconnectingSocket.CLOSED = WebSocket.CLOSED;
+WebRTCReconnectingAliveSocket.CONNECTING = WebSocket.CONNECTING;
+WebRTCReconnectingAliveSocket.OPEN = WebSocket.OPEN;
+WebRTCReconnectingAliveSocket.CLOSING = WebSocket.CLOSING;
+WebRTCReconnectingAliveSocket.CLOSED = WebSocket.CLOSED;
 
-export default WebRTCReconnectingSocket;
+export default WebRTCReconnectingAliveSocket;

@@ -1,4 +1,4 @@
-import WebRTCReconnectingSocket from "./WebRTCReconnectingSocket.js";
+import WebRTCReconnectingAliveSocket from "./WebRTCReconnectingAliveSocket.js";
 
 // This signal message type list match the same one on server side
 const _typeEnum = {
@@ -22,7 +22,7 @@ const _eventListenerMap = new Map();
 function _createSocket(socketUrl, openCallback, closeCallback) {
   let socket = _socketMap.get(socketUrl);
   if (!socket) {
-    socket = new WebRTCReconnectingSocket(socketUrl);
+    socket = new WebRTCReconnectingAliveSocket(socketUrl);
 
     const openEventListener = function (event) {
       console.debug(`SocketService: websocket connected`);

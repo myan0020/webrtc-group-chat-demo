@@ -13,8 +13,24 @@ const authenticatedUserIds = require("./sessionController").authenticatedUserIds
 const chalk = require("chalk");
 
 const wss = new WebSocket.Server({ noServer: true });
+
 wss.on("connection", function (ws, request, client) {
   handleWebSocketConnection(ws, request.session, websocketMap);
+});
+
+const pingInterval = setInterval(function ping() {
+  wss.clients.forEach(function each(ws) {
+    if (ws.isAlive === false) {
+      // ws.terminate();
+      return
+    }
+
+    ws.isAlive = false;
+    ws.ping();
+  });
+}, 30000);
+wss.on('close', function close() {
+  clearInterval(pingInterval);
 });
 
 exports.handleUpgrade = (request, socket, head) => {
@@ -70,8 +86,14 @@ const handleWebSocketConnection = (ws, session, websocketMap) => {
   }
 
   websocketMap.set(sessionUserId, ws);
+
   ws.userId = sessionUserId;
   ws.username = sessionUserName;
+  ws.isAlive = true;
+
+  ws.on('pong', function heartbeat() {
+    ws.isAlive = true;
+  });
 
   ws.on("message", (data) => {
     if (!authenticatedUserIds.has(sessionUserId)) {
