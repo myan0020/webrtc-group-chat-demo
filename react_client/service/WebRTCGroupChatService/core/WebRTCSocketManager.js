@@ -1,21 +1,5 @@
 import WebRTCReconnectingAliveSocket from "./WebRTCReconnectingAliveSocket.js";
 
-// This signal message type list match the same one on server side
-const _typeEnum = {
-  // Chat room singals
-  CREATE_ROOM: 3,
-  UPDATE_ROOMS: 4,
-  JOIN_ROOM: 5,
-  JOIN_ROOM_SUCCESS: 6,
-  LEAVE_ROOM: 7,
-  LEAVE_ROOM_SUCCESS: 8,
-
-  // WebRTC connection singals
-  WEBRTC_NEW_PEER_ARIVAL: 9,
-  WEBRTC_NEW_PEER_LEAVE: 10,
-  WEBRTC_NEW_PASSTHROUGH: 11,
-};
-
 const _socketMap = new Map();
 const _eventListenerMap = new Map();
 
@@ -171,6 +155,4 @@ export default {
   emitMessageEvent(socketUrl, emitType, emitPayload) {
     _emitMessageEvent(socketUrl, emitType, emitPayload);
   },
-
-  typeEnum: _typeEnum,
 };

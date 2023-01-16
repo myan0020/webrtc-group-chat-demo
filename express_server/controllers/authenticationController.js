@@ -38,7 +38,7 @@ exports.handleLogout = (req, res, next) => {
   const sessionUserName = req.session.username;
 
   console.log(
-    `[HTTP] before logout action been executed, avaliable session are [${chalk.yellow`...`}]`
+    `[${chalk.green`HTTP`}] before logout action been executed, avaliable session are [${chalk.yellow`...`}]`
   );
   for (let userId of Array.from(websocketMap.keys())) {
     console.log(`[${chalk.yellow`${userId}`}]`);
@@ -65,7 +65,9 @@ exports.handleLogout = (req, res, next) => {
         websocketController.handleLeaveRoom(ws, sessionUserId);
 
         console.log(
-          `[WebSocket] will perform ${chalk.green`an active connection close`} to the user named ${sessionUserName}`
+          `[${chalk.green`WebSocket`}] will perform ${chalk.green`an active connection close`} to a user of a name(${chalk.green`${
+            typeof sessionUserName === "string" ? sessionUserName : "unknown"
+          }`})`
         );
       }
     }

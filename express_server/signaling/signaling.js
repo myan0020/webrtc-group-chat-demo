@@ -1,22 +1,31 @@
 const chalk = require("chalk");
 
 const typeEnum = {
-  // Session singals
+  // HTTP //
+  //
+  // auth
   LOG_IN_SUCCESS: 1,
   LOG_OUT_SUCCESS: 2,
 
-  // Chat room singals
-  GET_ROOMS: 0,
-  CREATE_ROOM: 3,
-  UPDATE_ROOMS: 4,
-  JOIN_ROOM: 5,
-  JOIN_ROOM_SUCCESS: 6,
-  LEAVE_ROOM: 7,
-  LEAVE_ROOM_SUCCESS: 8,
-  // WebRTC connection singals
-  WEBRTC_NEW_PEER_ARIVAL: 9,
-  WEBRTC_NEW_PEER_LEAVE: 10,
-  WEBRTC_NEW_PASSTHROUGH: 11,
+  // WebSocket //
+  //
+  // heartbeat
+  PING: 3,
+  PONG: 4,
+  //
+  // chat room
+  GET_ROOMS: 5,
+  CREATE_ROOM: 6,
+  UPDATE_ROOMS: 7,
+  JOIN_ROOM: 8,
+  JOIN_ROOM_SUCCESS: 9,
+  LEAVE_ROOM: 10,
+  LEAVE_ROOM_SUCCESS: 11,
+  //
+  // WebRTC connection
+  WEBRTC_NEW_PEER_ARIVAL: 12,
+  WEBRTC_NEW_PEER_LEAVE: 13,
+  WEBRTC_NEW_PASSTHROUGH: 14,
 };
 
 const createMessage = (selectedType, payload) => {
@@ -65,7 +74,7 @@ exports.sendThroughResponse = (res, selectedType, payload) => {
     );
   } else {
     console.log(
-      `[HTTP] ${chalk.green`${selectedTypeName}`} signal msg respond ${chalk.blue`to`} a user`
+      `[${chalk.green`HTTP`}] ${chalk.green`${selectedTypeName}`} signal msg respond ${chalk.blue`to`} a user`
     );
   }
 
@@ -89,9 +98,9 @@ exports.sendThroughWebsocket = (websocket, selectedType, payload) => {
     );
   } else {
     console.log(
-      `[WebSocket] ${chalk.green`${selectedTypeName}`} signal msg ${chalk.blue`to`} the user named ${chalk.green`${
+      `[${chalk.green`WebSocket`}] ${chalk.green`${selectedTypeName}`} signal msg ${chalk.blue`to`} a user of a name(${chalk.green`${
         websocket.username ? websocket.username : "unknown"
-      }`}`
+      }`})`
     );
   }
 

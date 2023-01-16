@@ -1,5 +1,34 @@
 import WebRTCSocketManager from "./WebRTCSocketManager.js";
 
+// This signal message type list match the same one on server side
+const _typeEnum = {
+  // HTTP //
+  //
+  // auth
+  LOG_IN_SUCCESS: 1,
+  LOG_OUT_SUCCESS: 2,
+
+  // WebSocket //
+  //
+  // heartbeat
+  PING: 3,
+  PONG: 4,
+  //
+  // chat room
+  GET_ROOMS: 5,
+  CREATE_ROOM: 6,
+  UPDATE_ROOMS: 7,
+  JOIN_ROOM: 8,
+  JOIN_ROOM_SUCCESS: 9,
+  LEAVE_ROOM: 10,
+  LEAVE_ROOM_SUCCESS: 11,
+  //
+  // WebRTC connection
+  WEBRTC_NEW_PEER_ARIVAL: 12,
+  WEBRTC_NEW_PEER_LEAVE: 13,
+  WEBRTC_NEW_PASSTHROUGH: 14,
+};
+
 let _webSocketUrl;
 
 let _handleWebSocketOpened;
@@ -28,6 +57,12 @@ function _handleSocketClose(event) {
   if (_handleWebSocketClosed) {
     _handleWebSocketClosed(event);
   }
+}
+
+function _handleSocketPing() {
+  console.debug("WebRTCGroupChatController: PING signal received, will respond with PONG signal");
+
+  WebRTCSocketManager.emitMessageEvent(_webSocketUrl, _typeEnum.PONG);
 }
 
 function _handleSocketUpdateRooms(payload) {
@@ -85,45 +120,53 @@ function _handleSocketNewWebRTCPeerLeave(payload) {
 
 function _connect() {
   if (typeof _webSocketUrl !== "string" || _webSocketUrl.length === 0) {
-    console.debug(`WebRTCSignalingManager: connecting failed because of WebSocket url`, _webSocketUrl);
+    console.debug(
+      `WebRTCSignalingManager: connecting failed because of WebSocket url`,
+      _webSocketUrl
+    );
     return;
   }
 
   WebRTCSocketManager.createSocket(_webSocketUrl, _handleSocketOpen, _handleSocketClose);
   WebRTCSocketManager.registerMessageEvent(
     _webSocketUrl,
-    WebRTCSocketManager.typeEnum.UPDATE_ROOMS,
+    _typeEnum.PING,
+    _handleSocketPing
+  );
+  WebRTCSocketManager.registerMessageEvent(
+    _webSocketUrl,
+    _typeEnum.UPDATE_ROOMS,
     _handleSocketUpdateRooms
   );
   WebRTCSocketManager.registerMessageEvent(
     _webSocketUrl,
-    WebRTCSocketManager.typeEnum.JOIN_ROOM_SUCCESS,
+    _typeEnum.JOIN_ROOM_SUCCESS,
     _handleSocketJoinRoomSuccess
   );
   WebRTCSocketManager.registerMessageEvent(
     _webSocketUrl,
-    WebRTCSocketManager.typeEnum.LEAVE_ROOM_SUCCESS,
+    _typeEnum.LEAVE_ROOM_SUCCESS,
     _handleSocketLeaveRoomSuccess
   );
   WebRTCSocketManager.registerMessageEvent(
     _webSocketUrl,
-    WebRTCSocketManager.typeEnum.WEBRTC_NEW_PEER_ARIVAL,
+    _typeEnum.WEBRTC_NEW_PEER_ARIVAL,
     _handleSocketNewWebRTCPeerArival
   );
   WebRTCSocketManager.registerMessageEvent(
     _webSocketUrl,
-    WebRTCSocketManager.typeEnum.WEBRTC_NEW_PASSTHROUGH,
+    _typeEnum.WEBRTC_NEW_PASSTHROUGH,
     _handleSocketNewWebRTCPassthroughArival
   );
   WebRTCSocketManager.registerMessageEvent(
     _webSocketUrl,
-    WebRTCSocketManager.typeEnum.WEBRTC_NEW_PEER_LEAVE,
+    _typeEnum.WEBRTC_NEW_PEER_LEAVE,
     _handleSocketNewWebRTCPeerLeave
   );
 }
 
 function _disconnect() {
-  WebRTCSocketManager.destroySocket(_webSocketUrl)
+  WebRTCSocketManager.destroySocket(_webSocketUrl);
 }
 
 /**
@@ -132,7 +175,7 @@ function _disconnect() {
 
 function _createNewRoomSignaling(roomName) {
   if (roomName.length > 0) {
-    WebRTCSocketManager.emitMessageEvent(_webSocketUrl, WebRTCSocketManager.typeEnum.CREATE_ROOM, {
+    WebRTCSocketManager.emitMessageEvent(_webSocketUrl, _typeEnum.CREATE_ROOM, {
       roomName: roomName,
     });
   }
@@ -140,14 +183,26 @@ function _createNewRoomSignaling(roomName) {
 
 function _joinRoomSignaling(roomId) {
   if (roomId.length > 0) {
-    WebRTCSocketManager.emitMessageEvent(_webSocketUrl, WebRTCSocketManager.typeEnum.JOIN_ROOM, {
+    WebRTCSocketManager.emitMessageEvent(_webSocketUrl, _typeEnum.JOIN_ROOM, {
       roomId: roomId,
     });
   }
 }
 
 function _leaveRoomSignaling() {
-  WebRTCSocketManager.emitMessageEvent(_webSocketUrl, WebRTCSocketManager.typeEnum.LEAVE_ROOM, {});
+  WebRTCSocketManager.emitMessageEvent(_webSocketUrl, _typeEnum.LEAVE_ROOM, {});
+}
+
+/**
+ * WebRTC peer connection
+ */
+
+function _passThroughSignaling(payload) {
+  WebRTCSocketManager.emitMessageEvent(
+    _webSocketUrl,
+    _typeEnum.WEBRTC_NEW_PASSTHROUGH,
+    payload
+  );
 }
 
 /**
@@ -193,6 +248,8 @@ export default {
   createNewRoomSignaling: _createNewRoomSignaling,
   joinRoomSignaling: _joinRoomSignaling,
   leaveRoomSignaling: _leaveRoomSignaling,
+
+  passThroughSignaling: _passThroughSignaling,
 
   onWebSocketOpen: function (handler) {
     _handleWebSocketOpened = handler;

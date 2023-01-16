@@ -1,8 +1,7 @@
 import WebRTCDataChannelManager from "./WebRTCDataChannelManager.js";
 import WebRTCMediaCallingManager from "./WebRTCMediaCallingManager.js";
-import WebRTCSocketManager from "./WebRTCSocketManager.js";
+import WebRTCSignalingManager from "./WebRTCSignalingManager.js";
 
-let _webSocketUrl;
 let _peerConnectionConfig = {
   iceServers: [
     {
@@ -236,15 +235,10 @@ function _handleNewPassthroughArival(payload) {
       if (sdp.type == "answer") {
         return;
       }
-
-      WebRTCSocketManager.emitMessageEvent(
-        _webSocketUrl,
-        WebRTCSocketManager.typeEnum.WEBRTC_NEW_PASSTHROUGH,
-        {
-          sdp: peerConnection.localDescription,
-          to: peerId,
-        }
-      );
+      WebRTCSignalingManager.passThroughSignaling({
+        sdp: peerConnection.localDescription,
+        to: peerId,
+      });
     })
     .catch((error) => {
       console.error(
@@ -311,14 +305,10 @@ function _addPeerConnection(peerId, peerName) {
 
 function _handlePeerConnectionICECandidateEvent(event, peerId) {
   if (event.candidate) {
-    WebRTCSocketManager.emitMessageEvent(
-      _webSocketUrl,
-      WebRTCSocketManager.typeEnum.WEBRTC_NEW_PASSTHROUGH,
-      {
-        iceCandidate: event.candidate,
-        to: peerId,
-      }
-    );
+    WebRTCSignalingManager.passThroughSignaling({
+      iceCandidate: event.candidate,
+      to: peerId,
+    });
     console.debug(
       `WebRTCGroupChatController: a peer connection's 'onicecandidate' fired with a new ICE candidate, then it's sent to ${peerId}`
     );
@@ -372,15 +362,11 @@ function _handlePeerConnectionNegotiationEvent(event) {
         },  during 'onnegotiationneeded'`
       );
 
-      WebRTCSocketManager.emitMessageEvent(
-        _webSocketUrl,
-        WebRTCSocketManager.typeEnum.WEBRTC_NEW_PASSTHROUGH,
-        {
-          sdp: offer,
-          to: peerId,
-          callingConstraints: WebRTCMediaCallingManager.callingConstraints,
-        }
-      );
+      WebRTCSignalingManager.passThroughSignaling({
+        sdp: offer,
+        to: peerId,
+        callingConstraints: WebRTCMediaCallingManager.callingConstraints,
+      });
     })
     .catch((error) => {
       console.error(`WebRTCGroupChatController: Found error with message of ${error}`);
@@ -392,7 +378,9 @@ function _handlePeerConnectionNegotiationEvent(event) {
 
 function _closePeerConnection(peerId) {
   if (!peerId || peerId.length === 0) {
-    console.debug(`WebRTCGroupChatController: unexpected peerId when stopping peer side connection`);
+    console.debug(
+      `WebRTCGroupChatController: unexpected peerId when stopping peer side connection`
+    );
     return;
   }
 
@@ -407,7 +395,9 @@ function _closeALLPeerConnections() {
   _peerConnectionMap.forEach((peerConnection, peerId) => {
     if (peerConnection) {
       peerConnection.close();
-      console.debug(`WebRTCGroupChatController: the peerConnection with peerId of ${peerId} closed`);
+      console.debug(
+        `WebRTCGroupChatController: the peerConnection with peerId of ${peerId} closed`
+      );
     }
   });
   _peerConnectionMap.clear();
@@ -435,13 +425,6 @@ export default {
       return undefined;
     }
     return peerConnection.peerName;
-  },
-
-  /**
-   * @param {String} url
-   */
-  set webSocketUrl(url) {
-    _webSocketUrl = url;
   },
 
   handleNewPeerArivalInternally: _handleNewPeerArivalInternally,

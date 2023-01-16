@@ -64,7 +64,6 @@ export default {
       );
     }
 
-    WebRTCPeerConnectionManager.webSocketUrl = url;
     WebRTCSignalingManager.webSocketUrl = url;
     WebRTCSignalingManager.connect();
   },

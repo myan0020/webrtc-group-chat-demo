@@ -12,29 +12,30 @@ const sessionParser = require("./sessionController").sessionParser;
 const authenticatedUserIds = require("./sessionController").authenticatedUserIds;
 const chalk = require("chalk");
 
+const pingInterval = 30 * 1000;
+
 const wss = new WebSocket.Server({ noServer: true });
 
 wss.on("connection", function (ws, request, client) {
   handleWebSocketConnection(ws, request.session, websocketMap);
 });
 
-const pingInterval = setInterval(function ping() {
+const pingIntervalId = setInterval(function ping() {
   wss.clients.forEach(function each(ws) {
     if (ws.isAlive === false) {
       // ws.terminate();
-      return
+      return;
     }
-
     ws.isAlive = false;
-    ws.ping();
+    sendSerializedSignalThroughWebsocket(ws, signalTypeEnum.PING);
   });
-}, 30000);
-wss.on('close', function close() {
-  clearInterval(pingInterval);
+}, pingInterval);
+wss.on("close", function close() {
+  clearInterval(pingIntervalId);
 });
 
 exports.handleUpgrade = (request, socket, head) => {
-  console.log(`[HTTP] heard websocket upgrade event`);
+  console.log(`[${chalk.green`HTTP`}] heard ${chalk.green`websocket upgrade`} event`);
 
   const pathname = request.url;
 
@@ -42,7 +43,9 @@ exports.handleUpgrade = (request, socket, head) => {
     sessionParser(request, {}, function next() {
       if (!authenticatedUserIds.has(request.session.userId)) {
         console.log(
-          `[HTTP] websocket upgrade event ignored beacause of the unauthorized id(${request.session.userId})`
+          `[${chalk.yellow`HTTP`}] ${chalk.yellow`websocket upgrade`} event ${chalk.yellow`ignored`} beacause of the unauthorized id(${
+            request.session.userId
+          })`
         );
 
         socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
@@ -52,14 +55,16 @@ exports.handleUpgrade = (request, socket, head) => {
 
       wss.handleUpgrade(request, socket, head, function (ws) {
         console.log(
-          `[HTTP] websocket upgrade event has passed checking, will emit a websocket ${chalk.yellow`connection`} event`
+          `[${chalk.green`HTTP`}] ${chalk.green`websocket upgrade`} event has passed checking, will emit a websocket ${chalk.yellow`connection`} event`
         );
 
         wss.emit("connection", ws, request);
       });
     });
   } else {
-    console.log(`[HTTP] websocket upgrade event ignored beacause of the wrong path(${pathname})`);
+    console.log(
+      `[${chalk.yellow`HTTP`}] ${chalk.yellow`websocket upgrade`} event ${chalk.yellow`ignored`} beacause of the wrong path(${pathname})`
+    );
 
     socket.destroy();
     return;
@@ -68,7 +73,7 @@ exports.handleUpgrade = (request, socket, head) => {
 
 const handleWebSocketConnection = (ws, session, websocketMap) => {
   if (!ws || !session || !websocketMap) {
-    console.log(`[WebSocket] ${chalk.red`unexpected connection`} event`);
+    console.log(`${chalk.red`[WebSocket] unexpected connection event`}`);
     return;
   }
 
@@ -76,9 +81,9 @@ const handleWebSocketConnection = (ws, session, websocketMap) => {
   const sessionUserId = session.userId;
 
   console.log(
-    `[WebSocket] ${chalk.green`connection`} event ${chalk.blue`from`} the user named ${chalk.green`${
+    `[${chalk.green`WebSocket`}] ${chalk.green`connection`} event ${chalk.blue`from`} a user of a name(${chalk.green`${
       sessionUserName ? sessionUserName : "unknown"
-    }`}`
+    }`})`
   );
 
   if (!sessionUserId || !sessionUserName) {
@@ -90,10 +95,6 @@ const handleWebSocketConnection = (ws, session, websocketMap) => {
   ws.userId = sessionUserId;
   ws.username = sessionUserName;
   ws.isAlive = true;
-
-  ws.on('pong', function heartbeat() {
-    ws.isAlive = true;
-  });
 
   ws.on("message", (data) => {
     if (!authenticatedUserIds.has(sessionUserId)) {
@@ -113,12 +114,16 @@ const handleWebSocketMessage = (ws, sessionUserName, sessionUserId, data) => {
 
   const signalTypeName = findSignalTypeNameByTypeValue(type);
   console.log(
-    `[WebSocket] ${chalk.green`${signalTypeName}`} signal msg ${chalk.blue`from`} the user named ${chalk.green`${
+    `[${chalk.green`WebSocket`}] ${chalk.green`${signalTypeName}`} signal msg ${chalk.blue`from`} a user(${chalk.green`${sessionUserId}`}) of a name(${chalk.green`${
       sessionUserName ? sessionUserName : "unknown"
-    }`}`
+    }`})`
   );
 
   switch (type) {
+    case signalTypeEnum.PONG: {
+      handlePong(ws, sessionUserId, sessionUserName);
+      break;
+    }
     case signalTypeEnum.CREATE_ROOM: {
       handleCreateRoom(ws, sessionUserName, sessionUserId, payload);
       break;
@@ -142,14 +147,22 @@ const handleWebSocketMessage = (ws, sessionUserName, sessionUserId, data) => {
 
 const handleWebSocketClose = (code, reason, ws, sessionUserName, sessionUserId) => {
   console.log(
-    `[WebSocket] heard ${chalk.green`close`} event (code: ${chalk.green`${
+    `[${chalk.green`WebSocket`}] heard ${chalk.green`close`} event (code: ${chalk.green`${
       code ? code : "unknown close code"
     }`}, reason: ${chalk.green`${
       reason ? reason : "unknown close reason"
-    }`}) ${chalk.blue`from`} the user named ${chalk.green`${sessionUserName}`}`
+    }`}) ${chalk.blue`from`} the user of a name(${chalk.green`${sessionUserName}`})`
   );
 
   websocketMap.delete(sessionUserId);
+};
+
+const handlePong = (ws, sessionUserId, sessionUserName) => {
+  if (ws.isAlive) {
+    // ignore it when received a 'PONG' without ever sending a 'PING'
+    return;
+  }
+  ws.isAlive = true;
 };
 
 const handleCreateRoom = (ws, sessionUserName, sessionUserId, payload) => {
@@ -223,9 +236,9 @@ const handleLeaveRoom = (ws, sessionUserId, sessionUserName) => {
 
   if (!leftRoom) {
     console.log(
-      `[WebSocket] handleLeaveRoom failed for the user named ${chalk.green`${
+      `[${chalk.yellow`WebSocket`}] handleLeaveRoom failed for the user of a name(${chalk.yellow`${
         sessionUserName ? sessionUserName : "unknown"
-      }`}, because left room not existed`
+      }`}), because left room not existed`
     );
     return;
   }
@@ -270,7 +283,7 @@ const handleWebRTCNewPassthrough = (ws, sessionUserName, sessionUserId, payload)
 
   if ((sdp || iceCandidate) && websocketToPassThrough) {
     console.log(
-      `[WebSocket] ${chalk.green`WEBRTC_NEW_PASSTHROUGH`} signal msg of type ${chalk.green`${
+      `[${chalk.green`WebSocket`}] ${chalk.green`WEBRTC_NEW_PASSTHROUGH`} signal msg of type ${chalk.green`${
         sdp && iceCandidate
           ? "unexpected payload"
           : sdp
@@ -278,9 +291,9 @@ const handleWebRTCNewPassthrough = (ws, sessionUserName, sessionUserId, payload)
           : iceCandidate
           ? "ICE"
           : "unknown"
-      }`} ${chalk.blue`from`} the user named ${chalk.green`${sessionUserName}`} ${chalk.blue`to`} the user named ${chalk.green`${
+      }`} ${chalk.blue`from`} the user of a name(${chalk.green`${sessionUserName}`}) ${chalk.blue`to`} the user of a name(${chalk.green`${
         websocketToPassThrough.username ? websocketToPassThrough.username : "unknown"
-      }`}`
+      }`})`
     );
     sendSerializedSignalThroughWebsocket(
       websocketToPassThrough,
