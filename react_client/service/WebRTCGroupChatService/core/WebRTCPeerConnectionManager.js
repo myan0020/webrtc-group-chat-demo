@@ -321,7 +321,11 @@ function _handlePeerConnectionICEConnectionStateChangeEvent(event) {
   }
   const peerConnection = event.target;
   console.debug(
-    `WebRTCGroupChatController: a peer connection's 'oniceconnectionstatechange' fired with the state of '${peerConnection.iceConnectionState}'`
+    `WebRTCGroupChatController: a peer connection's 'oniceconnectionstatechange' fired with a state of '${peerConnection.iceConnectionState}'`,
+    `localDescription:`,
+    peerConnection.currentLocalDescription,
+    `remoteDescription:`,
+    peerConnection.currentRemoteDescription
   );
 }
 
