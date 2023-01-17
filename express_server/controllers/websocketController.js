@@ -20,7 +20,7 @@ wss.on("connection", function (ws, request, client) {
   handleWebSocketConnection(ws, request.session, websocketMap);
 });
 
-const pingIntervalId = setInterval(function ping() {
+const pingIntervalID = setInterval(function ping() {
   wss.clients.forEach(function each(ws) {
     if (ws.isAlive === false) {
       // ws.terminate();
@@ -31,7 +31,7 @@ const pingIntervalId = setInterval(function ping() {
   });
 }, pingInterval);
 wss.on("close", function close() {
-  clearInterval(pingIntervalId);
+  clearInterval(pingIntervalID);
 });
 
 exports.handleUpgrade = (request, socket, head) => {

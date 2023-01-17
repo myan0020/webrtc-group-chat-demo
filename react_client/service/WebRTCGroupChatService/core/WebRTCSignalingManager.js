@@ -128,11 +128,7 @@ function _connect() {
   }
 
   WebRTCSocketManager.createSocket(_webSocketUrl, _handleSocketOpen, _handleSocketClose);
-  WebRTCSocketManager.registerMessageEvent(
-    _webSocketUrl,
-    _typeEnum.PING,
-    _handleSocketPing
-  );
+  WebRTCSocketManager.registerMessageEvent(_webSocketUrl, _typeEnum.PING, _handleSocketPing);
   WebRTCSocketManager.registerMessageEvent(
     _webSocketUrl,
     _typeEnum.UPDATE_ROOMS,
@@ -198,11 +194,7 @@ function _leaveRoomSignaling() {
  */
 
 function _passThroughSignaling(payload) {
-  WebRTCSocketManager.emitMessageEvent(
-    _webSocketUrl,
-    _typeEnum.WEBRTC_NEW_PASSTHROUGH,
-    payload
-  );
+  WebRTCSocketManager.emitMessageEvent(_webSocketUrl, _typeEnum.WEBRTC_NEW_PASSTHROUGH, payload);
 }
 
 /**
