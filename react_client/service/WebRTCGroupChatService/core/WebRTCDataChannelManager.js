@@ -424,16 +424,24 @@ async function _handleSenderFileBufferChannelBufferedAmountLow(
   file
 ) {
   const offset = WebRTCFileDataStore.getSendingProgress(peerId, fileHash);
-
   console.debug(
     `WebRTCGroupChatController: '_handleSenderFileBufferChannelBufferedAmountLow' called, from a channel(${dataChannel.label}), peerId(${peerId}), the current file(${fileHash}) offset is ${offset}`
   );
 
+  if (dataChannel.hasSentEndOfFileBufferMessage) {
+    return;
+  }
+
+  if (dataChannel.readyState !== "open") {
+    return;
+  }
+
   if (offset >= file.size) {
     console.debug(
-      `WebRTCGroupChatController: this offset(${offset}) is not less than file size(${file.size}), so perform an active close for this file buffer channel`
+      `WebRTCGroupChatController: the offset(${offset}) is not less than file size(${file.size}), so notify remote peer that the file buffer sending is completed and wait for ACK_FOR_END_OF_FILE_BUFFER_MESSAGE`
     );
 
+    dataChannel.hasSentEndOfFileBufferMessage = true;
     dataChannel.send(END_OF_FILE_BUFFER_MESSAGE);
     return;
   }
@@ -619,7 +627,7 @@ async function _handleReceiverChannelFileBufferMessage(event, peerId) {
     WebRTCFileDataStore.setReceivingCancelled(peerId, fileHash, true);
     WebRTCFileDataStore.resetReceivingBuffer(peerId, fileHash);
   } else if (data === END_OF_FILE_BUFFER_MESSAGE) {
-    const channel = _peerFileBufferChannelMap.getChannel(peerId, label)
+    const channel = _peerFileBufferChannelMap.getChannel(peerId, label);
     if (channel && channel.readyState === "open") {
       channel.send(ACK_FOR_END_OF_FILE_BUFFER_MESSAGE);
     }
