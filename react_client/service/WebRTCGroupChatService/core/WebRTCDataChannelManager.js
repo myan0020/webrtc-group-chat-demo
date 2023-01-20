@@ -93,7 +93,7 @@ function _handleChatMessagingChannelMessage({ event, peerId, peerName, label }) 
  * File transceiving
  */
 
-const MAXIMUM_FILE_CHUNK_SIZE = WebRTCFileDataStore.maxSendingChunkSize;
+const MAXIMUM_FILE_CHUNK_SIZE_OF_DEFAULT = 32 * 1024;
 const FILE_META_DATA_CHANNEL_LABEL = "FILE_META_DATA_CHANNEL_LABEL";
 const ACK_FOR_FILE_META_DATA_MESSAGE = "ACK_FOR_FILE_META_DATA_MESSAGE";
 const START_OF_FILE_BUFFER_MESSAGE = "START_OF_FILE_BUFFER_MESSAGE";
@@ -384,12 +384,21 @@ function _createAndStoreDataChannel({
   }
 
   const dataChannel = peerConnection.createDataChannel(label);
+
   console.debug(
     `WebRTCGroupChatController: a new data channel of label(${label}) for a peer(${peerId}) has been created`,
     `and max message size is (${
       peerConnection.sctp ? peerConnection.sctp.maxMessageSize : "unknown"
     })`
   );
+
+  dataChannel.maxMessageSize = 0;
+  if (peerConnection.sctp && peerConnection.sctp.maxMessageSize > 0) {
+    dataChannel.maxMessageSize = peerConnection.sctp.maxMessageSize;
+    console.debug(
+      `WebRTCGroupChatController: a maxMessageSize(${peerConnection.sctp.maxMessageSize}) has found and set to a dataChannel(${label})`
+    );
+  }
 
   if (onOpenHandler) {
     dataChannel.onopen = onOpenHandler;
@@ -461,7 +470,11 @@ async function _handleSenderFileBufferChannelBufferedAmountLow(
 
 // ( sender: file buffer )
 async function _sendChunk(fileHash, file, offset, dataChannel) {
-  const chunk = file.slice(offset, offset + MAXIMUM_FILE_CHUNK_SIZE);
+  const maxMessageSize =
+    dataChannel.maxMessageSize > 0
+      ? dataChannel.maxMessageSize
+      : MAXIMUM_FILE_CHUNK_SIZE_OF_DEFAULT;
+  const chunk = file.slice(offset, offset + maxMessageSize);
   const buffer = await chunk.arrayBuffer();
 
   // avoid sending after sending cancelled

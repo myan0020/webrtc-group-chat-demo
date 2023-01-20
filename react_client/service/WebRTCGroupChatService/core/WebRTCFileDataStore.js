@@ -1186,14 +1186,6 @@ export default {
   },
 
   //
-  // Sending chunk size
-  //
-
-  get maxSendingChunkSize() {
-    return 16 * 1024;
-  },
-
-  //
   // Sending meta data
   //
 
