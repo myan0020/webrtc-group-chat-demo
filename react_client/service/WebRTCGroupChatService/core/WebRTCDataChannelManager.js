@@ -555,7 +555,7 @@ function _handlePeerConnectionDataChannelEvent(event, peerId, peerName) {
     channel.onmessage = (event) => {
       _handleReceiverChannelFileMetaDataMessage(event, peerId, label);
     };
-    _peerFileMetaDataChannelMap.setChannel(peerId, label);
+    _peerFileMetaDataChannelMap.setChannel(peerId, label, channel);
   } else {
     channel.onmessage = (event) => {
       _handleReceiverChannelFileBufferMessage(event, peerId, channel);
