@@ -128,7 +128,7 @@ const RoomListWrapper = styled.ul`
   padding-top: 50px;
   padding-bottom: 50px;
   height: 100%;
-  overflow: scroll;
+  overflow: auto;
 `;
 
 const RoomItemWrapper = styled.li`
