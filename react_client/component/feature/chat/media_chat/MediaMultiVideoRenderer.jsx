@@ -27,7 +27,7 @@ const PresentationTypeMembersRendererContainer = styled.div`
   flex: 0 0 content;
   aspect-ratio: 1 / ${(props) => props.numberOfInitialVisibleMembers};
   height: 100%;
-  overflow-y: scroll;
+  overflow-y: auto;
 `;
 
 const PresentationTypeMemberRendererContainer = styled.div`

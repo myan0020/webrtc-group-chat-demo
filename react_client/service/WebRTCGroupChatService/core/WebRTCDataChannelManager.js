@@ -44,6 +44,7 @@ function _sendChatMessageToPeer(message, peerId, peerConnection) {
       peerConnection: peerConnection,
       peerId: peerId,
       label: CHAT_MESSAGING_CHANNEL_LABEL,
+      bufferedAmountLowThreshold: 0,
       onOpenHandler: () => {
         _handleSenderChatMessagingChannelOpen(peerId, dataChannel, message);
       },
@@ -219,6 +220,7 @@ async function _sendFileToPeer(files, peerId, peerConnection) {
   const fileMetaDataChannel = _createAndStoreDataChannel({
     peerConnection: peerConnection,
     peerId: peerId,
+    bufferedAmountLowThreshold: 0,
     label: FILE_META_DATA_CHANNEL_LABEL,
     onOpenHandler: () => {
       _handleSenderFileMetaDataChannelOpen(
@@ -313,6 +315,7 @@ async function _sendFileBufferToPeer(fileHashToFile, peerId, peerConnection) {
         peerId: peerId,
         peerConnection: peerConnection,
         label: label,
+        bufferedAmountLowThreshold: 0,
         onOpenHandler: (event) => {
           _handleSenderFileBufferChannelOpen(event, peerId, fileBufferChannel);
         },
@@ -365,6 +368,7 @@ function _createAndStoreDataChannel({
   peerConnection,
   peerId,
   label,
+  bufferedAmountLowThreshold,
   onOpenHandler,
   onMessageHandler,
   onBufferedAmountLowHandler,
@@ -392,6 +396,8 @@ function _createAndStoreDataChannel({
     })`
   );
 
+  dataChannel.bufferedAmountLowThreshold =
+    typeof bufferedAmountLowThreshold === "number" ? bufferedAmountLowThreshold : 0;
   dataChannel.maxMessageSize = 0;
   if (peerConnection.sctp && peerConnection.sctp.maxMessageSize > 0) {
     dataChannel.maxMessageSize = peerConnection.sctp.maxMessageSize;
