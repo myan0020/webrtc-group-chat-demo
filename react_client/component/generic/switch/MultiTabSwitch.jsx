@@ -1,77 +1,6 @@
 import React from "react";
 import styled from "styled-components";
 
-const Wrapper = styled.div`
-  background-color: ${(props) => props.backgroundColor};
-  border-style: solid;
-  border-radius: ${(props) => props.borderRadius}px;
-  border-width: ${(props) => props.outerMostBorderWidth}px;
-  border-color: rgba(0, 0, 0, 0);
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  width: 100%;
-  height: 100%;
-  box-sizing: border-box;
-`;
-
-const TabWrapper = styled.div`
-  flex: 1;
-  border-radius: ${(props) => props.borderRadius}px;
-  border-width: 0px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  background-color: ${(props) => props.backgroundColor};
-  ${(props) =>
-    typeof props.backgroundImageUrl === "string" &&
-    `background-image: url(${props.backgroundImageUrl});`}
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: ${(props) => props.backgroundImageSize};
-  color: ${(props) => props.color};
-  font-size: ${(props) => props.fontSize}px;
-  text-align: center;
-  height: 100%;
-
-  position: relative;
-
-  &:hover,
-  &:active {
-    opacity: ${(props) => (props.enabled ? 0.5 : 1)};
-  }
-`;
-
-const TabTextWrapper = styled.div`
-  margin: auto;
-`;
-
-const BadgeWrapper = styled.div`
-  visibility: ${(props) => props.visibility};
-  width: 20px;
-  height: 20px;
-  position: absolute;
-  top: -7px;
-  right: 8px;
-
-  border-radius: 5px;
-  background-color: rgb(0, 150, 136);
-
-  ${
-    "" /* background-image: url(${(props) => props.backgroundImageUrl});
-  background-position: 50% 2px;
-  background-repeat: no-repeat;
-  background-size: cover; */
-  }
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 12px;
-  font-weight: 600;
-  color: rgb(255, 255, 255);
-`;
-
 export const multiTabSwitchTabBuilder = ({
   switchTabName,
   switchTabBorderRadius,
@@ -284,3 +213,74 @@ export default function MultiTabSwitch({
     </Wrapper>
   );
 }
+
+const Wrapper = styled.div`
+  background-color: ${(props) => props.backgroundColor};
+  border-style: solid;
+  border-radius: ${(props) => props.borderRadius}px;
+  border-width: ${(props) => props.outerMostBorderWidth}px;
+  border-color: rgba(0, 0, 0, 0);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+`;
+
+const TabWrapper = styled.div`
+  flex: 1;
+  border-radius: ${(props) => props.borderRadius}px;
+  border-width: 0px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background-color: ${(props) => props.backgroundColor};
+  ${(props) =>
+    typeof props.backgroundImageUrl === "string" &&
+    `background-image: url(${props.backgroundImageUrl});`}
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: ${(props) => props.backgroundImageSize};
+  color: ${(props) => props.color};
+  font-size: ${(props) => props.fontSize}px;
+  text-align: center;
+  height: 100%;
+
+  position: relative;
+
+  &:hover,
+  &:active {
+    opacity: ${(props) => (props.enabled ? 0.5 : 1)};
+  }
+`;
+
+const TabTextWrapper = styled.div`
+  margin: auto;
+`;
+
+const BadgeWrapper = styled.div`
+  visibility: ${(props) => props.visibility};
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  top: -7px;
+  right: 8px;
+
+  border-radius: 5px;
+  background-color: rgb(0, 150, 136);
+
+  ${
+    "" /* background-image: url(${(props) => props.backgroundImageUrl});
+  background-position: 50% 2px;
+  background-repeat: no-repeat;
+  background-size: cover; */
+  }
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgb(255, 255, 255);
+`;

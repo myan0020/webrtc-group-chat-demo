@@ -8,10 +8,24 @@ import DropdownSwitch, {
 } from "../../generic/switch/DropdownSwitch";
 import { GlobalContext } from "context/global-context";
 
-const Wrapper = styled.div`
-  width: 100%;
-  height: 100%;
-`;
+export default function LocalizationSwitch({
+  iconImageUrl,
+  selectedTextColor,
+  isSelectedTextKeyVisible,
+}) {
+  const { localizedStrings, changeLocalization } = useContext(GlobalContext);
+  return (
+    <MemorizedLocalizationSwitch
+      iconImageUrl={iconImageUrl}
+      selectedTextColor={selectedTextColor}
+      isSelectedTextKeyVisible={isSelectedTextKeyVisible}
+      localizedStrings={localizedStrings}
+      changeLocalization={changeLocalization}
+    />
+  );
+}
+
+const MemorizedLocalizationSwitch = React.memo(LocalizationSwitchToMemo, arePropsEqual);
 
 function LocalizationSwitchToMemo({
   iconImageUrl,
@@ -79,21 +93,7 @@ const arePropsEqual = (prevProps, nextProps) => {
   );
 };
 
-const MemorizedLocalizationSwitch = React.memo(LocalizationSwitchToMemo, arePropsEqual);
-
-export default function LocalizationSwitch({
-  iconImageUrl,
-  selectedTextColor,
-  isSelectedTextKeyVisible,
-}) {
-  const { localizedStrings, changeLocalization } = useContext(GlobalContext);
-  return (
-    <MemorizedLocalizationSwitch
-      iconImageUrl={iconImageUrl}
-      selectedTextColor={selectedTextColor}
-      isSelectedTextKeyVisible={isSelectedTextKeyVisible}
-      localizedStrings={localizedStrings}
-      changeLocalization={changeLocalization}
-    />
-  );
-}
+const Wrapper = styled.div`
+  width: 100%;
+  height: 100%;
+`;

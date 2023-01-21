@@ -1,108 +1,6 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 
-const sharedStyleValues = {
-  dropdownOptionHorizontalMargin: 5,
-  dropdownOptionVerticalMargin: 5,
-};
-
-const Wrapper = styled.div`
-  box-sizing: border-box;
-  width: 100%;
-  height: 100%;
-
-  position: relative;
-`;
-
-const SelectedOptionWrapper = styled.div`
-  box-sizing: border-box;
-  max-width: 100%;
-  height: 100%;
-
-  display: flex;
-  flex-direction: row;
-  justify-content: start;
-  align-items: center;
-
-  &:hover,
-  &:active {
-    opacity: 0.5;
-  }
-`;
-
-const SelectedOptionIconWrapper = styled.div`
-  box-sizing: border-box;
-  flex: 0 0 ${(props) => props.width}px;
-  height: ${(props) => props.width}px;
-
-  background-image: url(${(props) => props.backgroundImageUrl});
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: contain;
-`;
-
-const SelectedOptionTextWrapper = styled.div`
-  box-sizing: border-box;
-  flex: 0 0 content;
-  height: 100%;
-  margin-left: 3px;
-
-  display: flex;
-  align-items: center;
-  color: ${(props) => props.color};
-`;
-
-const DropdownBackgroundWrapper = styled.div`
-  display: ${(props) => props.display};
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-
-  z-index: 1;
-`;
-
-const DropdownContentWrapper = styled.ul`
-  display: ${(props) => props.display};
-
-  box-sizing: border-box;
-  width: 100px;
-  padding: 0;
-  padding-top: 3px;
-  padding-bottom: 3px;
-  margin: 0;
-  border: 1.5px solid #808080;
-  border-radius: 10px;
-
-  position: absolute;
-  top: 120%;
-  left: -5px;
-  z-index: 1;
-
-  background-color: rgb(36, 41, 47);
-`;
-
-const DropdownOptionWrapper = styled.li`
-  box-sizing: border-box;
-  height: 50px;
-  list-style-type: none;
-  color: rgb(255, 255, 255);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: calc(100% - ${sharedStyleValues.dropdownOptionHorizontalMargin * 2}px);
-  border-radius: 10px;
-  margin-left: ${sharedStyleValues.dropdownOptionHorizontalMargin}px;
-  margin-right: ${sharedStyleValues.dropdownOptionHorizontalMargin}px;
-  margin-top: ${sharedStyleValues.dropdownOptionVerticalMargin}px;
-  margin-bottom: ${sharedStyleValues.dropdownOptionVerticalMargin}px;
-
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-  }
-`;
-
 export const dropdownSwitchOptionBuilder = ({
   dropdownOptionName,
   dropdownOptionSelected,
@@ -220,3 +118,105 @@ export default function DropdownSwitch({
     </Wrapper>
   );
 }
+
+const sharedStyleValues = {
+  dropdownOptionHorizontalMargin: 5,
+  dropdownOptionVerticalMargin: 5,
+};
+
+const Wrapper = styled.div`
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+
+  position: relative;
+`;
+
+const SelectedOptionWrapper = styled.div`
+  box-sizing: border-box;
+  max-width: 100%;
+  height: 100%;
+
+  display: flex;
+  flex-direction: row;
+  justify-content: start;
+  align-items: center;
+
+  &:hover,
+  &:active {
+    opacity: 0.5;
+  }
+`;
+
+const SelectedOptionIconWrapper = styled.div`
+  box-sizing: border-box;
+  flex: 0 0 ${(props) => props.width}px;
+  height: ${(props) => props.width}px;
+
+  background-image: url(${(props) => props.backgroundImageUrl});
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+`;
+
+const SelectedOptionTextWrapper = styled.div`
+  box-sizing: border-box;
+  flex: 0 0 content;
+  height: 100%;
+  margin-left: 3px;
+
+  display: flex;
+  align-items: center;
+  color: ${(props) => props.color};
+`;
+
+const DropdownBackgroundWrapper = styled.div`
+  display: ${(props) => props.display};
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+
+  z-index: 1;
+`;
+
+const DropdownContentWrapper = styled.ul`
+  display: ${(props) => props.display};
+
+  box-sizing: border-box;
+  width: 100px;
+  padding: 0;
+  padding-top: 3px;
+  padding-bottom: 3px;
+  margin: 0;
+  border: 1.5px solid #808080;
+  border-radius: 10px;
+
+  position: absolute;
+  top: 120%;
+  left: -5px;
+  z-index: 1;
+
+  background-color: rgb(36, 41, 47);
+`;
+
+const DropdownOptionWrapper = styled.li`
+  box-sizing: border-box;
+  height: 50px;
+  list-style-type: none;
+  color: rgb(255, 255, 255);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(100% - ${sharedStyleValues.dropdownOptionHorizontalMargin * 2}px);
+  border-radius: 10px;
+  margin-left: ${sharedStyleValues.dropdownOptionHorizontalMargin}px;
+  margin-right: ${sharedStyleValues.dropdownOptionHorizontalMargin}px;
+  margin-top: ${sharedStyleValues.dropdownOptionVerticalMargin}px;
+  margin-bottom: ${sharedStyleValues.dropdownOptionVerticalMargin}px;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+`;

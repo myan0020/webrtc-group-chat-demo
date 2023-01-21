@@ -7,24 +7,22 @@ import { localizableStringKeyEnum } from "resource/string/localizable-strings";
 import { GlobalContext } from "context/global-context";
 import { reset as resetTextChatSlice } from "store/textChatSlice";
 import { reset as resetMediaChatSlice } from "store/mediaChatSlice";
+import { reset as resetRoomSlice } from "store/roomSlice";
 
-const SignoutNavigatorWrapper = styled.div`
-  width: 100%;
-  height: 100%;
-`;
+export default function SignoutNavigator() {
+  const { localizedStrings, resetMediaRenderingContext, resetMessageContext } =
+    useContext(GlobalContext);
 
-const SignoutNavigatorButton = styled.button`
-  width: 100%;
-  height: 100%;
+  return (
+    <MemorizedSignoutNavigator
+      localizedStrings={localizedStrings}
+      resetMediaRenderingContext={resetMediaRenderingContext}
+      resetMessageContext={resetMessageContext}
+    />
+  );
+}
 
-  box-sizing: border-box;
-  border: 1px solid #ffffff;
-  border-radius: 10px;
-  color: rgb(255, 255, 255);
-  text-align: center;
-  font-size: 14px;
-  background-color: transparent;
-`;
+const MemorizedSignoutNavigator = React.memo(SignoutNavigatorToMemo, arePropsEqual);
 
 function SignoutNavigatorToMemo({
   localizedStrings,
@@ -41,6 +39,9 @@ function SignoutNavigatorToMemo({
     // message
     dispatch(resetTextChatSlice());
     resetMessageContext();
+
+    // roomList
+    dispatch(resetRoomSlice())
 
     // auth
     dispatch(requestToSignout());
@@ -68,17 +69,20 @@ const arePropsEqual = (prevProps, nextProps) => {
   return isLocalizedStringEqual && isResetMediaRenderingContextEqual && isResetMessageContextEqual;
 };
 
-const MemorizedSignoutNavigator = React.memo(SignoutNavigatorToMemo, arePropsEqual);
+const SignoutNavigatorWrapper = styled.div`
+  width: 100%;
+  height: 100%;
+`;
 
-export default function SignoutNavigator() {
-  const { localizedStrings, resetMediaRenderingContext, resetMessageContext } =
-    useContext(GlobalContext);
+const SignoutNavigatorButton = styled.button`
+  width: 100%;
+  height: 100%;
 
-  return (
-    <MemorizedSignoutNavigator
-      localizedStrings={localizedStrings}
-      resetMediaRenderingContext={resetMediaRenderingContext}
-      resetMessageContext={resetMessageContext}
-    />
-  );
-}
+  box-sizing: border-box;
+  border: 1px solid #ffffff;
+  border-radius: 10px;
+  color: rgb(255, 255, 255);
+  text-align: center;
+  font-size: 14px;
+  background-color: transparent;
+`;

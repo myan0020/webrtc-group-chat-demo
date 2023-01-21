@@ -11,13 +11,6 @@ import enableAudioUrl from "resource/image/enable_audio_3x.png";
 import disableAudioUrl from "resource/image/disable_audio_3x.png";
 import audioEnablingDisabledUrl from "resource/image/audio_enabling_disabled_3x.png";
 
-const Wrapper = styled.div`
-  width: 55px;
-  height: 55px;
-  margin-left: 5px;
-  margin-right: 5px;
-`;
-
 export const MediaAudioEnablingSwitchPropsBuilder = ({}) => {
   return {};
 };
@@ -61,3 +54,10 @@ export default function MediaAudioEnablingSwitch({}) {
     </Wrapper>
   );
 }
+
+const Wrapper = styled.div`
+  width: 55px;
+  height: 55px;
+  margin-left: 5px;
+  margin-right: 5px;
+`;

@@ -3,6 +3,16 @@ import styled from "styled-components";
 
 import personSpeakImageUrl from "resource/image/person_speak_3x.png";
 
+export default function MediaUserTag({ userName }) {
+  const name = typeof userName === "string" && userName.length > 0 ? userName : "Unknown";
+  return (
+    <Wrapper>
+      <AvatarWrapper />
+      <NameWrapper>{name}</NameWrapper>
+    </Wrapper>
+  );
+}
+
 const Wrapper = styled.div`
   max-width: 100%;
   height: 100%;
@@ -36,13 +46,3 @@ const NameWrapper = styled.div`
   overflow: hidden;
   text-overflow: ellipsis;
 `;
-
-export default function MediaUserTag({ userName }) {
-  const name = typeof userName === "string" && userName.length > 0 ? userName : "Unknown";
-  return (
-    <Wrapper>
-      <AvatarWrapper />
-      <NameWrapper>{name}</NameWrapper>
-    </Wrapper>
-  );
-}

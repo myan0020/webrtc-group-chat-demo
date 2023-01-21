@@ -10,6 +10,108 @@ import LocalizationSwitch from "../localization/LocalizationSwitch";
 import globalGreyImageUrl from "resource/image/global_grey_3x.png";
 import { GlobalContext } from "context/global-context";
 
+export default function Signin() {
+  const dispatch = useDispatch();
+
+  const { localizedStrings } = useContext(GlobalContext);
+  const authenticated = useSelector(selectAuthenticated);
+  const [inputUserName, setInputUserName] = useState("");
+
+  const onInputNewUserNameChange = (e) => {
+    setInputUserName(e.target.value);
+  };
+  const onSigninClick = (e) => {
+    e.preventDefault();
+    dispatch(requestToSignin(inputUserName));
+  };
+  const onKeyDown = (e) => {
+    if (e.key !== "Enter") return;
+    if (inputUserName.length === 0) return;
+    onSigninClick(e);
+  };
+
+  if (!authenticated) {
+    return (
+      <MemorizedSignin
+        localizedStrings={localizedStrings}
+        inputUserName={inputUserName}
+        onInputNewUserNameChange={onInputNewUserNameChange}
+        onKeyDown={onKeyDown}
+        onSigninClick={onSigninClick}
+      />
+    );
+  }
+
+  return <Navigate to={"/room-list"} />;
+}
+
+const MemorizedSignin = React.memo(SigninToMemo, arePropsEqual);
+
+function SigninToMemo({
+  localizedStrings,
+  inputUserName,
+  onInputNewUserNameChange,
+  onKeyDown,
+  onSigninClick,
+}) {
+  return (
+    <Wrapper>
+      <ContentWrapper>
+        <HeadingWrapper>
+          <Heading>{localizedStrings[localizableStringKeyEnum.SIGN_IN_TITLE]}</Heading>
+          <HeadingDescription>
+            {localizedStrings[localizableStringKeyEnum.SIGN_IN_TITLE_DESC]}
+          </HeadingDescription>
+        </HeadingWrapper>
+        {/* {isVerifyingAuth && (
+          <VerifyingWrapper>
+            <RotatingLines
+              strokeColor='grey'
+              strokeWidth='5'
+              animationDuration='0.75'
+              width='20'
+              height='20'
+              visible={true}
+            />
+          </VerifyingWrapper>
+        )} */}
+        <FormWrapper>
+          <FormInputWrapper>
+            <FormInput
+              placeholder={`${
+                localizedStrings[localizableStringKeyEnum.SIGN_IN_INPUT_PLACEHOLDER]
+              }`}
+              onChange={onInputNewUserNameChange}
+              value={inputUserName}
+              onKeyDown={onKeyDown}
+              autoFocus
+            />
+          </FormInputWrapper>
+          <FormButton
+            type='button'
+            onClick={onSigninClick}
+          >
+            {localizedStrings[localizableStringKeyEnum.SIGN_IN_COMFIRM]}
+          </FormButton>
+          <FormLanguageSwitchContainer>
+            <LocalizationSwitch
+              iconImageUrl={globalGreyImageUrl}
+              selectedTextColor={"#808080"}
+              isSelectedTextKeyVisible={true}
+            />
+          </FormLanguageSwitchContainer>
+        </FormWrapper>
+      </ContentWrapper>
+    </Wrapper>
+  );
+}
+
+const arePropsEqual = (prevProps, nextProps) => {
+  const isLocalizedStringEqual = Object.is(prevProps.localizedStrings, nextProps.localizedStrings);
+  const isInputUserNameEqual = Object.is(prevProps.inputUserName, nextProps.inputUserName);
+  return isLocalizedStringEqual && isInputUserNameEqual;
+};
+
 const sharedStyleValues = {
   formInputVerticalMargin: 40,
 };
@@ -106,105 +208,3 @@ const FormLanguageSwitchContainer = styled.div`
   margin-top: 15px;
   font-size: 20px;
 `;
-
-function SigninToMemo({
-  localizedStrings,
-  inputUserName,
-  onInputNewUserNameChange,
-  onKeyDown,
-  onSigninClick,
-}) {
-  return (
-    <Wrapper>
-      <ContentWrapper>
-        <HeadingWrapper>
-          <Heading>{localizedStrings[localizableStringKeyEnum.SIGN_IN_TITLE]}</Heading>
-          <HeadingDescription>
-            {localizedStrings[localizableStringKeyEnum.SIGN_IN_TITLE_DESC]}
-          </HeadingDescription>
-        </HeadingWrapper>
-        {/* {isVerifyingAuth && (
-          <VerifyingWrapper>
-            <RotatingLines
-              strokeColor='grey'
-              strokeWidth='5'
-              animationDuration='0.75'
-              width='20'
-              height='20'
-              visible={true}
-            />
-          </VerifyingWrapper>
-        )} */}
-        <FormWrapper>
-          <FormInputWrapper>
-            <FormInput
-              placeholder={`${
-                localizedStrings[localizableStringKeyEnum.SIGN_IN_INPUT_PLACEHOLDER]
-              }`}
-              onChange={onInputNewUserNameChange}
-              value={inputUserName}
-              onKeyDown={onKeyDown}
-              autoFocus
-            />
-          </FormInputWrapper>
-          <FormButton
-            type='button'
-            onClick={onSigninClick}
-          >
-            {localizedStrings[localizableStringKeyEnum.SIGN_IN_COMFIRM]}
-          </FormButton>
-          <FormLanguageSwitchContainer>
-            <LocalizationSwitch
-              iconImageUrl={globalGreyImageUrl}
-              selectedTextColor={"#808080"}
-              isSelectedTextKeyVisible={true}
-            />
-          </FormLanguageSwitchContainer>
-        </FormWrapper>
-      </ContentWrapper>
-    </Wrapper>
-  );
-}
-
-const arePropsEqual = (prevProps, nextProps) => {
-  const isLocalizedStringEqual = Object.is(prevProps.localizedStrings, nextProps.localizedStrings);
-  const isInputUserNameEqual = Object.is(prevProps.inputUserName, nextProps.inputUserName);
-  return isLocalizedStringEqual && isInputUserNameEqual;
-};
-
-const MemorizedSignin = React.memo(SigninToMemo, arePropsEqual);
-
-export default function Signin() {
-  const dispatch = useDispatch();
-
-  const { localizedStrings } = useContext(GlobalContext);
-  const authenticated = useSelector(selectAuthenticated);
-  const [inputUserName, setInputUserName] = useState("");
-
-  const onInputNewUserNameChange = (e) => {
-    setInputUserName(e.target.value);
-  };
-  const onSigninClick = (e) => {
-    e.preventDefault();
-    dispatch(requestToSignin(inputUserName));
-  };
-  const onKeyDown = (e) => {
-    if (e.key !== "Enter") return;
-    if (inputUserName.length === 0) return;
-    onSigninClick(e);
-  };
-
-  if (!authenticated) {
-    return (
-      <MemorizedSignin
-        localizedStrings={localizedStrings}
-        inputUserName={inputUserName}
-        onInputNewUserNameChange={onInputNewUserNameChange}
-        onKeyDown={onKeyDown}
-        onSigninClick={onSigninClick}
-      />
-    );
-  }
-
-  return <Navigate to={"/room-list"} />;
-}

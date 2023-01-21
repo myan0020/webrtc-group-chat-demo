@@ -4,6 +4,23 @@ import styled from "styled-components";
 import MediaRenderingStyleSwitch from "./MediaRenderingStyleSwitch";
 import MediaMultiVideoRenderer from "./MediaMultiVideoRenderer";
 
+export const MediaRendererPropsBuilder = ({}) => {
+  return {};
+};
+
+export default function MediaRenderer({}) {
+  return (
+    <Wrapper>
+      <MediaRenderingStyleSwitchContainer>
+        <MediaRenderingStyleSwitch />
+      </MediaRenderingStyleSwitchContainer>
+      <MediaRenderingContainer>
+        <MediaMultiVideoRenderer />
+      </MediaRenderingContainer>
+    </Wrapper>
+  );
+}
+
 const sharedStyleValues = {
   mediaRenderingStyleSwitchContainerHeight: 54,
 };
@@ -29,20 +46,3 @@ const MediaRenderingContainer = styled.div`
   width: 100%;
   height: calc(100% - ${sharedStyleValues.mediaRenderingStyleSwitchContainerHeight}px);
 `;
-
-export const MediaRendererPropsBuilder = ({}) => {
-  return {};
-};
-
-export default function MediaRenderer({}) {
-  return (
-    <Wrapper>
-      <MediaRenderingStyleSwitchContainer>
-        <MediaRenderingStyleSwitch />
-      </MediaRenderingStyleSwitchContainer>
-      <MediaRenderingContainer>
-        <MediaMultiVideoRenderer />
-      </MediaRenderingContainer>
-    </Wrapper>
-  );
-}

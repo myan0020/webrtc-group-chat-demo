@@ -16,6 +16,147 @@ import closeImageUrl from "resource/image/close_3x.png";
 import { localizableStringKeyEnum } from "resource/string/localizable-strings";
 import { GlobalContext } from "context/global-context";
 
+export default function RoomList() {
+  const hasJoinedRoom = useSelector(selectHasJoinedRoom);
+  const { localizedStrings } = useContext(GlobalContext);
+  const [newRoomNameInputValue, setNewRoomNameInputValue] = useState("");
+
+  if (hasJoinedRoom) {
+    return <Navigate to={"/chat-room"} />;
+  }
+
+  return (
+    <MemorizedRoomList
+      localizedStrings={localizedStrings}
+      newRoomNameInputValue={newRoomNameInputValue}
+      setNewRoomNameInputValue={setNewRoomNameInputValue}
+    />
+  );
+}
+
+const MemorizedRoomList = React.memo(RoomListToMemo, arePropsEqual);
+
+function RoomListToMemo({
+  localizedStrings,
+  newRoomNameInputValue,
+  setNewRoomNameInputValue,
+}) {
+  const dispatch = useDispatch();
+
+  const isNewRoomPopupVisible = useSelector(selectNewRoomPopupVisible);
+  const roomList = useSelector(selectRoomList);
+
+  const newRoomPopupBackgroundVisibility = isNewRoomPopupVisible ? "visible" : "hidden";
+  const newRoomPopupBackgroundOpacity = isNewRoomPopupVisible ? 1 : 0;
+  const newRoomPopupBackgroundTransformScale = isNewRoomPopupVisible ? 1 : 1.1;
+
+  const newRoomPopupContentVisibility = isNewRoomPopupVisible ? "visible" : "hidden";
+  const newRoomPopupContentOpacity = isNewRoomPopupVisible ? 1 : 0;
+
+  const handleNewRoomPopupVisibilityToggled = () => {
+    setNewRoomNameInputValue("");
+    dispatch(toggleNewRoomPopupVisibility());
+  };
+
+  const handleNewRoomNameInputChanged = (e) => {
+    setNewRoomNameInputValue(e.target.value);
+  };
+
+  const handleNewRoomNameConfirmed = (e) => {
+    handleNewRoomPopupVisibilityToggled();
+    dispatch(createRoom(newRoomNameInputValue));
+  };
+
+  const handleNewRoomNameInputKeyDown = (e) => {
+    if (e.key !== "Enter") return;
+    if (!isNewRoomPopupVisible) return;
+    handleNewRoomNameConfirmed();
+  };
+
+  const handleRoomJoined = (roomId) => {
+    dispatch(joinRoom(roomId));
+  };
+
+  const focusDOM = (someDOM) => {
+    if (someDOM && someDOM.focus) {
+      someDOM.focus();
+    }
+  };
+
+  return (
+    <Wrapper>
+      {/* popup background */}
+
+      <PopupBackgroundWrapper
+        visibility={newRoomPopupBackgroundVisibility}
+        opacity={newRoomPopupBackgroundOpacity}
+        transformScale={newRoomPopupBackgroundTransformScale}
+        onClick={handleNewRoomPopupVisibilityToggled}
+      />
+
+      {/* popup */}
+
+      <PopupContentWrapper
+        visibility={newRoomPopupContentVisibility}
+        opacity={newRoomPopupContentOpacity}
+      >
+        <PopupContentCloseButton onClick={handleNewRoomPopupVisibilityToggled} />
+        <PopupContentTitle>
+          {localizedStrings[localizableStringKeyEnum.ROOM_LIST_CREATE_NEW_ROOM_TITLE]}
+        </PopupContentTitle>
+        <PopupContentInput
+          placeholder={
+            localizedStrings[localizableStringKeyEnum.ROOM_LIST_CREATE_NEW_ROOM_INPUT_PLACEHOLDER]
+          }
+          onChange={handleNewRoomNameInputChanged}
+          onKeyDown={handleNewRoomNameInputKeyDown}
+          value={newRoomNameInputValue}
+          ref={(inputDOM) => {
+            focusDOM(inputDOM);
+          }}
+        />
+        <PopupContentConfirmButton onClick={handleNewRoomNameConfirmed}>
+          {localizedStrings[localizableStringKeyEnum.ROOM_LIST_CREATE_NEW_ROOM_COMFIRM]}
+        </PopupContentConfirmButton>
+      </PopupContentWrapper>
+
+      {/* room list */}
+
+      <RoomListWrapper>
+        {Object.keys(roomList).map((roomId) => (
+          <RoomItemWrapper key={roomId}>
+            <RoomItemTitle>{roomList[roomId].name}</RoomItemTitle>
+            <RoomItemButton
+              onClick={(e) => {
+                handleRoomJoined(roomId);
+              }}
+            >
+              {localizedStrings[localizableStringKeyEnum.ROOM_LIST_JOIN_ROOM]}
+            </RoomItemButton>
+          </RoomItemWrapper>
+        ))}
+      </RoomListWrapper>
+    </Wrapper>
+  );
+}
+
+const arePropsEqual = (prevProps, nextProps) => {
+  const isLocalizedStringEqual = Object.is(prevProps.localizedStrings, nextProps.localizedStrings);
+  const isNewRoomNameInputValueEqual = Object.is(
+    prevProps.newRoomNameInputValue,
+    nextProps.newRoomNameInputValue
+  );
+  const isSetNewRoomNameInputValueEqual = Object.is(
+    prevProps.setNewRoomNameInputValue,
+    nextProps.setNewRoomNameInputValue
+  );
+  return (
+    isLocalizedStringEqual &&
+    isNewRoomNameInputValueEqual &&
+    isSetNewRoomNameInputValueEqual
+  );
+};
+
 const Wrapper = styled.div`
   width: 100%;
   height: 100%;
@@ -169,144 +310,3 @@ const RoomItemButton = styled.button`
   font-weight: bold;
   margin-right: 38px;
 `;
-
-function RoomListToMemo({
-  localizedStrings,
-  newRoomNameInputValue,
-  setNewRoomNameInputValue,
-}) {
-  const dispatch = useDispatch();
-
-  const isNewRoomPopupVisible = useSelector(selectNewRoomPopupVisible);
-  const roomList = useSelector(selectRoomList);
-
-  const newRoomPopupBackgroundVisibility = isNewRoomPopupVisible ? "visible" : "hidden";
-  const newRoomPopupBackgroundOpacity = isNewRoomPopupVisible ? 1 : 0;
-  const newRoomPopupBackgroundTransformScale = isNewRoomPopupVisible ? 1 : 1.1;
-
-  const newRoomPopupContentVisibility = isNewRoomPopupVisible ? "visible" : "hidden";
-  const newRoomPopupContentOpacity = isNewRoomPopupVisible ? 1 : 0;
-
-  const handleNewRoomPopupVisibilityToggled = () => {
-    setNewRoomNameInputValue("");
-    dispatch(toggleNewRoomPopupVisibility());
-  };
-
-  const handleNewRoomNameInputChanged = (e) => {
-    setNewRoomNameInputValue(e.target.value);
-  };
-
-  const handleNewRoomNameConfirmed = (e) => {
-    handleNewRoomPopupVisibilityToggled();
-    dispatch(createRoom(newRoomNameInputValue));
-  };
-
-  const handleNewRoomNameInputKeyDown = (e) => {
-    if (e.key !== "Enter") return;
-    if (!isNewRoomPopupVisible) return;
-    handleNewRoomNameConfirmed();
-  };
-
-  const handleRoomJoined = (roomId) => {
-    dispatch(joinRoom(roomId));
-  };
-
-  const focusDOM = (someDOM) => {
-    if (someDOM && someDOM.focus) {
-      someDOM.focus();
-    }
-  };
-
-  return (
-    <Wrapper>
-      {/* popup background */}
-
-      <PopupBackgroundWrapper
-        visibility={newRoomPopupBackgroundVisibility}
-        opacity={newRoomPopupBackgroundOpacity}
-        transformScale={newRoomPopupBackgroundTransformScale}
-        onClick={handleNewRoomPopupVisibilityToggled}
-      />
-
-      {/* popup */}
-
-      <PopupContentWrapper
-        visibility={newRoomPopupContentVisibility}
-        opacity={newRoomPopupContentOpacity}
-      >
-        <PopupContentCloseButton onClick={handleNewRoomPopupVisibilityToggled} />
-        <PopupContentTitle>
-          {localizedStrings[localizableStringKeyEnum.ROOM_LIST_CREATE_NEW_ROOM_TITLE]}
-        </PopupContentTitle>
-        <PopupContentInput
-          placeholder={
-            localizedStrings[localizableStringKeyEnum.ROOM_LIST_CREATE_NEW_ROOM_INPUT_PLACEHOLDER]
-          }
-          onChange={handleNewRoomNameInputChanged}
-          onKeyDown={handleNewRoomNameInputKeyDown}
-          value={newRoomNameInputValue}
-          ref={(inputDOM) => {
-            focusDOM(inputDOM);
-          }}
-        />
-        <PopupContentConfirmButton onClick={handleNewRoomNameConfirmed}>
-          {localizedStrings[localizableStringKeyEnum.ROOM_LIST_CREATE_NEW_ROOM_COMFIRM]}
-        </PopupContentConfirmButton>
-      </PopupContentWrapper>
-
-      {/* room list */}
-
-      <RoomListWrapper>
-        {Object.keys(roomList).map((roomId) => (
-          <RoomItemWrapper key={roomId}>
-            <RoomItemTitle>{roomList[roomId].name}</RoomItemTitle>
-            <RoomItemButton
-              onClick={(e) => {
-                handleRoomJoined(roomId);
-              }}
-            >
-              {localizedStrings[localizableStringKeyEnum.ROOM_LIST_JOIN_ROOM]}
-            </RoomItemButton>
-          </RoomItemWrapper>
-        ))}
-      </RoomListWrapper>
-    </Wrapper>
-  );
-}
-
-const arePropsEqual = (prevProps, nextProps) => {
-  const isLocalizedStringEqual = Object.is(prevProps.localizedStrings, nextProps.localizedStrings);
-  const isNewRoomNameInputValueEqual = Object.is(
-    prevProps.newRoomNameInputValue,
-    nextProps.newRoomNameInputValue
-  );
-  const isSetNewRoomNameInputValueEqual = Object.is(
-    prevProps.setNewRoomNameInputValue,
-    nextProps.setNewRoomNameInputValue
-  );
-  return (
-    isLocalizedStringEqual &&
-    isNewRoomNameInputValueEqual &&
-    isSetNewRoomNameInputValueEqual
-  );
-};
-
-const MemorizedRoomList = React.memo(RoomListToMemo, arePropsEqual);
-
-export default function RoomList() {
-  const hasJoinedRoom = useSelector(selectHasJoinedRoom);
-  const { localizedStrings } = useContext(GlobalContext);
-  const [newRoomNameInputValue, setNewRoomNameInputValue] = useState("");
-
-  if (hasJoinedRoom) {
-    return <Navigate to={"/chat-room"} />;
-  }
-
-  return (
-    <MemorizedRoomList
-      localizedStrings={localizedStrings}
-      newRoomNameInputValue={newRoomNameInputValue}
-      setNewRoomNameInputValue={setNewRoomNameInputValue}
-    />
-  );
-}

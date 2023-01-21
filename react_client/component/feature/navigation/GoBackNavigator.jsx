@@ -8,20 +8,22 @@ import { GlobalContext } from "context/global-context";
 import { reset as resetTextChatSlice } from "store/textChatSlice";
 import { reset as resetMediaChatSlice } from "store/mediaChatSlice";
 
-const Wrapper = styled.button`
-  width: 100%;
-  height: 100%;
-  visibility: ${(props) => props.visibility};
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-image: url(${goBackImageUrl});
-  background-color: transparent;
-  border-color: transparent;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: calc(100% / 3);
-`;
+export default function GoBackNavigator() {
+  const hasJoinedRoom = useSelector(selectHasJoinedRoom);
+  const { resetMediaRenderingContext, resetMessageContext } = useContext(GlobalContext);
+
+  const visibility = !hasJoinedRoom ? "hidden" : "visible";
+
+  return (
+    <MemorizedGoBackNavigator
+      visibility={visibility}
+      resetMediaRenderingContext={resetMediaRenderingContext}
+      resetMessageContext={resetMessageContext}
+    />
+  );
+}
+
+const MemorizedGoBackNavigator = React.memo(GoBackNavigatorToMemo, arePropsEqual);
 
 function GoBackNavigatorToMemo({ visibility, resetMediaRenderingContext, resetMessageContext }) {
   const dispatch = useDispatch();
@@ -59,19 +61,17 @@ const arePropsEqual = (prevProps, nextProps) => {
   return isVisibilityEqual && isResetMediaRenderingContextEqual && isResetMessageContextEqual;
 };
 
-const MemorizedGoBackNavigator = React.memo(GoBackNavigatorToMemo, arePropsEqual);
-
-export default function GoBackNavigator() {
-  const hasJoinedRoom = useSelector(selectHasJoinedRoom);
-  const { resetMediaRenderingContext, resetMessageContext } = useContext(GlobalContext);
-
-  const visibility = !hasJoinedRoom ? "hidden" : "visible";
-
-  return (
-    <MemorizedGoBackNavigator
-      visibility={visibility}
-      resetMediaRenderingContext={resetMediaRenderingContext}
-      resetMessageContext={resetMessageContext}
-    />
-  );
-}
+const Wrapper = styled.button`
+  width: 100%;
+  height: 100%;
+  visibility: ${(props) => props.visibility};
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-image: url(${goBackImageUrl});
+  background-color: transparent;
+  border-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: calc(100% / 3);
+`;

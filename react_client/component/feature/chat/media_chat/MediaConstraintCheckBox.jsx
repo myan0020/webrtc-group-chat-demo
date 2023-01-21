@@ -9,11 +9,6 @@ import {
   updateVideoCallingInputEnabling,
 } from "store/mediaChatSlice";
 
-const Wrapper = styled.div`
-  width: 20px;
-  height: 20px;
-`;
-
 export const MediaConstraintCheckBoxPropsBuilder = ({}) => {
   return {};
 };
@@ -38,3 +33,8 @@ export default function MediaConstraintCheckBox() {
     </Wrapper>
   );
 }
+
+const Wrapper = styled.div`
+  width: 20px;
+  height: 20px;
+`;

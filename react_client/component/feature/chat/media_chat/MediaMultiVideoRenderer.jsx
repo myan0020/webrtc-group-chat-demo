@@ -4,57 +4,27 @@ import styled from "styled-components";
 import MediaVideoRenderer from "./MediaVideoRenderer";
 import { GlobalContext } from "context/global-context";
 
-const sharedStyleValues = {
-  bottomSpaceHeight: 14,
-  numberOfRowsForEqualityType: 2,
-};
+export default function MediaMultiVideoRenderer({}) {
+  const {
+    numberOfInitialVisibleMediaMembers,
+    mediaRenderingDataSourceList,
+    mediaRenderingDataSourceForPresenter,
+    mediaAccessibilityTypeEnum,
+    mediaAccessibilityType,
+  } = useContext(GlobalContext);
 
-const Wrapper = styled.div`
-  width: 100%;
-  height: calc(100% - ${sharedStyleValues.bottomSpaceHeight}px);
-  display: flex;
-  flex-direction: row;
-`;
+  return (
+    <MemorizedMediaMultiVideoRenderer
+      numberOfInitialVisibleMediaMembers={numberOfInitialVisibleMediaMembers}
+      mediaRenderingDataSourceList={mediaRenderingDataSourceList}
+      mediaRenderingDataSourceForPresenter={mediaRenderingDataSourceForPresenter}
+      mediaAccessibilityTypeEnum={mediaAccessibilityTypeEnum}
+      mediaAccessibilityType={mediaAccessibilityType}
+    />
+  );
+}
 
-const PresenterRendererContainer = styled.div`
-  display: ${(props) => (props.shouldDisplay ? "block" : "none")};
-  flex: 1 0 0%;
-  height: 100%;
-`;
-
-const PresentationTypeMembersRendererContainer = styled.div`
-  display: ${(props) => (props.shouldDisplay ? "block" : "none")};
-  flex: 0 0 content;
-  aspect-ratio: 1 / ${(props) => props.numberOfInitialVisibleMembers};
-  height: 100%;
-  overflow-y: auto;
-`;
-
-const PresentationTypeMemberRendererContainer = styled.div`
-  width: 100%;
-  height: calc(100% / ${(props) => props.numberOfInitialVisibleMembers});
-`;
-
-const EqualityTypeMembersRendererContainer = styled.div`
-  display: ${(props) => (props.shouldDisplay ? "flex" : "none")};
-  flex-direction: row;
-  flex-wrap: wrap;
-  flex: 0 0 100%;
-  height: 100%;
-  overflow-y: auto;
-`;
-
-const EqualityTypeMemberRendererContainer = styled.div`
-  height: calc(100% / ${sharedStyleValues.numberOfRowsForEqualityType});
-  flex: 0 0
-    calc(
-      100% /
-        ${(props) =>
-          Math.floor(
-            props.numberOfInitialVisibleMembers / sharedStyleValues.numberOfRowsForEqualityType
-          )}
-    );
-`;
+const MemorizedMediaMultiVideoRenderer = React.memo(MediaMultiVideoRendererToMemo, arePropsEqual);
 
 function MediaMultiVideoRendererToMemo({
   numberOfInitialVisibleMediaMembers,
@@ -161,24 +131,54 @@ const arePropsEqual = (prevProps, nextProps) => {
   );
 };
 
-const MemorizedMediaMultiVideoRenderer = React.memo(MediaMultiVideoRendererToMemo, arePropsEqual);
+const sharedStyleValues = {
+  bottomSpaceHeight: 14,
+  numberOfRowsForEqualityType: 2,
+};
 
-export default function MediaMultiVideoRenderer({}) {
-  const {
-    numberOfInitialVisibleMediaMembers,
-    mediaRenderingDataSourceList,
-    mediaRenderingDataSourceForPresenter,
-    mediaAccessibilityTypeEnum,
-    mediaAccessibilityType,
-  } = useContext(GlobalContext);
+const Wrapper = styled.div`
+  width: 100%;
+  height: calc(100% - ${sharedStyleValues.bottomSpaceHeight}px);
+  display: flex;
+  flex-direction: row;
+`;
 
-  return (
-    <MemorizedMediaMultiVideoRenderer
-      numberOfInitialVisibleMediaMembers={numberOfInitialVisibleMediaMembers}
-      mediaRenderingDataSourceList={mediaRenderingDataSourceList}
-      mediaRenderingDataSourceForPresenter={mediaRenderingDataSourceForPresenter}
-      mediaAccessibilityTypeEnum={mediaAccessibilityTypeEnum}
-      mediaAccessibilityType={mediaAccessibilityType}
-    />
-  );
-}
+const PresenterRendererContainer = styled.div`
+  display: ${(props) => (props.shouldDisplay ? "block" : "none")};
+  flex: 1 0 0%;
+  height: 100%;
+`;
+
+const PresentationTypeMembersRendererContainer = styled.div`
+  display: ${(props) => (props.shouldDisplay ? "block" : "none")};
+  flex: 0 0 content;
+  aspect-ratio: 1 / ${(props) => props.numberOfInitialVisibleMembers};
+  height: 100%;
+  overflow-y: auto;
+`;
+
+const PresentationTypeMemberRendererContainer = styled.div`
+  width: 100%;
+  height: calc(100% / ${(props) => props.numberOfInitialVisibleMembers});
+`;
+
+const EqualityTypeMembersRendererContainer = styled.div`
+  display: ${(props) => (props.shouldDisplay ? "flex" : "none")};
+  flex-direction: row;
+  flex-wrap: wrap;
+  flex: 0 0 100%;
+  height: 100%;
+  overflow-y: auto;
+`;
+
+const EqualityTypeMemberRendererContainer = styled.div`
+  height: calc(100% / ${sharedStyleValues.numberOfRowsForEqualityType});
+  flex: 0 0
+    calc(
+      100% /
+        ${(props) =>
+          Math.floor(
+            props.numberOfInitialVisibleMembers / sharedStyleValues.numberOfRowsForEqualityType
+          )}
+    );
+`;

@@ -5,57 +5,30 @@ import MediaUserTag from "./MediaUserTag";
 import cancelImageUrl from "resource/image/cancel_media_presenting_3x.png";
 import { GlobalContext } from "context/global-context";
 
-const Wrapper = styled.div`
-  box-sizing: border-box;
-  border-width: 3px;
-  width: 100%;
-  height: 100%;
-  position: relative;
-  border: 3px solid rgba(250, 250, 250);
-  border-radius: 10px;
-  background-color: rgb(236, 239, 241);
-`;
+export default function MediaVideoRenderer(props) {
+  const userId = props.userId;
+  const userName = props.userName;
+  const mediaStream = props.mediaStream;
+  const volume = props.volume;
+  const isCancellable = props.isCancellable;
+  const isVideoClickable = props.isVideoClickable;
 
-const MediaUserTagContainer = styled.div`
-  visibility: ${(props) => props.visibility};
-  position: absolute;
-  top: 5px;
-  left: 5px;
-  max-width: calc(100% - 2 * 5px);
-  height: 25px;
-  border-radius: 10px;
-  border-color: transparent;
-  overflow: hidden;
-  z-index: 1;
-`;
+  const { updatePresenterId } = useContext(GlobalContext);
 
-const CancelButton = styled.button`
-  visibility: ${(props) => props.visibility};
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  width: 40px;
-  height: 40px;
-  border-color: transparent;
-  border-radius: 20px;
-  background-color: rgba(0, 0, 0, 0.7);
-  background-image: url(${cancelImageUrl});
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: contain;
-`;
+  return (
+    <MemorizedMediaVideoRenderer
+      userId={userId}
+      userName={userName}
+      mediaStream={mediaStream}
+      volume={volume}
+      isCancellable={isCancellable}
+      isVideoClickable={isVideoClickable}
+      updatePresenterId={updatePresenterId}
+    />
+  );
+}
 
-const Video = styled.video`
-  display: block;
-  width: 100%;
-  height: 100%;
-  &:active {
-    opacity: ${(props) => (props.isClickable ? 0.7 : 1)};
-  }
-  &:hover {
-    opacity: ${(props) => (props.isClickable ? 0.7 : 1)};
-  }
-`;
+const MemorizedMediaVideoRenderer = React.memo(MediaVideoRendererToMemo, arePropsEqual);
 
 function MediaVideoRendererToMemo(props) {
   const userId = props.userId;
@@ -128,27 +101,54 @@ const arePropsEqual = (prevProps, nextProps) => {
   );
 };
 
-const MemorizedMediaVideoRenderer = React.memo(MediaVideoRendererToMemo, arePropsEqual);
+const Wrapper = styled.div`
+  box-sizing: border-box;
+  border-width: 3px;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  border: 3px solid rgba(250, 250, 250);
+  border-radius: 10px;
+  background-color: rgb(236, 239, 241);
+`;
 
-export default function MediaVideoRenderer(props) {
-  const userId = props.userId;
-  const userName = props.userName;
-  const mediaStream = props.mediaStream;
-  const volume = props.volume;
-  const isCancellable = props.isCancellable;
-  const isVideoClickable = props.isVideoClickable;
+const MediaUserTagContainer = styled.div`
+  visibility: ${(props) => props.visibility};
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  max-width: calc(100% - 2 * 5px);
+  height: 25px;
+  border-radius: 10px;
+  border-color: transparent;
+  overflow: hidden;
+  z-index: 1;
+`;
 
-  const { updatePresenterId } = useContext(GlobalContext);
+const CancelButton = styled.button`
+  visibility: ${(props) => props.visibility};
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 40px;
+  height: 40px;
+  border-color: transparent;
+  border-radius: 20px;
+  background-color: rgba(0, 0, 0, 0.7);
+  background-image: url(${cancelImageUrl});
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+`;
 
-  return (
-    <MemorizedMediaVideoRenderer
-      userId={userId}
-      userName={userName}
-      mediaStream={mediaStream}
-      volume={volume}
-      isCancellable={isCancellable}
-      isVideoClickable={isVideoClickable}
-      updatePresenterId={updatePresenterId}
-    />
-  );
-}
+const Video = styled.video`
+  display: block;
+  width: 100%;
+  height: 100%;
+  &:active {
+    opacity: ${(props) => (props.isClickable ? 0.7 : 1)};
+  }
+  &:hover {
+    opacity: ${(props) => (props.isClickable ? 0.7 : 1)};
+  }
+`;

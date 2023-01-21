@@ -11,6 +11,57 @@ import LocalizationSwitch from "../localization/LocalizationSwitch";
 import globalWhiteImageUrl from "resource/image/gobal_white_3x.png";
 import { GlobalContext } from "context/global-context";
 
+export default function NavigationBar() {
+  const { localizedStrings } = useContext(GlobalContext);
+  const authenticatedUserName = useSelector(selectAuthenticatedUserName);
+  return (
+    <MemorizedNavigationBar
+      localizedStrings={localizedStrings}
+      authenticatedUserName={authenticatedUserName}
+    />
+  );
+}
+
+const MemorizedNavigationBar = React.memo(NavigationBarToMemo, arePropsEqual);
+
+function NavigationBarToMemo({ localizedStrings, authenticatedUserName }) {
+  const welcomeUserMessage = `${
+    localizedStrings[localizableStringKeyEnum.NAVIGATION_WELCOME]
+  }, ${authenticatedUserName}`;
+
+  return (
+    <Wrapper>
+      <LeftContainer>
+        <GoBackNavigator />
+      </LeftContainer>
+      <MiddleContainer>
+        <NewRoomNavigator />
+      </MiddleContainer>
+      <RightContainer>
+        <WelcomeUserWrapper>{welcomeUserMessage}</WelcomeUserWrapper>
+        <LocalizationSwitchContainer>
+          <LocalizationSwitch
+            iconImageUrl={globalWhiteImageUrl}
+            isSelectedTextKeyVisible={false}
+          />
+        </LocalizationSwitchContainer>
+        <SignoutNavigatorContainer>
+          <SignoutNavigator />
+        </SignoutNavigatorContainer>
+      </RightContainer>
+    </Wrapper>
+  );
+}
+
+const arePropsEqual = (prevProps, nextProps) => {
+  const isLocalizedStringEqual = Object.is(prevProps.localizedStrings, nextProps.localizedStrings);
+  const isAuthenticatedUserNameEqual = Object.is(
+    prevProps.authenticatedUserName,
+    nextProps.authenticatedUserName
+  );
+  return isLocalizedStringEqual && isAuthenticatedUserNameEqual;
+};
+
 const sharedStyleValues = {
   rightContainerInnerHorizontalMargin: 8,
   welcomeUserWrapperMarginRight: 25,
@@ -70,54 +121,3 @@ const SignoutNavigatorContainer = styled.div`
   margin-left: ${sharedStyleValues.rightContainerInnerHorizontalMargin}px;
   margin-right: ${sharedStyleValues.rightContainerInnerHorizontalMargin * 2}px;
 `;
-
-function NavigationBarToMemo({ localizedStrings, authenticatedUserName }) {
-  const welcomeUserMessage = `${
-    localizedStrings[localizableStringKeyEnum.NAVIGATION_WELCOME]
-  }, ${authenticatedUserName}`;
-
-  return (
-    <Wrapper>
-      <LeftContainer>
-        <GoBackNavigator />
-      </LeftContainer>
-      <MiddleContainer>
-        <NewRoomNavigator />
-      </MiddleContainer>
-      <RightContainer>
-        <WelcomeUserWrapper>{welcomeUserMessage}</WelcomeUserWrapper>
-        <LocalizationSwitchContainer>
-          <LocalizationSwitch
-            iconImageUrl={globalWhiteImageUrl}
-            isSelectedTextKeyVisible={false}
-          />
-        </LocalizationSwitchContainer>
-        <SignoutNavigatorContainer>
-          <SignoutNavigator />
-        </SignoutNavigatorContainer>
-      </RightContainer>
-    </Wrapper>
-  );
-}
-
-const arePropsEqual = (prevProps, nextProps) => {
-  const isLocalizedStringEqual = Object.is(prevProps.localizedStrings, nextProps.localizedStrings);
-  const isAuthenticatedUserNameEqual = Object.is(
-    prevProps.authenticatedUserName,
-    nextProps.authenticatedUserName
-  );
-  return isLocalizedStringEqual && isAuthenticatedUserNameEqual;
-};
-
-const MemorizedNavigationBar = React.memo(NavigationBarToMemo, arePropsEqual);
-
-export default function NavigationBar() {
-  const { localizedStrings } = useContext(GlobalContext);
-  const authenticatedUserName = useSelector(selectAuthenticatedUserName);
-  return (
-    <MemorizedNavigationBar
-      localizedStrings={localizedStrings}
-      authenticatedUserName={authenticatedUserName}
-    />
-  );
-}

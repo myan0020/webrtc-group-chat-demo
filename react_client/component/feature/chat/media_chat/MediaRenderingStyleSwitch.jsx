@@ -11,10 +11,22 @@ import equalityEnabledUrl from "resource/image/equality_enabled_3x.png";
 import equalityDisabledUrl from "resource/image/equality_disabled_3x.png";
 import { GlobalContext } from "context/global-context";
 
-const Wrapper = styled.div`
-  width: 80px;
-  height: 40px;
-`;
+export default function MediaRenderingStyleSwitch({}) {
+  const { mediaAccessibilityTypeEnum, updateMediaAccessibilityType, mediaAccessibilityType } =
+    useContext(GlobalContext);
+  return (
+    <MemorizedMediaRenderingStyleSwitch
+      mediaAccessibilityTypeEnum={mediaAccessibilityTypeEnum}
+      updateMediaAccessibilityType={updateMediaAccessibilityType}
+      mediaAccessibilityType={mediaAccessibilityType}
+    />
+  );
+}
+
+const MemorizedMediaRenderingStyleSwitch = React.memo(
+  MediaRenderingStyleSwitchToMemo,
+  arePropsEqual
+);
 
 function MediaRenderingStyleSwitchToMemo({
   mediaAccessibilityTypeEnum,
@@ -84,19 +96,7 @@ const arePropsEqual = (prevProps, nextProps) => {
   );
 };
 
-const MemorizedMediaRenderingStyleSwitch = React.memo(
-  MediaRenderingStyleSwitchToMemo,
-  arePropsEqual
-);
-
-export default function MediaRenderingStyleSwitch({}) {
-  const { mediaAccessibilityTypeEnum, updateMediaAccessibilityType, mediaAccessibilityType } =
-    useContext(GlobalContext);
-  return (
-    <MemorizedMediaRenderingStyleSwitch
-      mediaAccessibilityTypeEnum={mediaAccessibilityTypeEnum}
-      updateMediaAccessibilityType={updateMediaAccessibilityType}
-      mediaAccessibilityType={mediaAccessibilityType}
-    />
-  );
-}
+const Wrapper = styled.div`
+  width: 80px;
+  height: 40px;
+`;

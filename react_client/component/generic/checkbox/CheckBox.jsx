@@ -3,30 +3,6 @@ import styled from "styled-components";
 
 import checkMarkUrl from "resource/image/check_mark_3x.png";
 
-const Wrapper = styled.div`
-  box-sizing: border-box;
-  width: 100%;
-  height: 100%;
-  border: ${(props) => props.borderWidth}px solid ${(props) => props.borderColor};
-  border-radius: ${(props) => props.borderRadius}px;
-  background-color: ${(props) => props.backgroundColor};
-  &:hover,
-  &:active {
-    opacity: ${(props) => (props.enabled ? 0.5 : 1)};
-  }
-`;
-
-const CheckMarkWrapper = styled.div`
-  visibility: ${(props) => props.visiblility};
-  width: 100%;
-  height: 100%;
-  background-color: ${(props) => props.checkMarkBackgroundColor};
-  background-image: url(${(props) => props.checkMarkImageUrl});
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: ${(props) => props.checkMarkImageSize};
-`;
-
 export const checkBoxPropsBuilder = ({
   initialEnabled,
   initalChecked,
@@ -158,3 +134,27 @@ export default function CheckBox({
     </Wrapper>
   );
 }
+
+const Wrapper = styled.div`
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  border: ${(props) => props.borderWidth}px solid ${(props) => props.borderColor};
+  border-radius: ${(props) => props.borderRadius}px;
+  background-color: ${(props) => props.backgroundColor};
+  &:hover,
+  &:active {
+    opacity: ${(props) => (props.enabled ? 0.5 : 1)};
+  }
+`;
+
+const CheckMarkWrapper = styled.div`
+  visibility: ${(props) => props.visiblility};
+  width: 100%;
+  height: 100%;
+  background-color: ${(props) => props.checkMarkBackgroundColor};
+  background-image: url(${(props) => props.checkMarkImageUrl});
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: ${(props) => props.checkMarkImageSize};
+`;

@@ -7,23 +7,6 @@ import { requestToSignout, selectAuthenticated } from "store/authSlice";
 import NavigationBar from "../navigation/NavigationBar";
 import useBeforeunload from "hook/use-beforeunload";
 
-const Wrapper = styled.div`
-  width: 100%;
-  height: 100%;
-`;
-
-const NavigationContainer = styled.nav`
-  width: 100%;
-  height: 60px;
-`;
-
-const OutletContainer = styled.div`
-  box-sizing: border-box;
-  width: 100%;
-  height: calc(100% - 60px);
-  background-color: rgb(255, 255, 255); ;
-`;
-
 export default function RequireAuth({ children, redirectTo }) {
   const dispatch = useDispatch();
   const authenticated = useSelector(selectAuthenticated);
@@ -57,3 +40,20 @@ export default function RequireAuth({ children, redirectTo }) {
     </Wrapper>
   );
 }
+
+const Wrapper = styled.div`
+  width: 100%;
+  height: 100%;
+`;
+
+const NavigationContainer = styled.nav`
+  width: 100%;
+  height: 60px;
+`;
+
+const OutletContainer = styled.div`
+  box-sizing: border-box;
+  width: 100%;
+  height: calc(100% - 60px);
+  background-color: rgb(255, 255, 255); ;
+`;

@@ -6,6 +6,25 @@ import { selectIsCalling } from "store/mediaChatSlice";
 import MediaConstraintCheckBox from "./MediaConstraintCheckBox";
 import MediaConstraintSwitch from "./MediaConstraintSwitch";
 
+export const MediaConstraintCheckableSwitchPropsBuilder = ({}) => {
+  return {};
+};
+
+export default function MediaConstraintCheckableSwitch({}) {
+  const isCalling = useSelector(selectIsCalling);
+  const borderColor = isCalling ? "#C4C4C4" : "rgb(33, 150, 243)";
+  return (
+    <Wrapper borderColor={borderColor}>
+      <MediaConstraintCheckBoxContainer>
+        <MediaConstraintCheckBox />
+      </MediaConstraintCheckBoxContainer>
+      <MediaConstraintSwitchContainer>
+        <MediaConstraintSwitch />
+      </MediaConstraintSwitchContainer>
+    </Wrapper>
+  );
+}
+
 const Wrapper = styled.div`
   display: flex;
   align-items: center;
@@ -26,22 +45,3 @@ const MediaConstraintSwitchContainer = styled.div`
   margin-left: 9px;
   margin-right: 9px;
 `;
-
-export const MediaConstraintCheckableSwitchPropsBuilder = ({}) => {
-  return {};
-};
-
-export default function MediaConstraintCheckableSwitch({}) {
-  const isCalling = useSelector(selectIsCalling);
-  const borderColor = isCalling ? "#C4C4C4" : "rgb(33, 150, 243)";
-  return (
-    <Wrapper borderColor={borderColor}>
-      <MediaConstraintCheckBoxContainer>
-        <MediaConstraintCheckBox />
-      </MediaConstraintCheckBoxContainer>
-      <MediaConstraintSwitchContainer>
-        <MediaConstraintSwitch />
-      </MediaConstraintSwitchContainer>
-    </Wrapper>
-  );
-}

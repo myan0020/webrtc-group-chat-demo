@@ -11,13 +11,6 @@ import enableVideoUrl from "resource/image/enable_video_3x.png";
 import disableVideoUrl from "resource/image/disable_video_3x.png";
 import videoEnablingDisabledUrl from "resource/image/video_enabling_disabled_3x.png";
 
-const Wrapper = styled.div`
-  width: 55px;
-  height: 55px;
-  margin-left: 5px;
-  margin-right: 5px;
-`;
-
 export const MediaVideoEnablingSwitchPropsBuilder = ({}) => {
   return {};
 };
@@ -61,3 +54,10 @@ export default function MediaVideoEnablingSwitch({}) {
     </Wrapper>
   );
 }
+
+const Wrapper = styled.div`
+  width: 55px;
+  height: 55px;
+  margin-left: 5px;
+  margin-right: 5px;
+`;

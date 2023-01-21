@@ -1,44 +1,6 @@
 import React from "react";
 import styled from "styled-components";
 
-const Wrapper = styled.div`
-  background-color: rgba(0, 0, 0, 0);
-  ${(props) =>
-    typeof props.backgroundImageUrl === "string" &&
-    `background-image: url(${props.backgroundImageUrl});`}
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: ${(props) => props.backgroundImageSize};
-  border-style: solid;
-  border-radius: ${(props) => props.borderRadius}px;
-  border-width: 1px;
-  border-color: ${(props) => props.borderColor};
-  width: 100%;
-  height: 100%;
-  box-sizing: border-box;
-  overflow: hidden;
-  &:hover,
-  &:active {
-    opacity: ${(props) => (props.enabled ? 0.5 : 1)};
-  }
-`;
-
-const OptionWrapper = styled.div`
-  display: ${(props) => props.display};
-  border-width: 0px;
-  border-color: transparent;
-  border-style: solid;
-  background-color: ${(props) => props.backgroundColor};
-  ${(props) =>
-    typeof props.backgroundImageUrl === "string" &&
-    `background-image: url(${props.backgroundImageUrl});`}
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: ${(props) => props.backgroundImageSize};
-  width: 100%;
-  height: 100%;
-`;
-
 export const singleTabSwitchOptionBuilder = ({
   switchOptionBorderColor,
   switchOptionBackgroundColor,
@@ -194,3 +156,41 @@ export default function SingleTabSwitch({
     </Wrapper>
   );
 }
+
+const Wrapper = styled.div`
+  background-color: rgba(0, 0, 0, 0);
+  ${(props) =>
+    typeof props.backgroundImageUrl === "string" &&
+    `background-image: url(${props.backgroundImageUrl});`}
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: ${(props) => props.backgroundImageSize};
+  border-style: solid;
+  border-radius: ${(props) => props.borderRadius}px;
+  border-width: 1px;
+  border-color: ${(props) => props.borderColor};
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  &:hover,
+  &:active {
+    opacity: ${(props) => (props.enabled ? 0.5 : 1)};
+  }
+`;
+
+const OptionWrapper = styled.div`
+  display: ${(props) => props.display};
+  border-width: 0px;
+  border-color: transparent;
+  border-style: solid;
+  background-color: ${(props) => props.backgroundColor};
+  ${(props) =>
+    typeof props.backgroundImageUrl === "string" &&
+    `background-image: url(${props.backgroundImageUrl});`}
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: ${(props) => props.backgroundImageSize};
+  width: 100%;
+  height: 100%;
+`;

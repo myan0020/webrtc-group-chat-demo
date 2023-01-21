@@ -7,164 +7,6 @@ import fileIconUrl from "resource/image/dowload_new_file_3x.png";
 import cancellingAvaliableImageUrl from "resource/image/cancel_single_download_3x.png";
 import exportingAvaliableImageUrl from "resource/image/download_completed_3x.png";
 
-const sharedStyleValues = {
-  contentHorizontalMargin: 10,
-  senderSideContentBorderRadius: 0,
-  noneSenderSideContentBorderRadius: 10,
-
-  fileIconWidth: 30,
-
-  transceivingInfoHorizontalMargin: 5,
-
-  fileAvaliableOperationWidth: 20,
-  fileAvaliableOperationHeight: 20,
-};
-
-const Wrapper = styled.div`
-  box-sizing: border-box;
-  padding-left: 8px;
-  padding-right: 8px;
-  padding-top: 10px;
-  padding-bottom: 10px;
-`;
-
-const TitleWrapper = styled.div`
-  height: 20px;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: end;
-`;
-
-const UserNameWrapper = styled.div`
-  visibility: ${(props) => props.visibility};
-  font-size: 14px;
-  color: rgb(0, 150, 136);
-  margin-left: 5px;
-  margin-right: 15px;
-  line-height: 1;
-`;
-
-const TimestampWrapper = styled.div`
-  font-size: 12px;
-  color: rgba(128, 128, 128, 0.5);
-  line-height: 1;
-  margin-right: 15px;
-`;
-
-const ContentWrapper = styled.div`
-  box-sizing: border-box;
-  width: calc(100% - ${2 * sharedStyleValues.contentHorizontalMargin}px);
-  height: 50px;
-  margin-top: 10px;
-
-  margin-left: ${sharedStyleValues.contentHorizontalMargin}px;
-  margin-right: ${sharedStyleValues.contentHorizontalMargin}px;
-
-  padding: 5px;
-  border-radius: ${(props) => props.topLeftBorderRadius}px
-    ${(props) => props.topRightBorderRadius}px
-    ${sharedStyleValues.noneSenderSideContentBorderRadius}px
-    ${sharedStyleValues.noneSenderSideContentBorderRadius}px;
-  border: 0.5px solid #c4c4c4;
-  background-color: rgb(255, 255, 255);
-  color: rgb(128, 128, 128);
-
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  flex-wrap: wrap;
-
-  &:hover,
-  &:active {
-    opacity: ${(props) => (props.clickable ? 0.6 : 1)};
-  }
-`;
-
-const FileIcon = styled.div`
-  flex: 0 0 ${sharedStyleValues.fileIconWidth}px;
-  width: ${sharedStyleValues.fileIconWidth}px;
-  height: 30px;
-  box-sizing: border-box;
-  background-image: url(${fileIconUrl});
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
-`;
-
-const TransceivingInfoWrapper = styled.div`
-  flex: 0 0
-    calc(
-      100% -
-        ${sharedStyleValues.fileIconWidth +
-        sharedStyleValues.transceivingInfoHorizontalMargin * 2 +
-        sharedStyleValues.fileAvaliableOperationWidth}px
-    );
-  width: calc(
-    100% -
-      ${sharedStyleValues.fileIconWidth +
-      sharedStyleValues.transceivingInfoHorizontalMargin * 2 +
-      sharedStyleValues.fileAvaliableOperationWidth}px
-  );
-  height: 100%;
-  margin-left: ${sharedStyleValues.transceivingInfoHorizontalMargin}px;
-  margin-right: ${sharedStyleValues.transceivingInfoHorizontalMargin}px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-`;
-const TransceivingTextInfoWrapper = styled.div`
-  height: 15px;
-  display: flex;
-  flex-direction: row;
-  align-items: end;
-  margin-left: 3px;
-`;
-
-const TransceivingFileName = styled.div`
-  flex: 1;
-  height: 15px;
-  font-size: 12px;
-  line-height: 1;
-
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-`;
-
-const TransceivingProgressText = styled.div`
-  flex: 0 0 content;
-  height: 15px;
-  margin-left: 3px;
-  font-size: 12px;
-  font-weight: 300;
-  text-align: right;
-  line-height: 1;
-`;
-
-const TransceivingProgressBar = styled.progress`
-  display: block;
-  width: 100%;
-  height: 15px;
-  margin-top: 2px;
-`;
-
-const FileAvaliableOperation = styled.div`
-  visibility: ${(props) => props.visibility};
-  flex: 0 0 ${sharedStyleValues.fileAvaliableOperationWidth}px;
-  width: ${sharedStyleValues.fileAvaliableOperationWidth}px;
-  height: 20px;
-  background-image: url(${(props) => props.avaliableOperationImageUrl});
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: contain;
-
-  &:hover,
-  &:active {
-    opacity: ${(props) => (props.clickable ? 0.6 : 1)};
-  }
-`;
-
 export const fileMessagePropsBuilder = (isParentVisible, messageItem, localizedStrings) => {
   const defaultMessage = {
     id: "unknown id",
@@ -349,5 +191,163 @@ function FileMessage(
     </Wrapper>
   );
 }
+
+const sharedStyleValues = {
+  contentHorizontalMargin: 10,
+  senderSideContentBorderRadius: 0,
+  noneSenderSideContentBorderRadius: 10,
+
+  fileIconWidth: 30,
+
+  transceivingInfoHorizontalMargin: 5,
+
+  fileAvaliableOperationWidth: 20,
+  fileAvaliableOperationHeight: 20,
+};
+
+const Wrapper = styled.div`
+  box-sizing: border-box;
+  padding-left: 8px;
+  padding-right: 8px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+`;
+
+const TitleWrapper = styled.div`
+  height: 20px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: end;
+`;
+
+const UserNameWrapper = styled.div`
+  visibility: ${(props) => props.visibility};
+  font-size: 14px;
+  color: rgb(0, 150, 136);
+  margin-left: 5px;
+  margin-right: 15px;
+  line-height: 1;
+`;
+
+const TimestampWrapper = styled.div`
+  font-size: 12px;
+  color: rgba(128, 128, 128, 0.5);
+  line-height: 1;
+  margin-right: 15px;
+`;
+
+const ContentWrapper = styled.div`
+  box-sizing: border-box;
+  width: calc(100% - ${2 * sharedStyleValues.contentHorizontalMargin}px);
+  height: 50px;
+  margin-top: 10px;
+
+  margin-left: ${sharedStyleValues.contentHorizontalMargin}px;
+  margin-right: ${sharedStyleValues.contentHorizontalMargin}px;
+
+  padding: 5px;
+  border-radius: ${(props) => props.topLeftBorderRadius}px
+    ${(props) => props.topRightBorderRadius}px
+    ${sharedStyleValues.noneSenderSideContentBorderRadius}px
+    ${sharedStyleValues.noneSenderSideContentBorderRadius}px;
+  border: 0.5px solid #c4c4c4;
+  background-color: rgb(255, 255, 255);
+  color: rgb(128, 128, 128);
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+
+  &:hover,
+  &:active {
+    opacity: ${(props) => (props.clickable ? 0.6 : 1)};
+  }
+`;
+
+const FileIcon = styled.div`
+  flex: 0 0 ${sharedStyleValues.fileIconWidth}px;
+  width: ${sharedStyleValues.fileIconWidth}px;
+  height: 30px;
+  box-sizing: border-box;
+  background-image: url(${fileIconUrl});
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+`;
+
+const TransceivingInfoWrapper = styled.div`
+  flex: 0 0
+    calc(
+      100% -
+        ${sharedStyleValues.fileIconWidth +
+        sharedStyleValues.transceivingInfoHorizontalMargin * 2 +
+        sharedStyleValues.fileAvaliableOperationWidth}px
+    );
+  width: calc(
+    100% -
+      ${sharedStyleValues.fileIconWidth +
+      sharedStyleValues.transceivingInfoHorizontalMargin * 2 +
+      sharedStyleValues.fileAvaliableOperationWidth}px
+  );
+  height: 100%;
+  margin-left: ${sharedStyleValues.transceivingInfoHorizontalMargin}px;
+  margin-right: ${sharedStyleValues.transceivingInfoHorizontalMargin}px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+`;
+const TransceivingTextInfoWrapper = styled.div`
+  height: 15px;
+  display: flex;
+  flex-direction: row;
+  align-items: end;
+  margin-left: 3px;
+`;
+
+const TransceivingFileName = styled.div`
+  flex: 1;
+  height: 15px;
+  font-size: 12px;
+  line-height: 1;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const TransceivingProgressText = styled.div`
+  flex: 0 0 content;
+  height: 15px;
+  margin-left: 3px;
+  font-size: 12px;
+  font-weight: 300;
+  text-align: right;
+  line-height: 1;
+`;
+
+const TransceivingProgressBar = styled.progress`
+  display: block;
+  width: 100%;
+  height: 15px;
+  margin-top: 2px;
+`;
+
+const FileAvaliableOperation = styled.div`
+  visibility: ${(props) => props.visibility};
+  flex: 0 0 ${sharedStyleValues.fileAvaliableOperationWidth}px;
+  width: ${sharedStyleValues.fileAvaliableOperationWidth}px;
+  height: 20px;
+  background-image: url(${(props) => props.avaliableOperationImageUrl});
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+
+  &:hover,
+  &:active {
+    opacity: ${(props) => (props.clickable ? 0.6 : 1)};
+  }
+`;
 
 export default React.forwardRef(FileMessage);

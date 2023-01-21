@@ -10,13 +10,6 @@ import { startCalling, hangUpCalling, selectIsCalling } from "store/mediaChatSli
 import startCallingUrl from "resource/image/start_calling_3x.png";
 import hangUpCallingUrl from "resource/image/hang_up_calling_3x.png";
 
-const Wrapper = styled.div`
-  width: 590px;
-  height: 55px;
-  margin-left: 5px;
-  margin-right: 5px;
-`;
-
 export const CallingSwitchPropsBuilder = ({}) => {
   return {};
 };
@@ -58,3 +51,10 @@ export default function CallingSwitch({}) {
     </Wrapper>
   );
 }
+
+const Wrapper = styled.div`
+  width: 590px;
+  height: 55px;
+  margin-left: 5px;
+  margin-right: 5px;
+`;

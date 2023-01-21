@@ -8,35 +8,6 @@ import { messageTypeEnum } from "context/message-context";
 import { GlobalContext } from "context/global-context";
 import { readAllTextMessages, selectUnreadTextMessageCount } from "store/textChatSlice";
 
-const sharedStyleValues = {
-  // autoScrollingThredhold: 300,
-};
-
-const Wrapper = styled.div`
-  width: 100%;
-  height: 100%;
-  box-sizing: border-box;
-  position: relative;
-`;
-
-const TextMessageWrapper = styled.div`
-  width: 100%;
-  height: 100%;
-  box-sizing: border-box;
-  overflow: auto;
-  visibility: ${(props) => props.visibility};
-  position: absolute;
-`;
-
-const FileMessageWrapper = styled.div`
-  width: 100%;
-  height: 100%;
-  box-sizing: border-box;
-  overflow: auto;
-  visibility: ${(props) => props.visibility};
-  position: absolute;
-`;
-
 const autoScrollingThredhold = 400;
 const autoScrollToBottomIfNecessary = (scrollableContainer, autoScrollingThreshold) => {
   if (
@@ -55,6 +26,27 @@ const autoScrollToBottomIfNecessary = (scrollableContainer, autoScrollingThresho
     scrollableContainer.scrollTop = scrollableContainer.scrollHeight;
   }
 };
+
+export default function MessageBox({}) {
+  const {
+    localizedStrings,
+    visibleMessageType,
+    orderedTextMessageList,
+    orderedFileMessageList,
+    readAllFileMessage,
+  } = useContext(GlobalContext);
+  return (
+    <MemorizedMessageBox
+      localizedStrings={localizedStrings}
+      visibleMessageType={visibleMessageType}
+      orderedTextMessageList={orderedTextMessageList}
+      orderedFileMessageList={orderedFileMessageList}
+      readAllFileMessage={readAllFileMessage}
+    />
+  );
+}
+
+const MemorizedMessageBox = React.memo(MessageBoxToMemo, arePropsEqual);
 
 function MessageBoxToMemo({
   localizedStrings,
@@ -171,23 +163,31 @@ const arePropsEqual = (prevProps, nextProps) => {
   );
 };
 
-const MemorizedMessageBox = React.memo(MessageBoxToMemo, arePropsEqual);
+const sharedStyleValues = {
+  // autoScrollingThredhold: 300,
+};
 
-export default function MessageBox({}) {
-  const {
-    localizedStrings,
-    visibleMessageType,
-    orderedTextMessageList,
-    orderedFileMessageList,
-    readAllFileMessage,
-  } = useContext(GlobalContext);
-  return (
-    <MemorizedMessageBox
-      localizedStrings={localizedStrings}
-      visibleMessageType={visibleMessageType}
-      orderedTextMessageList={orderedTextMessageList}
-      orderedFileMessageList={orderedFileMessageList}
-      readAllFileMessage={readAllFileMessage}
-    />
-  );
-}
+const Wrapper = styled.div`
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  position: relative;
+`;
+
+const TextMessageWrapper = styled.div`
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: auto;
+  visibility: ${(props) => props.visibility};
+  position: absolute;
+`;
+
+const FileMessageWrapper = styled.div`
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: auto;
+  visibility: ${(props) => props.visibility};
+  position: absolute;
+`;

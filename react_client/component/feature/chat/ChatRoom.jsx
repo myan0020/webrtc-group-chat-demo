@@ -10,6 +10,41 @@ import MessageTypeSwitch from "./message_chat/MessageTypeSwitch";
 import MessageBox from "./message_chat/MessageBox";
 import MessageSender from "./message_chat/MessageSender";
 
+export default function ChatRoom() {
+  const hasJoinedRoom = useSelector(selectHasJoinedRoom,);
+
+  if (!hasJoinedRoom) {
+    return <Navigate to={"/room-list"} />;
+  }
+
+  return (
+    <Wrapper>
+      {/* media chat */}
+      <MediaContainer>
+        <MediaRendererContainer>
+          <MediaRenderer />
+        </MediaRendererContainer>
+        <MediaControllerContainer>
+          <MediaController />
+        </MediaControllerContainer>
+      </MediaContainer>
+
+      {/* message chat */}
+      <MessageContainer>
+        <MessageTypeSwitchContainer>
+          <MessageTypeSwitch />
+        </MessageTypeSwitchContainer>
+        <MessageBoxContainer>
+          <MessageBox />
+        </MessageBoxContainer>
+        <MessageSenderContainer>
+          <MessageSender />
+        </MessageSenderContainer>
+      </MessageContainer>
+    </Wrapper>
+  );
+}
+
 const sharedStyleValues = {
   mediaControllerContainerHeight: 116,
   messageContainerWidth: 328,
@@ -66,37 +101,3 @@ const MessageSenderContainer = styled.div`
   height: ${sharedStyleValues.messageSenderContainerHeight}px;
 `;
 
-export default function ChatRoom() {
-  const hasJoinedRoom = useSelector(selectHasJoinedRoom,);
-
-  if (!hasJoinedRoom) {
-    return <Navigate to={"/room-list"} />;
-  }
-
-  return (
-    <Wrapper>
-      {/* media chat */}
-      <MediaContainer>
-        <MediaRendererContainer>
-          <MediaRenderer />
-        </MediaRendererContainer>
-        <MediaControllerContainer>
-          <MediaController />
-        </MediaControllerContainer>
-      </MediaContainer>
-
-      {/* message chat */}
-      <MessageContainer>
-        <MessageTypeSwitchContainer>
-          <MessageTypeSwitch />
-        </MessageTypeSwitchContainer>
-        <MessageBoxContainer>
-          <MessageBox />
-        </MessageBoxContainer>
-        <MessageSenderContainer>
-          <MessageSender />
-        </MessageSenderContainer>
-      </MessageContainer>
-    </Wrapper>
-  );
-}
