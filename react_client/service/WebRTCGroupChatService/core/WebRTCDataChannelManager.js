@@ -403,7 +403,7 @@ function _createAndStoreDataChannel({
   if (peerConnection.sctp && peerConnection.sctp.maxMessageSize > 0) {
     dataChannel.maxMessageSize = peerConnection.sctp.maxMessageSize;
     console.debug(
-      `WebRTCGroupChatController: a maxMessageSize(${peerConnection.sctp.maxMessageSize}) has found and set to a dataChannel(${label})`
+      `WebRTCGroupChatController: a sctp`, peerConnection.sctp, `with maxMessageSize(${peerConnection.sctp.maxMessageSize}) and state(${peerConnection.sctp.state}) has found and set to a dataChannel(${label})`
     );
   }
 
