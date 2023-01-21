@@ -23,7 +23,7 @@ const TextMessageWrapper = styled.div`
   width: 100%;
   height: 100%;
   box-sizing: border-box;
-  overflow: scroll;
+  overflow: auto;
   visibility: ${(props) => props.visibility};
   position: absolute;
 `;
@@ -32,7 +32,7 @@ const FileMessageWrapper = styled.div`
   width: 100%;
   height: 100%;
   box-sizing: border-box;
-  overflow: scroll;
+  overflow: auto;
   visibility: ${(props) => props.visibility};
   position: absolute;
 `;

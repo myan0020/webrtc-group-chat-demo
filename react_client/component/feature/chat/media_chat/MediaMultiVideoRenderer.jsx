@@ -41,7 +41,7 @@ const EqualityTypeMembersRendererContainer = styled.div`
   flex-wrap: wrap;
   flex: 0 0 100%;
   height: 100%;
-  overflow-y: scroll;
+  overflow-y: auto;
 `;
 
 const EqualityTypeMemberRendererContainer = styled.div`
