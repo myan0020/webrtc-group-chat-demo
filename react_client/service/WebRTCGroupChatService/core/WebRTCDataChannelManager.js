@@ -542,9 +542,15 @@ function _cancelSenderFileSendingToAllPeer(fileHash) {
 
     const label = `file-${fileHash}`;
     const channel = _peerFileBufferChannelMap.getChannel(peerId, label);
-    if (!channel || channel.readyState !== "open") {
+    if (!channel) {
       console.debug(
-        `WebRTCGroupChatController: unexpected data channel of 'undefined' or its unexpected readyState(${channel.readyState}) when sending canceling message`
+        `WebRTCGroupChatController: unexpected data channel of 'undefined' when sending canceling message`
+      );
+      return;
+    }
+    if (channel.readyState !== "open") {
+      console.debug(
+        `WebRTCGroupChatController: unexpected data channel readyState(${channel.readyState}) when sending canceling message`
       );
       return;
     }
