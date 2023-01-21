@@ -319,6 +319,9 @@ async function _sendFileBufferToPeer(fileHashToFile, peerId, peerConnection) {
         onOpenHandler: (event) => {
           _handleSenderFileBufferChannelOpen(event, peerId, fileBufferChannel);
         },
+        onSCTPStateChange: (sctp) => {
+          console.debug(`WebRTCGroupChatController: onSCTPStateChange called with a sctp`, sctp);
+        },
         onBufferedAmountLowHandler: (event) => {
           _handleSenderFileBufferChannelBufferedAmountLow(
             event,
@@ -370,6 +373,7 @@ function _createAndStoreDataChannel({
   label,
   bufferedAmountLowThreshold,
   onOpenHandler,
+  onSCTPStateChange,
   onMessageHandler,
   onBufferedAmountLowHandler,
   onCloseHandler,
@@ -390,10 +394,7 @@ function _createAndStoreDataChannel({
   const dataChannel = peerConnection.createDataChannel(label);
 
   console.debug(
-    `WebRTCGroupChatController: a new data channel of label(${label}) for a peer(${peerId}) has been created`,
-    `and max message size is (${
-      peerConnection.sctp ? peerConnection.sctp.maxMessageSize : "unknown"
-    })`
+    `WebRTCGroupChatController: a new data channel of label(${label}) for a peer(${peerId}) has been created`
   );
 
   dataChannel.bufferedAmountLowThreshold =
@@ -408,6 +409,9 @@ function _createAndStoreDataChannel({
 
   if (onOpenHandler) {
     dataChannel.onopen = onOpenHandler;
+  }
+  if (onSCTPStateChange && peerConnection.sctp) {
+    peerConnection.sctp.onstatechange = onSCTPStateChange;
   }
   if (onMessageHandler) {
     dataChannel.onmessage = onMessageHandler;
