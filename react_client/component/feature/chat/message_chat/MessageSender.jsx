@@ -2,8 +2,8 @@ import React, { useContext, useRef, useState } from "react";
 import styled from "styled-components";
 import { useDispatch } from "react-redux";
 
-import { messageTypeEnum } from "context/message-context";
-import { localizableStringKeyEnum } from "resource/string/localizable-strings";
+import * as messageChatEnum from "constant/enum/message-chat";
+import * as localizableEnum from "constant/enum/localizable";
 import enabledMessageSendBubbleImageUrl from "resource/image/send_message_bubble_enabled_3x.png";
 import disabledMessageSendBubbleImageUrl from "resource/image/send_message_bubble_disabled_3x.png";
 import messageSendPlaneImageUrl from "resource/image/send_message_plane_3x.png";
@@ -64,33 +64,33 @@ function MessageSenderToMemo({
   let messageSendDisabled = false;
 
   const textInputPlaceholder =
-    localizedStrings[localizableStringKeyEnum.CHAT_ROOM_MESSAGE_TEXT_INPUT_PLACEHOLDER];
+    localizedStrings[localizableEnum.key.CHAT_ROOM_MESSAGE_TEXT_INPUT_PLACEHOLDER];
 
-  if (visibleMessageType === messageTypeEnum.MESSAGE_TYPE_TEXT) {
+  if (visibleMessageType === messageChatEnum.type.MESSAGE_TYPE_TEXT) {
     contentBorderStyle = "solid";
     fileInputInfoText = undefined;
     messageInputDisplayment = "block";
     messageInputType = messageInputTypeEnum.MESSAGE_INPUT_TYPE_TEXT;
     messageSendDisabled = false;
-  } else if (visibleMessageType === messageTypeEnum.MESSAGE_TYPE_FILE) {
+  } else if (visibleMessageType === messageChatEnum.type.MESSAGE_TYPE_FILE) {
     contentBorderStyle = "dashed";
     fileInputInfoText =
       inputFilesCount === 0
-        ? localizedStrings[localizableStringKeyEnum.CHAT_ROOM_MESSAGE_FILE_INPUT_PLACEHOLDER_IDLE]
+        ? localizedStrings[localizableEnum.key.CHAT_ROOM_MESSAGE_FILE_INPUT_PLACEHOLDER_IDLE]
         : `${inputFilesCount} ${
             inputFilesCount === 1
               ? localizedStrings[
-                  localizableStringKeyEnum.CHAT_ROOM_MESSAGE_FILE_INPUT_PLACEHOLDER_FILE
+                  localizableEnum.key.CHAT_ROOM_MESSAGE_FILE_INPUT_PLACEHOLDER_FILE
                 ]
               : localizedStrings[
-                  localizableStringKeyEnum.CHAT_ROOM_MESSAGE_FILE_INPUT_PLACEHOLDER_FILE
+                  localizableEnum.key.CHAT_ROOM_MESSAGE_FILE_INPUT_PLACEHOLDER_FILE
                 ] +
                 localizedStrings[
-                  localizableStringKeyEnum.CHAT_ROOM_MESSAGE_FILE_INPUT_PLACEHOLDER_FILE_PLURAL
+                  localizableEnum.key.CHAT_ROOM_MESSAGE_FILE_INPUT_PLACEHOLDER_FILE_PLURAL
                 ]
           } ${
             localizedStrings[
-              localizableStringKeyEnum.CHAT_ROOM_MESSAGE_FILE_INPUT_PLACEHOLDER_ADDED
+              localizableEnum.key.CHAT_ROOM_MESSAGE_FILE_INPUT_PLACEHOLDER_ADDED
             ]
           }`;
     messageInputDisplayment = "none";
@@ -107,7 +107,7 @@ function MessageSenderToMemo({
   };
 
   const handleMessageInputWrapperClick = () => {
-    if (visibleMessageType === messageTypeEnum.MESSAGE_TYPE_FILE && fileInputRef.current) {
+    if (visibleMessageType === messageChatEnum.type.MESSAGE_TYPE_FILE && fileInputRef.current) {
       fileInputRef.current.click();
     }
   };
@@ -120,10 +120,10 @@ function MessageSenderToMemo({
   };
 
   const handleMessageSendClick = () => {
-    if (visibleMessageType === messageTypeEnum.MESSAGE_TYPE_TEXT) {
+    if (visibleMessageType === messageChatEnum.type.MESSAGE_TYPE_TEXT) {
       dispatch(sendTextMessage(inputText));
       setInputText("");
-    } else if (visibleMessageType === messageTypeEnum.MESSAGE_TYPE_FILE) {
+    } else if (visibleMessageType === messageChatEnum.type.MESSAGE_TYPE_FILE) {
       sendFiles();
     }
   };

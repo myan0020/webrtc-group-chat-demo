@@ -7,7 +7,7 @@ import {
   selectHasJoinedRoom,
   selectJoinedRoomName,
 } from "store/roomSlice";
-import { localizableStringKeyEnum } from "resource/string/localizable-strings";
+import * as localizableEnum from "constant/enum/localizable";
 import { GlobalContext } from "context/global-context";
 
 export default function NewRoomNavigator() {
@@ -29,7 +29,7 @@ function NewRoomNavigatorToMemo({ localizedStrings }) {
 
   const title = hasJoinedRoom
     ? joinedRoomName
-    : localizedStrings[localizableStringKeyEnum.NAVIGATION_ROOM_LIST_TITLE];
+    : localizedStrings[localizableEnum.key.NAVIGATION_ROOM_LIST_TITLE];
   const buttonVisibility = hasJoinedRoom ? "hidden" : "visible";
 
   return (
@@ -39,7 +39,7 @@ function NewRoomNavigatorToMemo({ localizedStrings }) {
         visibility={buttonVisibility}
         onClick={handleNewRoomPopupVisibilityToggled}
       >
-        {localizedStrings[localizableStringKeyEnum.NAVIGATION_CREATE_NEW_ROOM]}
+        {localizedStrings[localizableEnum.key.NAVIGATION_CREATE_NEW_ROOM]}
       </Button>
     </Wrapper>
   );

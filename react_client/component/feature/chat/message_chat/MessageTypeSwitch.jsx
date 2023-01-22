@@ -2,8 +2,8 @@ import React, { useContext } from "react";
 import styled from "styled-components";
 import { useSelector } from "react-redux";
 
-import { messageTypeEnum } from "context/message-context";
-import { localizableStringKeyEnum } from "resource/string/localizable-strings";
+import * as messageChatEnum from "constant/enum/message-chat";
+import * as localizableEnum from "constant/enum/localizable";
 import MultiTabSwitch, {
   multiTabSwitchPropsBuilder,
   multiTabSwitchTabBuilder,
@@ -27,10 +27,10 @@ export default function MessageTypeSwitch({}) {
 
   let textMessageTabSelected = true;
   let fileMessageTabSelected = false;
-  if (visibleMessageType === messageTypeEnum.MESSAGE_TYPE_TEXT) {
+  if (visibleMessageType === messageChatEnum.type.MESSAGE_TYPE_TEXT) {
     textMessageTabSelected = true;
     fileMessageTabSelected = false;
-  } else if (visibleMessageType === messageTypeEnum.MESSAGE_TYPE_FILE) {
+  } else if (visibleMessageType === messageChatEnum.type.MESSAGE_TYPE_FILE) {
     textMessageTabSelected = false;
     fileMessageTabSelected = true;
   }
@@ -61,22 +61,22 @@ function MessageTypeSwitchToMemo({
   fileMessageTabBadgeText,
 }) {
   const textMessageTab = multiTabSwitchTabBuilder({
-    switchTabName: localizedStrings[localizableStringKeyEnum.CHAT_ROOM_MESSAGE_TYPE_TEXT],
+    switchTabName: localizedStrings[localizableEnum.key.CHAT_ROOM_MESSAGE_TYPE_TEXT],
     switchTabBorderRadius: 5,
     switchTabBadgeText: textMessageTabBadgeText,
     switchTabBadgeBackgroundImageUrl: badgeBackgroundImageUrl,
     switchTabOnClick: () => {
-      updateVisibleMessageType(messageTypeEnum.MESSAGE_TYPE_TEXT);
+      updateVisibleMessageType(messageChatEnum.type.MESSAGE_TYPE_TEXT);
     },
     switchTabSelected: textMessageTabSelected,
   });
   const fileMessageTab = multiTabSwitchTabBuilder({
-    switchTabName: localizedStrings[localizableStringKeyEnum.CHAT_ROOM_MESSAGE_TYPE_FILE],
+    switchTabName: localizedStrings[localizableEnum.key.CHAT_ROOM_MESSAGE_TYPE_FILE],
     switchTabBorderRadius: 5,
     switchTabBadgeText: fileMessageTabBadgeText,
     switchTabBadgeBackgroundImageUrl: badgeBackgroundImageUrl,
     switchTabOnClick: () => {
-      updateVisibleMessageType(messageTypeEnum.MESSAGE_TYPE_FILE);
+      updateVisibleMessageType(messageChatEnum.type.MESSAGE_TYPE_FILE);
     },
     switchTabSelected: fileMessageTabSelected,
   });

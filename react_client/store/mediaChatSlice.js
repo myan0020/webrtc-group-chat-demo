@@ -1,16 +1,17 @@
 import { createAsyncThunk, createSelector, createSlice } from "@reduxjs/toolkit";
 
 import WebRTCGroupChatService from "service/WebRTCGroupChatService/WebRTCGroupChatService";
+import * as mediaChatEnum from "constant/enum/media-chat"
 
-export const videoCallingInputTypeEnum = {
-  VIDEO_CALLING_INPUT_TYPE_NONE: "none",
-  VIDEO_CALLING_INPUT_TYPE_CAMERA: "camera",
-  VIDEO_CALLING_INPUT_TYPE_SCREEN: "screen",
-};
+// export const videoCallingInputTypeEnum = {
+//   VIDEO_CALLING_INPUT_TYPE_NONE: "none",
+//   VIDEO_CALLING_INPUT_TYPE_CAMERA: "camera",
+//   VIDEO_CALLING_INPUT_TYPE_SCREEN: "screen",
+// };
 
 const initialState = {
   enableVideoCallingInput: true,
-  videoCallingInputType: videoCallingInputTypeEnum.VIDEO_CALLING_INPUT_TYPE_NONE,
+  videoCallingInputType: mediaChatEnum.videoCallingInputType.VIDEO_CALLING_INPUT_TYPE_NONE,
 
   isCalling: false,
 
@@ -117,19 +118,19 @@ export const startCalling = createAsyncThunk("mediaChat/startCalling", async (_,
   let callingInputTypeOfVideo;
   if (enableVideoCallingInput) {
     switch (videoCallingInputType) {
-      case videoCallingInputTypeEnum.VIDEO_CALLING_INPUT_TYPE_CAMERA:
+      case mediaChatEnum.videoCallingInputType.VIDEO_CALLING_INPUT_TYPE_CAMERA:
         {
           callingInputTypeOfVideo =
             WebRTCGroupChatService.callingInputTypeEnum.CALLING_INPUT_TYPE_VIDEO_CAMERA;
         }
         break;
-      case videoCallingInputTypeEnum.VIDEO_CALLING_INPUT_TYPE_SCREEN:
+      case mediaChatEnum.videoCallingInputType.VIDEO_CALLING_INPUT_TYPE_SCREEN:
         {
           callingInputTypeOfVideo =
             WebRTCGroupChatService.callingInputTypeEnum.CALLING_INPUT_TYPE_VIDEO_SCREEN;
         }
         break;
-      case videoCallingInputTypeEnum.VIDEO_CALLING_INPUT_TYPE_NONE:
+      case mediaChatEnum.videoCallingInputType.VIDEO_CALLING_INPUT_TYPE_NONE:
         break;
       default:
         break;

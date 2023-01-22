@@ -13,7 +13,7 @@ import {
   selectRoomList,
 } from "store/roomSlice";
 import closeImageUrl from "resource/image/close_3x.png";
-import { localizableStringKeyEnum } from "resource/string/localizable-strings";
+import * as localizableEnum from "constant/enum/localizable";
 import { GlobalContext } from "context/global-context";
 
 export default function RoomList() {
@@ -102,11 +102,11 @@ function RoomListToMemo({
       >
         <PopupContentCloseButton onClick={handleNewRoomPopupVisibilityToggled} />
         <PopupContentTitle>
-          {localizedStrings[localizableStringKeyEnum.ROOM_LIST_CREATE_NEW_ROOM_TITLE]}
+          {localizedStrings[localizableEnum.key.ROOM_LIST_CREATE_NEW_ROOM_TITLE]}
         </PopupContentTitle>
         <PopupContentInput
           placeholder={
-            localizedStrings[localizableStringKeyEnum.ROOM_LIST_CREATE_NEW_ROOM_INPUT_PLACEHOLDER]
+            localizedStrings[localizableEnum.key.ROOM_LIST_CREATE_NEW_ROOM_INPUT_PLACEHOLDER]
           }
           onChange={handleNewRoomNameInputChanged}
           onKeyDown={handleNewRoomNameInputKeyDown}
@@ -116,7 +116,7 @@ function RoomListToMemo({
           }}
         />
         <PopupContentConfirmButton onClick={handleNewRoomNameConfirmed}>
-          {localizedStrings[localizableStringKeyEnum.ROOM_LIST_CREATE_NEW_ROOM_COMFIRM]}
+          {localizedStrings[localizableEnum.key.ROOM_LIST_CREATE_NEW_ROOM_COMFIRM]}
         </PopupContentConfirmButton>
       </PopupContentWrapper>
 
@@ -131,7 +131,7 @@ function RoomListToMemo({
                 handleRoomJoined(roomId);
               }}
             >
-              {localizedStrings[localizableStringKeyEnum.ROOM_LIST_JOIN_ROOM]}
+              {localizedStrings[localizableEnum.key.ROOM_LIST_JOIN_ROOM]}
             </RoomItemButton>
           </RoomItemWrapper>
         ))}

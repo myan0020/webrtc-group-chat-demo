@@ -2,7 +2,7 @@ import React, { useContext } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 
-import { leaveRoom, selectHasJoinedRoom } from "store/roomSlice";
+import { leaveRoom, selectHasJoinedRoom, updateJoinedRoomId } from "store/roomSlice";
 import goBackImageUrl from "resource/image/go_back_3x.png";
 import { GlobalContext } from "context/global-context";
 import { reset as resetTextChatSlice } from "store/textChatSlice";
@@ -37,6 +37,7 @@ function GoBackNavigatorToMemo({ visibility, resetMediaRenderingContext, resetMe
     resetMessageContext();
 
     // room
+    dispatch(updateJoinedRoomId({ roomId: "", roomName: "" }));
     dispatch(leaveRoom());
   };
 

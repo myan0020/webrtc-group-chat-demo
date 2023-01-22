@@ -2,8 +2,8 @@ import React, { useContext } from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
 
-import { requestToSignout } from "store/authSlice";
-import { localizableStringKeyEnum } from "resource/string/localizable-strings";
+import { requestToSignout, reset as resetAuthSlice } from "store/authSlice";
+import * as localizableEnum from "constant/enum/localizable";
 import { GlobalContext } from "context/global-context";
 import { reset as resetTextChatSlice } from "store/textChatSlice";
 import { reset as resetMediaChatSlice } from "store/mediaChatSlice";
@@ -44,13 +44,14 @@ function SignoutNavigatorToMemo({
     dispatch(resetRoomSlice())
 
     // auth
+    dispatch(resetAuthSlice())
     dispatch(requestToSignout());
   };
 
   return (
     <SignoutNavigatorWrapper>
       <SignoutNavigatorButton onClick={handleSignoutClicked}>
-        {localizedStrings[localizableStringKeyEnum.NAVIGATION_SIGN_OUT]}
+        {localizedStrings[localizableEnum.key.NAVIGATION_SIGN_OUT]}
       </SignoutNavigatorButton>
     </SignoutNavigatorWrapper>
   );

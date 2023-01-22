@@ -10,6 +10,7 @@
       "service/*": ["service/*"],
       "resource/*": ["resource/*"],
       "hook/*": ["hook/*"],
+      "constant/*": ["constant/*"],
     }
   },
 }

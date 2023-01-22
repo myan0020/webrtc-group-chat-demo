@@ -173,6 +173,7 @@ module.exports = (env, argv) => {
         service: path.resolve(process.cwd(), "./react_client/service/"),
         resource: path.resolve(process.cwd(), "./react_client/resource/"),
         hook: path.resolve(process.cwd(), "./react_client/hook/"),
+        constant: path.resolve(process.cwd(), "./react_client/constant/"),
       },
     },
   };

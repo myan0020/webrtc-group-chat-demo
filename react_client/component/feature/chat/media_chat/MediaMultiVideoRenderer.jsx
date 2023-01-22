@@ -3,13 +3,13 @@ import styled from "styled-components";
 
 import MediaVideoRenderer from "./MediaVideoRenderer";
 import { GlobalContext } from "context/global-context";
+import * as mediaChatEnum from "constant/enum/media-chat";
 
 export default function MediaMultiVideoRenderer({}) {
   const {
     numberOfInitialVisibleMediaMembers,
     mediaRenderingDataSourceList,
     mediaRenderingDataSourceForPresenter,
-    mediaAccessibilityTypeEnum,
     mediaAccessibilityType,
   } = useContext(GlobalContext);
 
@@ -18,7 +18,6 @@ export default function MediaMultiVideoRenderer({}) {
       numberOfInitialVisibleMediaMembers={numberOfInitialVisibleMediaMembers}
       mediaRenderingDataSourceList={mediaRenderingDataSourceList}
       mediaRenderingDataSourceForPresenter={mediaRenderingDataSourceForPresenter}
-      mediaAccessibilityTypeEnum={mediaAccessibilityTypeEnum}
       mediaAccessibilityType={mediaAccessibilityType}
     />
   );
@@ -30,17 +29,16 @@ function MediaMultiVideoRendererToMemo({
   numberOfInitialVisibleMediaMembers,
   mediaRenderingDataSourceList,
   mediaRenderingDataSourceForPresenter,
-  mediaAccessibilityTypeEnum,
   mediaAccessibilityType,
 }) {
   let shouldDisplayForEquality;
   let shouldDisplayForPresentation;
 
-  if (mediaAccessibilityType === mediaAccessibilityTypeEnum.MEDIA_ACCESSIBILITY_TYPE_EQUALITY) {
+  if (mediaAccessibilityType === mediaChatEnum.mediaAccessibilityType.MEDIA_ACCESSIBILITY_TYPE_EQUALITY) {
     shouldDisplayForEquality = true;
     shouldDisplayForPresentation = false;
   } else if (
-    mediaAccessibilityType === mediaAccessibilityTypeEnum.MEDIA_ACCESSIBILITY_TYPE_PRESENTATION
+    mediaAccessibilityType === mediaChatEnum.mediaAccessibilityType.MEDIA_ACCESSIBILITY_TYPE_PRESENTATION
   ) {
     shouldDisplayForEquality = false;
     shouldDisplayForPresentation = true;
@@ -114,10 +112,6 @@ const arePropsEqual = (prevProps, nextProps) => {
     prevProps.mediaRenderingDataSourceForPresenter,
     nextProps.mediaRenderingDataSourceForPresenter
   );
-  const isMediaAccessibilityTypeEnumEqual = Object.is(
-    prevProps.mediaAccessibilityTypeEnum,
-    nextProps.mediaAccessibilityTypeEnum
-  );
   const isMediaAccessibilityTypeEqual = Object.is(
     prevProps.mediaAccessibilityType,
     nextProps.mediaAccessibilityType
@@ -126,7 +120,6 @@ const arePropsEqual = (prevProps, nextProps) => {
     isNumberOfInitialVisibleMediaMembersEqual &&
     isMediaRenderingDataSourceListEqual &&
     isMediaRenderingDataSourceForPresenterEqual &&
-    isMediaAccessibilityTypeEnumEqual &&
     isMediaAccessibilityTypeEqual
   );
 };

@@ -6,7 +6,7 @@ import { selectAuthenticatedUserName } from "store/authSlice";
 import GoBackNavigator from "./GoBackNavigator";
 import NewRoomNavigator from "./NewRoomNavigator";
 import SignoutNavigator from "./SignoutNavigator";
-import { localizableStringKeyEnum } from "resource/string/localizable-strings";
+import * as localizableEnum from "constant/enum/localizable";
 import LocalizationSwitch from "../localization/LocalizationSwitch";
 import globalWhiteImageUrl from "resource/image/gobal_white_3x.png";
 import { GlobalContext } from "context/global-context";
@@ -26,7 +26,7 @@ const MemorizedNavigationBar = React.memo(NavigationBarToMemo, arePropsEqual);
 
 function NavigationBarToMemo({ localizedStrings, authenticatedUserName }) {
   const welcomeUserMessage = `${
-    localizedStrings[localizableStringKeyEnum.NAVIGATION_WELCOME]
+    localizedStrings[localizableEnum.key.NAVIGATION_WELCOME]
   }, ${authenticatedUserName}`;
 
   return (

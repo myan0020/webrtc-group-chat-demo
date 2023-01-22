@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 
 import TextMessage, { textMessagePropsBuilder } from "./TextMessage";
 import FileMessage, { fileMessagePropsBuilder } from "./FileMessage";
-import { messageTypeEnum } from "context/message-context";
+import * as messageChatEnum from "constant/enum/message-chat";
 import { GlobalContext } from "context/global-context";
 import { readAllTextMessages, selectUnreadTextMessageCount } from "store/textChatSlice";
 
@@ -61,12 +61,12 @@ function MessageBoxToMemo({
   const fileBoxWrapperRef = useRef(null);
 
   useEffect(() => {
-    if (visibleMessageType === messageTypeEnum.MESSAGE_TYPE_TEXT) {
+    if (visibleMessageType === messageChatEnum.type.MESSAGE_TYPE_TEXT) {
       if (unreadTextMessageCount === 0) {
         return;
       }
       dispatch(readAllTextMessages());
-    } else if (visibleMessageType === messageTypeEnum.MESSAGE_TYPE_FILE) {
+    } else if (visibleMessageType === messageChatEnum.type.MESSAGE_TYPE_FILE) {
       readAllFileMessage();
     }
   });
@@ -84,12 +84,12 @@ function MessageBoxToMemo({
   let isFileMessageVisible = false;
   let textMessageVisibility = "visible";
   let fileMessageVisibility = "hidden";
-  if (visibleMessageType === messageTypeEnum.MESSAGE_TYPE_TEXT) {
+  if (visibleMessageType === messageChatEnum.type.MESSAGE_TYPE_TEXT) {
     isTextMessageVisible = true;
     isFileMessageVisible = false;
     textMessageVisibility = "visible";
     fileMessageVisibility = "hidden";
-  } else if (visibleMessageType === messageTypeEnum.MESSAGE_TYPE_FILE) {
+  } else if (visibleMessageType === messageChatEnum.type.MESSAGE_TYPE_FILE) {
     isTextMessageVisible = false;
     isFileMessageVisible = true;
     textMessageVisibility = "hidden";
@@ -103,7 +103,7 @@ function MessageBoxToMemo({
         ref={textBoxWrapperRef}
       >
         {orderedTextMessageList.map((messageItem, index) => {
-          if (messageItem.type === messageTypeEnum.MESSAGE_TYPE_TEXT) {
+          if (messageItem.type === messageChatEnum.type.MESSAGE_TYPE_TEXT) {
             return (
               <TextMessage
                 key={index}
@@ -120,7 +120,7 @@ function MessageBoxToMemo({
         ref={fileBoxWrapperRef}
       >
         {orderedFileMessageList.map((messageItem, index) => {
-          if (messageItem.type === messageTypeEnum.MESSAGE_TYPE_FILE) {
+          if (messageItem.type === messageChatEnum.type.MESSAGE_TYPE_FILE) {
             return (
               <FileMessage
                 key={index}

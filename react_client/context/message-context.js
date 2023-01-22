@@ -3,11 +3,7 @@ import { useSelector } from "react-redux";
 
 import { selectAllTextMessages } from "store/textChatSlice";
 import { FileMessageContext, FileMessageContextProvider } from "context/file-message-context";
-
-export const messageTypeEnum = {
-  MESSAGE_TYPE_TEXT: 1,
-  MESSAGE_TYPE_FILE: 2,
-};
+import * as messageChatEnum from "constant/enum/message-chat";
 
 const MessageContext = React.createContext();
 MessageContext.displayName = "MessageContext";
@@ -21,7 +17,7 @@ function MessageContextProviderWrapper({ children }) {
 }
 
 function MessageContextProviderContent({ children }) {
-  const [visibleMessageType, setVisibleMessageType] = useState(messageTypeEnum.MESSAGE_TYPE_TEXT);
+  const [visibleMessageType, setVisibleMessageType] = useState(messageChatEnum.type.MESSAGE_TYPE_TEXT);
   const {
     messageContainer: fileMessageContainer,
     unreadMessageCount: unreadFileMessageCount,
@@ -45,7 +41,7 @@ function MessageContextProviderContent({ children }) {
     for (let message of Object.values(textMessageContainer)) {
       textMessageList.push({
         ...message,
-        type: messageTypeEnum.MESSAGE_TYPE_TEXT,
+        type: messageChatEnum.type.MESSAGE_TYPE_TEXT,
       });
     }
   }
@@ -58,7 +54,7 @@ function MessageContextProviderContent({ children }) {
     for (let message of Object.values(fileMessageContainer)) {
       fileMessageList.push({
         ...message,
-        type: messageTypeEnum.MESSAGE_TYPE_FILE,
+        type: messageChatEnum.type.MESSAGE_TYPE_FILE,
       });
     }
   }
@@ -70,7 +66,7 @@ function MessageContextProviderContent({ children }) {
     if (typeof resetFileMessageContext === "function") {
       resetFileMessageContext();
     }
-    setVisibleMessageType(messageTypeEnum.MESSAGE_TYPE_TEXT)
+    setVisibleMessageType(messageChatEnum.type.MESSAGE_TYPE_TEXT)
   }
 
   const contextValue = {

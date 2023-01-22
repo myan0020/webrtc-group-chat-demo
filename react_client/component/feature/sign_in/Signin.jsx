@@ -5,7 +5,7 @@ import { Navigate } from "react-router-dom";
 import { RotatingLines } from "react-loader-spinner";
 
 import { requestToSignin, selectAuthenticated } from "store/authSlice";
-import { localizableStringKeyEnum } from "resource/string/localizable-strings";
+import * as localizableEnum from "constant/enum/localizable";
 import LocalizationSwitch from "../localization/LocalizationSwitch";
 import globalGreyImageUrl from "resource/image/global_grey_3x.png";
 import { GlobalContext } from "context/global-context";
@@ -58,9 +58,9 @@ function SigninToMemo({
     <Wrapper>
       <ContentWrapper>
         <HeadingWrapper>
-          <Heading>{localizedStrings[localizableStringKeyEnum.SIGN_IN_TITLE]}</Heading>
+          <Heading>{localizedStrings[localizableEnum.key.SIGN_IN_TITLE]}</Heading>
           <HeadingDescription>
-            {localizedStrings[localizableStringKeyEnum.SIGN_IN_TITLE_DESC]}
+            {localizedStrings[localizableEnum.key.SIGN_IN_TITLE_DESC]}
           </HeadingDescription>
         </HeadingWrapper>
         {/* {isVerifyingAuth && (
@@ -79,7 +79,7 @@ function SigninToMemo({
           <FormInputWrapper>
             <FormInput
               placeholder={`${
-                localizedStrings[localizableStringKeyEnum.SIGN_IN_INPUT_PLACEHOLDER]
+                localizedStrings[localizableEnum.key.SIGN_IN_INPUT_PLACEHOLDER]
               }`}
               onChange={onInputNewUserNameChange}
               value={inputUserName}
@@ -91,7 +91,7 @@ function SigninToMemo({
             type='button'
             onClick={onSigninClick}
           >
-            {localizedStrings[localizableStringKeyEnum.SIGN_IN_COMFIRM]}
+            {localizedStrings[localizableEnum.key.SIGN_IN_COMFIRM]}
           </FormButton>
           <FormLanguageSwitchContainer>
             <LocalizationSwitch

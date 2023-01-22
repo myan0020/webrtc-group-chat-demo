@@ -1,7 +1,7 @@
 import React, { useContext } from "react";
 import styled from "styled-components";
 
-import { localeTypeEnum, localizableStringKeyEnum } from "resource/string/localizable-strings";
+import * as localizableEnum from "constant/enum/localizable";
 import DropdownSwitch, {
   dropdownSwitchOptionBuilder,
   dropdownSwitchPropsBuilder,
@@ -36,17 +36,17 @@ function LocalizationSwitchToMemo({
   changeLocalization,
 }) {
   const EnglishOption = dropdownSwitchOptionBuilder({
-    dropdownOptionName: localizedStrings[localizableStringKeyEnum.LOCALIZATION_ENGLISH_ITEM_TEXT],
+    dropdownOptionName: localizedStrings[localizableEnum.key.LOCALIZATION_ENGLISH_ITEM_TEXT],
     dropdownOptionSelected: true,
     dropdownOptionOnClick: () => {
-      changeLocalization(localeTypeEnum.ENGLISH);
+      changeLocalization(localizableEnum.type.ENGLISH);
     },
   });
   const ChineseOption = dropdownSwitchOptionBuilder({
-    dropdownOptionName: localizedStrings[localizableStringKeyEnum.LOCALIZATION_CHINESE_ITEM_TEXT],
+    dropdownOptionName: localizedStrings[localizableEnum.key.LOCALIZATION_CHINESE_ITEM_TEXT],
     dropdownOptionSelected: false,
     dropdownOptionOnClick: () => {
-      changeLocalization(localeTypeEnum.CHINESE);
+      changeLocalization(localizableEnum.type.CHINESE);
     },
   });
 
@@ -57,9 +57,9 @@ function LocalizationSwitchToMemo({
           dropdownSwitchIconImageUrl: iconImageUrl,
           dropdownSwitchIconImageWidth: 25,
           dropdownSwitchSelectedOptionTextKey:
-            localizedStrings[localizableStringKeyEnum.LOCALIZATION_SELECTED_TEXT_KEY],
+            localizedStrings[localizableEnum.key.LOCALIZATION_SELECTED_TEXT_KEY],
           dropdownSwitchSelectedOptionTextValue:
-            localizedStrings[localizableStringKeyEnum.LOCALIZATION_SELECTED_TEXT_VALUE],
+            localizedStrings[localizableEnum.key.LOCALIZATION_SELECTED_TEXT_VALUE],
           dropdownSwitchSelectedOptionTextColor: selectedTextColor,
           dropdownSwitchSelectedTextKeyVisible: isSelectedTextKeyVisible,
           dropdownSwitchOptions: [EnglishOption, ChineseOption],

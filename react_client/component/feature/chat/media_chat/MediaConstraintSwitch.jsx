@@ -11,9 +11,9 @@ import {
   selectIsCalling,
   selectVideoCallingInputType,
   updateVideoCallingInputType,
-  videoCallingInputTypeEnum,
 } from "store/mediaChatSlice";
-import { localizableStringKeyEnum } from "resource/string/localizable-strings";
+import * as mediaChatEnum from "constant/enum/media-chat"
+import * as localizableEnum from "constant/enum/localizable";
 import { GlobalContext } from "context/global-context";
 
 export const MediaConstraintSwitchPropsBuilder = ({}) => {
@@ -35,24 +35,24 @@ function MediaConstraintSwitchToMemo({ localizedStrings }) {
 
   const switchEnabled = !isCalling && enableVideoCallingInput;
   const cameraTab = multiTabSwitchTabBuilder({
-    switchTabName: localizedStrings[localizableStringKeyEnum.CHAT_ROOM_MEDIA_CONSTRAINT_CAMERA],
+    switchTabName: localizedStrings[localizableEnum.key.CHAT_ROOM_MEDIA_CONSTRAINT_CAMERA],
     switchTabOnClick: () => {
       dispatch(
-        updateVideoCallingInputType(videoCallingInputTypeEnum.VIDEO_CALLING_INPUT_TYPE_CAMERA)
+        updateVideoCallingInputType(mediaChatEnum.videoCallingInputType.VIDEO_CALLING_INPUT_TYPE_CAMERA)
       );
     },
     switchTabSelected:
-      videoCallingInputType === videoCallingInputTypeEnum.VIDEO_CALLING_INPUT_TYPE_CAMERA,
+      videoCallingInputType === mediaChatEnum.videoCallingInputType.VIDEO_CALLING_INPUT_TYPE_CAMERA,
   });
   const screenTab = multiTabSwitchTabBuilder({
-    switchTabName: localizedStrings[localizableStringKeyEnum.CHAT_ROOM_MEDIA_CONSTRAINT_SCREEN],
+    switchTabName: localizedStrings[localizableEnum.key.CHAT_ROOM_MEDIA_CONSTRAINT_SCREEN],
     switchTabOnClick: () => {
       dispatch(
-        updateVideoCallingInputType(videoCallingInputTypeEnum.VIDEO_CALLING_INPUT_TYPE_SCREEN)
+        updateVideoCallingInputType(mediaChatEnum.videoCallingInputType.VIDEO_CALLING_INPUT_TYPE_SCREEN)
       );
     },
     switchTabSelected:
-      videoCallingInputType === videoCallingInputTypeEnum.VIDEO_CALLING_INPUT_TYPE_SCREEN,
+      videoCallingInputType === mediaChatEnum.videoCallingInputType.VIDEO_CALLING_INPUT_TYPE_SCREEN,
   });
 
   return (

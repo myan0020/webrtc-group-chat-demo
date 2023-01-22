@@ -1,26 +1,27 @@
 import React, { useState } from "react";
 
-import { localeTypeEnum, localizableStrings } from "resource/string/localizable-strings";
+import { localizableStrings } from "constant/string/localizable-strings";
+import * as localizableEnum from "constant/enum/localizable";
 
 const LocalizationContext = React.createContext();
 LocalizationContext.displayName = "LocalizationContext";
 
 function LocalizationContextProvider({ children }) {
-  const [localeType, setLocaleType] = useState(localeTypeEnum.ENGLISH);
+  const [localeType, setLocaleType] = useState(localizableEnum.type.ENGLISH);
 
   const changeLocalization = (toLocaleType) => {
     switch (toLocaleType) {
-      case localeTypeEnum.CHINESE:
-        setLocaleType(localeTypeEnum.CHINESE);
+      case localizableEnum.type.CHINESE:
+        setLocaleType(localizableEnum.type.CHINESE);
         break;
       default:
-        setLocaleType(localeTypeEnum.ENGLISH);
+        setLocaleType(localizableEnum.type.ENGLISH);
         break;
     }
   };
 
   const resetLocalizationContext = () => {
-    setLocaleType(localeTypeEnum.ENGLISH);
+    setLocaleType(localizableEnum.type.ENGLISH);
   }
 
   const contextValue = {

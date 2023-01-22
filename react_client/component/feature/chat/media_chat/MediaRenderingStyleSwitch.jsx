@@ -10,13 +10,12 @@ import presentationDisabledUrl from "resource/image/presentation_disabled_3x.png
 import equalityEnabledUrl from "resource/image/equality_enabled_3x.png";
 import equalityDisabledUrl from "resource/image/equality_disabled_3x.png";
 import { GlobalContext } from "context/global-context";
+import * as mediaChatEnum from "constant/enum/media-chat";
 
 export default function MediaRenderingStyleSwitch({}) {
-  const { mediaAccessibilityTypeEnum, updateMediaAccessibilityType, mediaAccessibilityType } =
-    useContext(GlobalContext);
+  const { updateMediaAccessibilityType, mediaAccessibilityType } = useContext(GlobalContext);
   return (
     <MemorizedMediaRenderingStyleSwitch
-      mediaAccessibilityTypeEnum={mediaAccessibilityTypeEnum}
       updateMediaAccessibilityType={updateMediaAccessibilityType}
       mediaAccessibilityType={mediaAccessibilityType}
     />
@@ -28,11 +27,7 @@ const MemorizedMediaRenderingStyleSwitch = React.memo(
   arePropsEqual
 );
 
-function MediaRenderingStyleSwitchToMemo({
-  mediaAccessibilityTypeEnum,
-  updateMediaAccessibilityType,
-  mediaAccessibilityType,
-}) {
+function MediaRenderingStyleSwitchToMemo({ updateMediaAccessibilityType, mediaAccessibilityType }) {
   const presentationStyleTab = multiTabSwitchTabBuilder({
     switchTabName: "",
     switchTabBorderRadius: 20,
@@ -42,11 +37,12 @@ function MediaRenderingStyleSwitchToMemo({
     switchTabUnselectedBackgroundImageSize: "30px 20px",
     switchTabOnClick: () => {
       updateMediaAccessibilityType(
-        mediaAccessibilityTypeEnum.MEDIA_ACCESSIBILITY_TYPE_PRESENTATION
+        mediaChatEnum.mediaAccessibilityType.MEDIA_ACCESSIBILITY_TYPE_PRESENTATION
       );
     },
     switchTabSelected:
-      mediaAccessibilityType === mediaAccessibilityTypeEnum.MEDIA_ACCESSIBILITY_TYPE_PRESENTATION,
+      mediaAccessibilityType ===
+      mediaChatEnum.mediaAccessibilityType.MEDIA_ACCESSIBILITY_TYPE_PRESENTATION,
   });
   const equalityStyleTab = multiTabSwitchTabBuilder({
     switchTabName: "",
@@ -56,10 +52,13 @@ function MediaRenderingStyleSwitchToMemo({
     switchTabUnselectedBackgroundImageUrl: equalityDisabledUrl,
     switchTabUnselectedBackgroundImageSize: "30px 20px",
     switchTabOnClick: () => {
-      updateMediaAccessibilityType(mediaAccessibilityTypeEnum.MEDIA_ACCESSIBILITY_TYPE_EQUALITY);
+      updateMediaAccessibilityType(
+        mediaChatEnum.mediaAccessibilityType.MEDIA_ACCESSIBILITY_TYPE_EQUALITY
+      );
     },
     switchTabSelected:
-      mediaAccessibilityType === mediaAccessibilityTypeEnum.MEDIA_ACCESSIBILITY_TYPE_EQUALITY,
+      mediaAccessibilityType ===
+      mediaChatEnum.mediaAccessibilityType.MEDIA_ACCESSIBILITY_TYPE_EQUALITY,
   });
 
   return (
@@ -77,10 +76,6 @@ function MediaRenderingStyleSwitchToMemo({
 }
 
 const arePropsEqual = (prevProps, nextProps) => {
-  const isMediaAccessibilityTypeEnumEqual = Object.is(
-    prevProps.mediaAccessibilityTypeEnum,
-    nextProps.mediaAccessibilityTypeEnum
-  );
   const isUpdateMediaAccessibilityTypeEqual = Object.is(
     prevProps.updateMediaAccessibilityType,
     nextProps.updateMediaAccessibilityType
@@ -89,11 +84,7 @@ const arePropsEqual = (prevProps, nextProps) => {
     prevProps.mediaAccessibilityType,
     nextProps.mediaAccessibilityType
   );
-  return (
-    isMediaAccessibilityTypeEnumEqual &&
-    isUpdateMediaAccessibilityTypeEqual &&
-    isMediaAccessibilityTypeEqual
-  );
+  return isUpdateMediaAccessibilityTypeEqual && isMediaAccessibilityTypeEqual;
 };
 
 const Wrapper = styled.div`

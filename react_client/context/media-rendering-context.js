@@ -3,14 +3,10 @@ import { useSelector } from "react-redux";
 
 import WebRTCGroupChatService from "service/WebRTCGroupChatService/WebRTCGroupChatService";
 import { selectAuthenticatedUserId } from "store/authSlice";
+import * as mediaChatEnum from "constant/enum/media-chat";
 
 const MediaRenderingContext = React.createContext();
 MediaRenderingContext.displayName = "MediaRenderingContext";
-
-export const mediaAccessibilityTypeEnum = {
-  MEDIA_ACCESSIBILITY_TYPE_PRESENTATION: "free_for_presentation",
-  MEDIA_ACCESSIBILITY_TYPE_EQUALITY: "free_for_equality",
-};
 
 const numberOfInitialVisibleMediaMembers = 4;
 
@@ -19,7 +15,7 @@ function MediaRenderingContextProvider({ children }) {
   const [localMediaStream, setLocalMediaStream] = useState();
   const [peerUserMediaStreamMap, setPeerUserMediaStreamMap] = useState();
   const [mediaAccessibilityType, setMediaAccessibilityType] = useState(
-    mediaAccessibilityTypeEnum.MEDIA_ACCESSIBILITY_TYPE_PRESENTATION
+    mediaChatEnum.mediaAccessibilityType.MEDIA_ACCESSIBILITY_TYPE_PRESENTATION
   );
   const [presenterId, setPresenterId] = useState();
 
@@ -73,7 +69,7 @@ function MediaRenderingContextProvider({ children }) {
 
   const updatePresenterId = (presenterId) => {
     if (
-      mediaAccessibilityType === mediaAccessibilityTypeEnum.MEDIA_ACCESSIBILITY_TYPE_PRESENTATION
+      mediaAccessibilityType === mediaChatEnum.mediaAccessibilityType.MEDIA_ACCESSIBILITY_TYPE_PRESENTATION
     ) {
       setPresenterId(presenterId);
     }
@@ -88,7 +84,7 @@ function MediaRenderingContextProvider({ children }) {
   const resetMediaRenderingContext = () => {
     setLocalMediaStream(null);
     setPeerUserMediaStreamMap(null);
-    setMediaAccessibilityType(mediaAccessibilityTypeEnum.MEDIA_ACCESSIBILITY_TYPE_PRESENTATION);
+    setMediaAccessibilityType(mediaChatEnum.mediaAccessibilityType.MEDIA_ACCESSIBILITY_TYPE_PRESENTATION);
     setPresenterId(undefined);
   }
 
@@ -97,7 +93,6 @@ function MediaRenderingContextProvider({ children }) {
     mediaRenderingDataSourceList,
     mediaRenderingDataSourceForPresenter: { ...mediaRenderingDataSourceForPresenter, volume: 0 },
     updatePresenterId,
-    mediaAccessibilityTypeEnum,
     mediaAccessibilityType,
     updateMediaAccessibilityType,
 

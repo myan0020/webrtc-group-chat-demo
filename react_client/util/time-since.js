@@ -1,12 +1,12 @@
-import { localizableStringKeyEnum } from "resource/string/localizable-strings"
+import * as localizableEnum from "constant/enum/localizable";
 
 function timeSince(timestamp, withLocalizedStrings) {
-  const localizedYearsAgoText = withLocalizedStrings[localizableStringKeyEnum.YEARS_AGO];
-  const localizedMonthsAgoText = withLocalizedStrings[localizableStringKeyEnum.MONTHS_AGO]
-  const localizedDaysAgoText = withLocalizedStrings[localizableStringKeyEnum.DAYS_AGO]
-  const localizedHoursAgoText = withLocalizedStrings[localizableStringKeyEnum.HOURS_AGO]
-  const localizedMinutesAgoText = withLocalizedStrings[localizableStringKeyEnum.MINUTES_AGO]
-  const localizedSecondsAgoText = withLocalizedStrings[localizableStringKeyEnum.SECONDS_AGO]
+  const localizedYearsAgoText = withLocalizedStrings[localizableEnum.key.YEARS_AGO];
+  const localizedMonthsAgoText = withLocalizedStrings[localizableEnum.key.MONTHS_AGO]
+  const localizedDaysAgoText = withLocalizedStrings[localizableEnum.key.DAYS_AGO]
+  const localizedHoursAgoText = withLocalizedStrings[localizableEnum.key.HOURS_AGO]
+  const localizedMinutesAgoText = withLocalizedStrings[localizableEnum.key.MINUTES_AGO]
+  const localizedSecondsAgoText = withLocalizedStrings[localizableEnum.key.SECONDS_AGO]
 
   let seconds = Math.floor((new Date() - timestamp) / 1000);
 
