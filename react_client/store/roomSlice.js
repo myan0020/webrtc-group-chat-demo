@@ -2,20 +2,14 @@ import { createAsyncThunk, createSelector, createSlice } from "@reduxjs/toolkit"
 import axios from "axios";
 
 import WebRTCGroupChatService from "service/WebRTCGroupChatService/WebRTCGroupChatService";
-
-export const requestStatus = {
-  idle: "idle",
-  loading: "loading",
-  succeeded: "succeeded",
-  failed: "failed",
-};
+import * as loadingStatusEnum from "constant/enum/loading-status";
 
 const initialState = {
   roomList: {},
   joinedRoomId: "",
   joinedRoomName: "",
   isNewRoomPopupVisible: false,
-  requestStatus: requestStatus.idle,
+  loadingStatus: loadingStatusEnum.status.IDLE,
 };
 
 export const roomSlice = createSlice({
@@ -47,10 +41,10 @@ export const roomSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchInitialRoomList.pending, (sliceState, action) => {
-        sliceState.requestStatus = requestStatus.loading;
+        sliceState.loadingStatus = loadingStatusEnum.status.LOADING;
       })
       .addCase(fetchInitialRoomList.fulfilled, (sliceState, action) => {
-        sliceState.requestStatus = requestStatus.idle;
+        sliceState.loadingStatus = loadingStatusEnum.status.IDLE;
         if (action.payload.responseStatus !== 200) {
           return;
         }
@@ -119,4 +113,8 @@ export const selectRoomList = createSelector(selectRoom, (room) => {
 
 export const selectNewRoomPopupVisible = createSelector(selectRoom, (room) => {
   return room.isNewRoomPopupVisible;
+});
+
+export const selectLoadingStatus = createSelector(selectRoom, (room) => {
+  return room.loadingStatus;
 });

@@ -2,13 +2,24 @@ import React, { useContext, useState } from "react";
 import styled from "styled-components";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate } from "react-router-dom";
-import { RotatingLines } from "react-loader-spinner";
 
-import { requestToSignin, selectAuthenticated } from "store/authSlice";
+import {
+  requestToSignin,
+  selectAuthenticated,
+  selectLoadingStatus as selectAuthLoadingStatus,
+} from "store/authSlice";
 import * as localizableEnum from "constant/enum/localizable";
+import * as loadingStatusEnum from "constant/enum/loading-status";
 import LocalizationSwitch from "../localization/LocalizationSwitch";
 import globalGreyImageUrl from "resource/image/global_grey_3x.png";
 import { GlobalContext } from "context/global-context";
+import Loading from "component/generic/loading/Loading";
+
+const sharedStyleValues = {
+  formInputVerticalMargin: 40,
+  loadingContentWidth: 100,
+  loadingContentHeight: 100,
+};
 
 export default function Signin() {
   const dispatch = useDispatch();
@@ -54,8 +65,11 @@ function SigninToMemo({
   onKeyDown,
   onSigninClick,
 }) {
+  const authLoadingStatus = useSelector(selectAuthLoadingStatus);
+
   return (
     <Wrapper>
+      {authLoadingStatus === loadingStatusEnum.status.LOADING && <Loading />}
       <ContentWrapper>
         <HeadingWrapper>
           <Heading>{localizedStrings[localizableEnum.key.SIGN_IN_TITLE]}</Heading>
@@ -63,24 +77,10 @@ function SigninToMemo({
             {localizedStrings[localizableEnum.key.SIGN_IN_TITLE_DESC]}
           </HeadingDescription>
         </HeadingWrapper>
-        {/* {isVerifyingAuth && (
-          <VerifyingWrapper>
-            <RotatingLines
-              strokeColor='grey'
-              strokeWidth='5'
-              animationDuration='0.75'
-              width='20'
-              height='20'
-              visible={true}
-            />
-          </VerifyingWrapper>
-        )} */}
         <FormWrapper>
           <FormInputWrapper>
             <FormInput
-              placeholder={`${
-                localizedStrings[localizableEnum.key.SIGN_IN_INPUT_PLACEHOLDER]
-              }`}
+              placeholder={`${localizedStrings[localizableEnum.key.SIGN_IN_INPUT_PLACEHOLDER]}`}
               onChange={onInputNewUserNameChange}
               value={inputUserName}
               onKeyDown={onKeyDown}
@@ -110,10 +110,6 @@ const arePropsEqual = (prevProps, nextProps) => {
   const isLocalizedStringEqual = Object.is(prevProps.localizedStrings, nextProps.localizedStrings);
   const isInputUserNameEqual = Object.is(prevProps.inputUserName, nextProps.inputUserName);
   return isLocalizedStringEqual && isInputUserNameEqual;
-};
-
-const sharedStyleValues = {
-  formInputVerticalMargin: 40,
 };
 
 const Wrapper = styled.div`
@@ -151,9 +147,24 @@ const HeadingDescription = styled.p`
   color: #808080;
 `;
 
-// const VerifyingWrapper = styled.form`
-//   flex-basis: 404px;
-// `;
+const LoadingWrapper = styled.div`
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.3);
+  z-index: 1;
+`;
+
+const LoadingContentWrapper = styled.div`
+  position: relative;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -100%);
+  width: ${sharedStyleValues.loadingContentWidth}px;
+  height: ${sharedStyleValues.loadingContentHeight}px;
+`;
 
 const FormWrapper = styled.form`
   flex-basis: 404px;

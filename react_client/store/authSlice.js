@@ -3,19 +3,13 @@ import axios from "axios";
 
 import { fetchInitialRoomList } from "./roomSlice";
 import WebRTCGroupChatService from "service/WebRTCGroupChatService/WebRTCGroupChatService";
-
-export const requestStatus = {
-  idle: "idle",
-  loading: "loading",
-  succeeded: "succeeded",
-  failed: "failed",
-};
+import * as loadingStatusEnum from "constant/enum/loading-status";
 
 const initialState = {
   authenticated: false,
   authenticatedUserName: "",
   authenticatedUserId: "",
-  requestStatus: requestStatus.idle,
+  loadingStatus: loadingStatusEnum.status.IDLE,
 };
 
 export const authSlice = createSlice({
@@ -31,10 +25,10 @@ export const authSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(requestToSignin.pending, (sliceState, action) => {
-        sliceState.requestStatus = requestStatus.loading;
+        sliceState.loadingStatus = loadingStatusEnum.status.LOADING;
       })
       .addCase(requestToSignin.fulfilled, (sliceState, action) => {
-        sliceState.requestStatus = requestStatus.idle;
+        sliceState.loadingStatus = loadingStatusEnum.status.IDLE;
         if (!action.payload) {
           return;
         }
@@ -43,10 +37,10 @@ export const authSlice = createSlice({
         sliceState.authenticatedUserId = action.payload.userId;
       })
       .addCase(requestToSignout.pending, (sliceState, action) => {
-        sliceState.requestStatus = requestStatus.loading;
+        sliceState.loadingStatus = loadingStatusEnum.status.LOADING;
       })
       .addCase(requestToSignout.fulfilled, (sliceState, action) => {
-        sliceState.requestStatus = requestStatus.idle;
+        sliceState.loadingStatus = loadingStatusEnum.status.IDLE;
         if (!action.payload) {
           return;
         }
@@ -129,4 +123,8 @@ export const selectAuthenticatedUserId = createSelector(selectAuth, (auth) => {
 
 export const selectAuthenticatedUserName = createSelector(selectAuth, (auth) => {
   return auth.authenticatedUserName;
+});
+
+export const selectLoadingStatus = createSelector(selectAuth, (auth) => {
+  return auth.loadingStatus;
 });
