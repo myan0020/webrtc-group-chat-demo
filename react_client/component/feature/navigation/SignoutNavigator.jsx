@@ -2,7 +2,7 @@ import React, { useContext } from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
 
-import { requestToSignout, reset as resetAuthSlice } from "store/authSlice";
+import { requestToSignout } from "store/authSlice";
 import * as localizableEnum from "constant/enum/localizable";
 import { GlobalContext } from "context/global-context";
 import { reset as resetTextChatSlice } from "store/textChatSlice";
@@ -41,10 +41,9 @@ function SignoutNavigatorToMemo({
     resetMessageContext();
 
     // roomList
-    dispatch(resetRoomSlice())
+    dispatch(resetRoomSlice());
 
     // auth
-    dispatch(resetAuthSlice())
     dispatch(requestToSignout());
   };
 

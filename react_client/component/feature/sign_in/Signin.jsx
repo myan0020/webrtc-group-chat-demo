@@ -6,14 +6,14 @@ import { Navigate } from "react-router-dom";
 import {
   requestToSignin,
   selectAuthenticated,
-  selectLoadingStatus as selectAuthLoadingStatus,
+  selectAuthLoadingStatus,
 } from "store/authSlice";
 import * as localizableEnum from "constant/enum/localizable";
-import * as loadingStatusEnum from "constant/enum/loading-status";
 import LocalizationSwitch from "../localization/LocalizationSwitch";
 import globalGreyImageUrl from "resource/image/global_grey_3x.png";
 import { GlobalContext } from "context/global-context";
 import Loading from "component/generic/loading/Loading";
+import * as loadingStatusEnum from "constant/enum/loading-status";
 
 const sharedStyleValues = {
   formInputVerticalMargin: 40,
@@ -69,7 +69,6 @@ function SigninToMemo({
 
   return (
     <Wrapper>
-      {authLoadingStatus === loadingStatusEnum.status.LOADING && <Loading />}
       <ContentWrapper>
         <HeadingWrapper>
           <Heading>{localizedStrings[localizableEnum.key.SIGN_IN_TITLE]}</Heading>
@@ -102,6 +101,7 @@ function SigninToMemo({
           </FormLanguageSwitchContainer>
         </FormWrapper>
       </ContentWrapper>
+      {authLoadingStatus === loadingStatusEnum.status.LOADING && <Loading />}
     </Wrapper>
   );
 }

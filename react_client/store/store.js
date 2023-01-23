@@ -1,7 +1,7 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 
 import authReducer from "./authSlice";
-import roomReducer, { updateJoinedRoomId, updateRoomList } from "./roomSlice";
+import roomReducer, { updateJoinedRoomId, updateRoomList, updateRoomLoadingStatus } from "./roomSlice";
 import mediaChatReducer, {
   updateIsCalling,
   updateAudioEnablingAvaliable,
@@ -15,6 +15,7 @@ import mediaChatReducer, {
 } from "./mediaChatSlice";
 import textChatReducer, { receiveTextMessage } from "./textChatSlice";
 import WebRTCGroupChatService from "service/WebRTCGroupChatService/WebRTCGroupChatService";
+import * as loadingStatusEnum from "constant/enum/loading-status";
 
 const combinedReducer = combineReducers({
   auth: authReducer,
@@ -46,11 +47,13 @@ WebRTCGroupChatService.onJoinRoomInSuccess((payload) => {
   const roomName = payload.roomName;
   if (roomId.length > 0 && roomName.length > 0) {
     store.dispatch(updateJoinedRoomId({ roomId, roomName }));
+    store.dispatch(updateRoomLoadingStatus(loadingStatusEnum.status.IDLE));
   }
 });
 
 WebRTCGroupChatService.onLeaveRoomInSuccess((payload) => {
   store.dispatch(updateJoinedRoomId({ roomId: "", roomName: "" }));
+  store.dispatch(updateRoomLoadingStatus(loadingStatusEnum.status.IDLE));
 });
 
 WebRTCGroupChatService.onWebRTCCallingStateChanged((isCalling) => {

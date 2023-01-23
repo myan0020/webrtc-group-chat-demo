@@ -3,13 +3,21 @@ import { useDispatch, useSelector } from "react-redux";
 import { Navigate, Outlet } from "react-router-dom";
 import styled from "styled-components";
 
-import { requestToSignout, selectAuthenticated } from "store/authSlice";
+import { requestToSignout, selectAuthenticated, selectAuthLoadingStatus } from "store/authSlice";
 import NavigationBar from "../navigation/NavigationBar";
 import useBeforeunload from "hook/use-beforeunload";
+import Loading from "component/generic/loading/Loading";
+import * as loadingStatusEnum from "constant/enum/loading-status";
+import { selectRoomLoadingStatus } from "store/roomSlice";
 
 export default function RequireAuth({ children, redirectTo }) {
   const dispatch = useDispatch();
   const authenticated = useSelector(selectAuthenticated);
+  const authLoadingStatus = useSelector(selectAuthLoadingStatus);
+  const roomLoadingStatus = useSelector(selectRoomLoadingStatus);
+  const isLoading =
+    authLoadingStatus === loadingStatusEnum.status.LOADING ||
+    roomLoadingStatus === loadingStatusEnum.status.LOADING;
 
   useBeforeunload(() => {
     dispatch(requestToSignout());
@@ -37,9 +45,14 @@ export default function RequireAuth({ children, redirectTo }) {
       <OutletContainer>
         <Outlet />
       </OutletContainer>
+      {isLoading && <Loading />}
     </Wrapper>
   );
 }
+
+const sharedStyleValues = {
+  navigationContainerHeight: 60,
+};
 
 const Wrapper = styled.div`
   width: 100%;
@@ -48,12 +61,12 @@ const Wrapper = styled.div`
 
 const NavigationContainer = styled.nav`
   width: 100%;
-  height: 60px;
+  height: ${sharedStyleValues.navigationContainerHeight}px;
 `;
 
 const OutletContainer = styled.div`
   box-sizing: border-box;
   width: 100%;
-  height: calc(100% - 60px);
+  height: calc(100% - ${sharedStyleValues.navigationContainerHeight}px);
   background-color: rgb(255, 255, 255); ;
 `;

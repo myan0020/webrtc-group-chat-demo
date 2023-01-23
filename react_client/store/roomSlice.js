@@ -32,6 +32,11 @@ export const roomSlice = createSlice({
         sliceState.joinedRoomName = action.payload.roomName;
       },
     },
+    updateRoomLoadingStatus: {
+      reducer(sliceState, action) {
+        sliceState.loadingStatus = action.payload;
+      },
+    },
     reset: {
       reducer(sliceState, action) {
         return initialState;
@@ -75,12 +80,14 @@ export const createRoom = createAsyncThunk("room/createRoom", async (roomName) =
   WebRTCGroupChatService.createNewRoom(roomName);
 });
 
-export const joinRoom = createAsyncThunk("room/joinRoom", async (roomId) => {
+export const joinRoom = createAsyncThunk("room/joinRoom", async (roomId, thunkAPI) => {
   if (!roomId || roomId.length === 0) return;
+  thunkAPI.dispatch(updateRoomLoadingStatus(loadingStatusEnum.status.LOADING));
   WebRTCGroupChatService.joinRoom(roomId);
 });
 
 export const leaveRoom = createAsyncThunk("room/leaveRoom", async (_, thunkAPI) => {
+  thunkAPI.dispatch(updateRoomLoadingStatus(loadingStatusEnum.status.LOADING))
   WebRTCGroupChatService.leaveRoom();
 });
 
@@ -90,7 +97,7 @@ export default roomSlice.reducer;
 
 /* Action Creator */
 
-export const { updateRoomList, toggleNewRoomPopupVisibility, updateJoinedRoomId, reset } =
+export const { updateRoomList, toggleNewRoomPopupVisibility, updateJoinedRoomId, updateRoomLoadingStatus, reset } =
   roomSlice.actions;
 
 /* Selector */
@@ -115,6 +122,6 @@ export const selectNewRoomPopupVisible = createSelector(selectRoom, (room) => {
   return room.isNewRoomPopupVisible;
 });
 
-export const selectLoadingStatus = createSelector(selectRoom, (room) => {
+export const selectRoomLoadingStatus = createSelector(selectRoom, (room) => {
   return room.loadingStatus;
 });

@@ -44,6 +44,7 @@ export const authSlice = createSlice({
         if (!action.payload) {
           return;
         }
+        
         sliceState.authenticated = false;
         sliceState.authenticatedUserName = "";
         sliceState.authenticatedUserId = "";
@@ -125,6 +126,6 @@ export const selectAuthenticatedUserName = createSelector(selectAuth, (auth) => 
   return auth.authenticatedUserName;
 });
 
-export const selectLoadingStatus = createSelector(selectAuth, (auth) => {
+export const selectAuthLoadingStatus = createSelector(selectAuth, (auth) => {
   return auth.loadingStatus;
 });
