@@ -18,6 +18,14 @@ function GroupChatRoom(roomId, roomName) {
   this.deleteParticipant = (userId) => {
     this.participants.delete(userId);
   };
+  
+  Object.defineProperties(this, {
+    participantsSize: {
+      get: () => {
+        return this.participants.size;
+      },
+    },
+  });
 }
 
 module.exports = GroupChatRoom;

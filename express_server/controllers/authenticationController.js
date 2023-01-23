@@ -44,8 +44,6 @@ exports.handleLogout = (req, res, next) => {
     console.log(`[${chalk.yellow`${userId}`}]`);
   }
 
-  // }
-
   // TODO:
   //
   // Priority Level: Low

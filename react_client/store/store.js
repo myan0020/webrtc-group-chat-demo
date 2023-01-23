@@ -1,7 +1,11 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 
 import authReducer from "./authSlice";
-import roomReducer, { updateJoinedRoomId, updateRoomList, updateRoomLoadingStatus } from "./roomSlice";
+import roomReducer, {
+  updateJoinedRoomId,
+  updateRoomList,
+  updateRoomLoadingStatus,
+} from "./roomSlice";
 import mediaChatReducer, {
   updateIsCalling,
   updateAudioEnablingAvaliable,
@@ -22,10 +26,10 @@ const combinedReducer = combineReducers({
   room: roomReducer,
   mediaChat: mediaChatReducer,
   textChat: textChatReducer,
-},);
+});
 
 const rootReducer = (state, action) => {
-  if (action.type === 'RESET') {
+  if (action.type === "RESET") {
     state = undefined;
   }
   return combinedReducer(state, action);
@@ -34,6 +38,24 @@ const rootReducer = (state, action) => {
 const store = configureStore({
   reducer: rootReducer,
 });
+
+/**
+ * WebRTCGroupChatService preparation
+ */
+
+const iceServerUserName = env.TURN_SERVER_USER_NAME;
+const iceServerCredential = env.TURN_SERVER_CREDENTIAL;
+const iceServerUrls = JSON.parse(env.TURN_SERVER_URLS);
+
+WebRTCGroupChatService.peerConnectionConfig = {
+  iceServers: [
+    {
+      username: iceServerUserName,
+      credential: iceServerCredential,
+      urls: iceServerUrls,
+    },
+  ],
+};
 
 WebRTCGroupChatService.onRoomsInfoUpdated((payload) => {
   const rooms = payload.rooms;

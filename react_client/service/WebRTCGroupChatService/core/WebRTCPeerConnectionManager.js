@@ -2,21 +2,7 @@ import WebRTCDataChannelManager from "./WebRTCDataChannelManager.js";
 import WebRTCMediaCallingManager from "./WebRTCMediaCallingManager.js";
 import WebRTCSignalingManager from "./WebRTCSignalingManager.js";
 
-let _peerConnectionConfig = {
-  iceServers: [
-    {
-      username: "mingdongshensen",
-      credential: "123456",
-      urls: "turn:81.68.228.106:3478",
-    },
-  ],
-};
-
-function _changePeerConnectionConfig(config) {
-  const passChecking = _checkPeerConnectionConfig(config);
-  if (!passChecking) return;
-  _peerConnectionConfig = config;
-}
+let _peerConnectionConfig;
 
 const _peerConnectionMap = {
   peerMap: new Map(),
@@ -419,6 +405,13 @@ function _checkPeerConnectionConfig(config) {
 }
 
 export default {
+  /**
+   * @param {String} config
+   */
+  set peerConnectionConfig(config) {
+    _peerConnectionConfig = config;
+  },
+
   get peerConnectionMap() {
     return _peerConnectionMap;
   },

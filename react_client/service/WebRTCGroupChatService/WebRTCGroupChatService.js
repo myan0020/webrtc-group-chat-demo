@@ -38,6 +38,13 @@ function _resetRTCRelatedState() {
 
 export default {
   /**
+   * @param {String} config
+   */
+  set peerConnectionConfig(config) {
+    WebRTCPeerConnectionManager.peerConnectionConfig = config;
+  },
+
+  /**
    * connect
    *
    * note: please call 'connect' when a user has already signed in
