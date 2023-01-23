@@ -2,6 +2,7 @@ const path = require("path");
 const fs = require("fs");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const webpack = require("webpack");
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 require("dotenv").config();
 
@@ -75,6 +76,8 @@ module.exports = (env, argv) => {
         // ... any other global vars
         env: JSON.stringify(process.env),
       }),
+
+      isEnvDevelopment && new BundleAnalyzerPlugin(),
     ].filter(Boolean),
 
     module: {

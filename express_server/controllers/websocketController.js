@@ -267,7 +267,7 @@ const handleLeaveRoom = (ws, sessionUserId, sessionUserName) => {
   if (leftRoom.participants.size === 0) {
     delete rooms[leftRoomId];
     console.log(
-      `[${chalk.green`WebSocket`}] ${chalk.green`deleted`} a room(id:${chalk.green`${leftRoom.id}`}, name:${chalk.green`${leftRoom.name}`}), because of its participants size(${chalk.green`${leftRoom.participantsSize}`}})`
+      `[${chalk.green`WebSocket`}] ${chalk.green`deleted`} a room(id:${chalk.green`${leftRoom.id}`}, name:${chalk.green`${leftRoom.name}`}), because of its participants size(${chalk.green`${leftRoom.participantsSize}`})`
     );
     websocketMap.forEach((ws, _) => {
       if (ws.readyState === WebSocket.OPEN) {
