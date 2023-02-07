@@ -166,7 +166,10 @@ function _handlePeerConnectionTrackEvent(event, peerId) {
 
 function _setupTrackEventHandlers(track, peerId, peerConnection) {
   // chromium issue: https://bugs.chromium.org/p/chromium/issues/detail?id=931033
-  if (peerConnection.callingConstraints && peerConnection.callingConstraints.video === "screen") {
+  if (
+    peerConnection.callingConstraints &&
+    peerConnection.callingConstraints[_callingInputTypeEnum.CALLING_INPUT_TYPE_VIDEO_SCREEN]
+  ) {
     _peerUserMediaStreamMap.setTrack(peerId, track);
     return;
   }
@@ -211,6 +214,7 @@ let _handleLocalUserMediaStreamChanged;
 let _localMediaStreamPromise;
 let _localMediaStream;
 let _callingConstraints;
+const _localMediaSourceStreams = [];
 
 let _handleLocalAudioEnableAvaliableChanged;
 let _handleLocalVideoEnableAvaliableChanged;
@@ -218,81 +222,134 @@ let _handleLocalAudioMuteAvaliableChanged;
 let _handleLocalVideoMuteAvaliableChanged;
 
 const _callingInputTypeEnum = {
-  CALLING_INPUT_TYPE_AUDIO_MICROPHONE: "microphone",
-  CALLING_INPUT_TYPE_VIDEO_CAMERA: "camera",
-  CALLING_INPUT_TYPE_VIDEO_SCREEN: "screen",
+  CALLING_INPUT_TYPE_AUDIO_MICROPHONE: "microphone_audio",
+  CALLING_INPUT_TYPE_AUDIO_SCREEN: "screen_audio",
+  CALLING_INPUT_TYPE_VIDEO_CAMERA: "camera_video",
+  CALLING_INPUT_TYPE_VIDEO_SCREEN: "screen_video",
 };
 
-function _createCallingConstraints(withCallingInputTypeOfAudio, withCallingInputTypeOfVideo) {
-  const constraints = {};
-  switch (withCallingInputTypeOfAudio) {
-    default:
-      constraints["audio"] = "microphone";
-      break;
-  }
-  switch (withCallingInputTypeOfVideo) {
-    case _callingInputTypeEnum.CALLING_INPUT_TYPE_VIDEO_CAMERA:
-      {
-        constraints["video"] = "camera";
-      }
-      break;
-    case _callingInputTypeEnum.CALLING_INPUT_TYPE_VIDEO_SCREEN:
-      {
-        constraints["video"] = "screen";
-      }
-      break;
-    default:
-      break;
-  }
-  return constraints;
+function _applyCallingInputTypes(callingInputTypes) {
+  _callingConstraints = {};
+
+  callingInputTypes.forEach((callingInputType) => {
+    _callingConstraints[callingInputType] = true;
+  });
+
+  _localMediaStreamPromise = _createLocalMediaStream();
 }
 
-function _applyCallingConstraints(callingConstraints) {
-  _callingConstraints = callingConstraints;
-  let mediaStreamConstraints = { audio: true, video: true };
+async function _createLocalMediaStream() {
+  let promise = new Promise((resolve, _) => {
+    resolve(undefined);
+  });
 
-  if (callingConstraints === undefined) {
-    // use default constraints
-    _localMediaStreamPromise = _createLocalMediaStream(mediaStreamConstraints);
-  } else {
-    // use custom constraints
-    const useCameraVideoTrack = callingConstraints.video && callingConstraints.video === "camera";
-    const useDisplayVideoTrack = callingConstraints.video && callingConstraints.video === "screen";
-    const useAudioTrack = callingConstraints.audio && callingConstraints.audio === "microphone";
-    mediaStreamConstraints.audio = useAudioTrack;
-    mediaStreamConstraints.video = useCameraVideoTrack || useDisplayVideoTrack;
-    _localMediaStreamPromise = _createLocalMediaStream(
-      mediaStreamConstraints,
-      useCameraVideoTrack,
-      useDisplayVideoTrack
-    );
-  }
-}
+  const enableCameraVideoTrack =
+    _callingConstraints[_callingInputTypeEnum.CALLING_INPUT_TYPE_VIDEO_CAMERA];
+  const enableMicrophoneAudioTrack =
+    _callingConstraints[_callingInputTypeEnum.CALLING_INPUT_TYPE_AUDIO_MICROPHONE];
+  const enableScreenVideoTrack =
+    _callingConstraints[_callingInputTypeEnum.CALLING_INPUT_TYPE_VIDEO_SCREEN];
+  const enableScreenAudioTrack =
+    _callingConstraints[_callingInputTypeEnum.CALLING_INPUT_TYPE_AUDIO_SCREEN];
 
-async function _createLocalMediaStream(
-  customMediaStreamConstraints,
-  useCameraVideoTrack,
-  useDisplayVideoTrack
-) {
   const mediaDevices = navigator.mediaDevices;
-  let promise;
-  if (useCameraVideoTrack) {
-    promise = mediaDevices.getUserMedia(customMediaStreamConstraints);
-  } else if (useDisplayVideoTrack) {
-    promise = mediaDevices.getDisplayMedia(customMediaStreamConstraints);
+
+  if (
+    enableMicrophoneAudioTrack &&
+    !enableCameraVideoTrack &&
+    !enableScreenAudioTrack &&
+    !enableScreenVideoTrack
+  ) {
+    promise = mediaDevices.getUserMedia({ audio: true, video: false }).then((mediaStream) => {
+      _localMediaSourceStreams.push(mediaStream);
+      return mediaStream;
+    });
+  } else if (
+    enableMicrophoneAudioTrack &&
+    enableCameraVideoTrack &&
+    !enableScreenAudioTrack &&
+    !enableScreenVideoTrack
+  ) {
+    promise = mediaDevices.getUserMedia({ audio: true, video: true }).then((mediaStream) => {
+      _localMediaSourceStreams.push(mediaStream);
+      return mediaStream;
+    });
+  } else if (
+    enableScreenAudioTrack &&
+    enableScreenVideoTrack &&
+    !enableMicrophoneAudioTrack &&
+    !enableCameraVideoTrack
+  ) {
+    promise = mediaDevices.getDisplayMedia({ audio: true, video: false }).then((mediaStream) => {
+      _localMediaSourceStreams.push(mediaStream);
+      return mediaStream;
+    });
+  } else if (
+    enableScreenAudioTrack &&
+    enableScreenVideoTrack &&
+    enableMicrophoneAudioTrack &&
+    !enableCameraVideoTrack
+  ) {
+    promise = Promise.all([
+      mediaDevices.getDisplayMedia({ audio: true, video: true }),
+      mediaDevices.getUserMedia({ audio: true, video: false }),
+    ]).then((mediaStreams) => {
+      if (!(mediaStreams instanceof Array)) {
+        return null;
+      }
+
+      mediaStreams.forEach((mediaStream) => {
+        _localMediaSourceStreams.push(mediaStream);
+      });
+
+      if (mediaStreams.length !== 2) {
+        return null;
+      }
+
+      // perform audio track mixing
+
+      const audioCtx = new AudioContext();
+
+      mediaStreams.forEach(function (mediaStream) {
+        if (
+          !mediaStream.getTracks().filter(function (track) {
+            return track.kind === "audio";
+          }).length
+        ) {
+          return;
+        }
+
+        const audioSourceNode = new MediaStreamAudioSourceNode(audioCtx, {
+          mediaStream: mediaStream,
+        });
+        audioSourceNode.connect(audioCtx.destination);
+      });
+
+      const [localDisplayMediaStream] = mediaStreams;
+      const localScreenVideoTrack = localDisplayMediaStream.getVideoTracks()[0];
+
+      const mixedAudioDestinationNode = audioCtx.createMediaStreamDestination();
+      const localMediaStream = new MediaStream([
+        ...mixedAudioDestinationNode.stream.getTracks(),
+        localScreenVideoTrack,
+      ]);
+
+      return localMediaStream;
+    });
   } else {
-    promise = mediaDevices.getUserMedia(customMediaStreamConstraints);
+    // use no video, only microphone
+    promise = mediaDevices.getUserMedia({ audio: true, video: false });
   }
 
-  promise = promise.then((localUserMediaStream) => {
+  promise = promise.then((localMediaStream) => {
     console.debug(`WebRTCGroupChatController: local media stream created`);
 
-    _localMediaStream = localUserMediaStream;
+    _localMediaStream = localMediaStream;
     if (_handleLocalUserMediaStreamChanged) {
-      _handleLocalUserMediaStreamChanged(_localMediaStream);
+      _handleLocalUserMediaStreamChanged(localMediaStream);
     }
     // 'getUserMedia' or 'getDisplayMedia' may return a media stream that contains a lower number of tracks than expected
-    localUserMediaStream.getTracks().forEach((track, index) => {
+    localMediaStream.getTracks().forEach((track, index) => {
       let handleLocalEnableAvaliableChanged;
       if (track.kind === "audio") {
         handleLocalEnableAvaliableChanged = _handleLocalAudioEnableAvaliableChanged;
@@ -379,6 +436,17 @@ function _addLocalTracksIfPossible(peerId, peerConnection) {
 }
 
 function _stopLocalUserMediaTracks() {
+  // stop all media source streams for mixing
+  if (_localMediaSourceStreams.length > 0) {
+    _localMediaSourceStreams.forEach((localMediaSourceStream) => {
+      localMediaSourceStream.getTracks().forEach((localMediaSourceTrack) => {
+        localMediaSourceTrack.stop();
+      });
+    });
+    _localMediaSourceStreams.length = 0;
+  }
+
+  // stop mixed media stream
   if (_localMediaStream) {
     let handleLocalEnableAvaliableChanged;
     let handleLocalMuteAvaliableChanged;
@@ -557,7 +625,9 @@ function _hangUpCalling(isLeavingRoom) {
 }
 
 function _changeCallingState(changeToCalling) {
-  console.debug(`WebRTCGroupChatController: change calling state to toCalling of ${changeToCalling}`);
+  console.debug(
+    `WebRTCGroupChatController: change calling state to toCalling of ${changeToCalling}`
+  );
 
   // change state to no calling
   if (!changeToCalling) {
@@ -642,8 +712,7 @@ function _getReceiversOfKind(peerConnection, kind) {
 
 export default {
   callingInputTypeEnum: _callingInputTypeEnum,
-  createCallingConstraints: _createCallingConstraints,
-  applyCallingConstraints: _applyCallingConstraints,
+  applyCallingInputTypes: _applyCallingInputTypes,
 
   startCalling: _startCalling,
   hangUpCalling: _hangUpCalling,

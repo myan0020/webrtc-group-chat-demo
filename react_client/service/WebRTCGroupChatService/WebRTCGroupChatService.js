@@ -209,14 +209,9 @@ export default {
    */
 
   callingInputTypeEnum: WebRTCMediaCallingManager.callingInputTypeEnum,
-  createCallingConstraints(withCallingInputTypeOfAudio, withCallingInputTypeOfVideo) {
-    return WebRTCMediaCallingManager.createCallingConstraints(
-      withCallingInputTypeOfAudio,
-      withCallingInputTypeOfVideo
-    );
-  },
-  applyCallingConstraints(callingConstraints) {
-    WebRTCMediaCallingManager.applyCallingConstraints(callingConstraints);
+  
+  applyCallingInputTypes(callingInputTypes) {
+    WebRTCMediaCallingManager.applyCallingInputTypes(callingInputTypes);
   },
   startCalling() {
     WebRTCMediaCallingManager.startCalling(WebRTCPeerConnectionManager.peerConnectionMap);

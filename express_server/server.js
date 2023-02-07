@@ -107,6 +107,8 @@ server.on("upgrade", websocketController.handleUpgrade);
  */
 
 server.listen(process.env.EXPRESS_SERVER_PORT, () => {
+  console.log(`express server run on PORT(${process.env.EXPRESS_SERVER_PORT})`);
+
   if (openMongDBConnection) {
     mongoDBController.connectMongDB();
   }
