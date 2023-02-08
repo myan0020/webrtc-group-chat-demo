@@ -18,6 +18,7 @@ import mediaChatReducer, {
   updateVideoMuting,
 } from "./mediaChatSlice";
 import textChatReducer, { receiveTextMessage } from "./textChatSlice";
+import membershipReducer, { updatePeersInfo as updateMembershipPeersInfo } from "./membershipSlice";
 import WebRTCGroupChatService from "service/WebRTCGroupChatService/WebRTCGroupChatService";
 import * as loadingStatusEnum from "constant/enum/loading-status";
 
@@ -26,6 +27,7 @@ const combinedReducer = combineReducers({
   room: roomReducer,
   mediaChat: mediaChatReducer,
   textChat: textChatReducer,
+  membership: membershipReducer,
 });
 
 const rootReducer = (state, action) => {
@@ -104,6 +106,10 @@ WebRTCGroupChatService.onLocalVideoMuteAvaliableChanged((avaliable) => {
 
 WebRTCGroupChatService.onChatMessageReceived((message) => {
   store.dispatch(receiveTextMessage(message));
+});
+
+WebRTCGroupChatService.onPeersInfoChanged((peersInfo) => {
+  store.dispatch(updateMembershipPeersInfo(peersInfo));
 });
 
 export default store;

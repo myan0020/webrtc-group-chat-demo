@@ -3,39 +3,57 @@ import WebRTCMediaCallingManager from "./WebRTCMediaCallingManager.js";
 import WebRTCSignalingManager from "./WebRTCSignalingManager.js";
 
 let _peerConnectionConfig;
+let _handlePeersInfoChanged;
 
 const _peerConnectionMap = {
   peerMap: new Map(),
+
   has(key) {
     return this.peerMap.has(key);
   },
+
   size() {
     return this.peerMap.size;
   },
+
   set(key, value) {
     const prevSize = this.peerMap.size;
     this.peerMap.set(key, value);
     const curSize = this.peerMap.size;
+
     console.debug(
       `WebRTCGroupChatController: _peerConnectionMap set executed, and its size changed from ${prevSize} to ${curSize}`
     );
+
+    if (_handlePeersInfoChanged) {
+      _handlePeersInfoChanged(this.peersInfo);
+    }
   },
+
   get(key) {
     return this.peerMap.get(key);
   },
+
   getFirstKeyByValue: function (searchValue) {
     for (let [key, value] of this.peerMap.entries()) {
       if (value === searchValue) return key;
     }
   },
+
   delete(key) {
     const prevSize = this.peerMap.size;
     this.peerMap.delete(key);
     const curSize = this.peerMap.size;
+
     console.debug(
       `WebRTCGroupChatController: _peerConnectionMap delete executed, and its size changed from ${prevSize} to ${curSize}`
     );
+
+    if (_handlePeersInfoChanged) {
+      _handlePeersInfoChanged(this.peersInfo);
+    }
   },
+
   clear() {
     const prevSize = this.peerMap.size;
     this.peerMap.clear();
@@ -43,9 +61,22 @@ const _peerConnectionMap = {
     console.debug(
       `WebRTCGroupChatController: _peerConnectionMap clear executed, and its size changed from ${prevSize} to ${curSize}`
     );
+
+    if (_handlePeersInfoChanged) {
+      _handlePeersInfoChanged(this.peersInfo);
+    }
   },
+
   forEach(func) {
     this.peerMap.forEach(func);
+  },
+
+  get peersInfo() {
+    const peersInfo = {};
+    this.peerMap.forEach((peerConnection, peerId) => {
+      peersInfo[peerId] = { name: peerConnection.peerName };
+    });
+    return peersInfo;
   },
 };
 
@@ -313,6 +344,9 @@ function _handlePeerConnectionICEConnectionStateChangeEvent(event) {
     `remoteDescription:`,
     peerConnection.currentRemoteDescription
   );
+
+  // TODO: add ice connection status to 'peersInfo' object, and make 'peersInfo' object hear this ice connection state change event
+
 }
 
 function _handlePeerConnectionNegotiationEvent(event) {
@@ -388,6 +422,8 @@ function _closeALLPeerConnections() {
       console.debug(
         `WebRTCGroupChatController: the peerConnection with peerId of ${peerId} closed`
       );
+
+
     }
   });
   _peerConnectionMap.clear();
@@ -429,4 +465,9 @@ export default {
   handleNewPeerLeave: _handleNewPeerLeave,
 
   closeALLPeerConnections: _closeALLPeerConnections,
+
+  //listener
+  onPeersInfoChanged: function (handler) {
+    _handlePeersInfoChanged = handler;
+  },
 };

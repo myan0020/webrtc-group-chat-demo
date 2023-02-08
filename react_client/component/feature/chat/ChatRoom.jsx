@@ -4,14 +4,14 @@ import { Navigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 
 import { selectHasJoinedRoom } from "store/roomSlice";
-import MediaController from "./media_chat/MediaController";
-import MediaRenderer from "./media_chat/MediaRenderer";
-import MessageTypeSwitch from "./message_chat/MessageTypeSwitch";
-import MessageBox from "./message_chat/MessageBox";
-import MessageSender from "./message_chat/MessageSender";
+import MediaController from "./media/MediaController";
+import MediaRenderer from "./media/MediaRenderer";
+import MessageTypeSwitch from "./message/MessageTypeSwitch";
+import MessageBox from "./message/MessageBox";
+import MessageSender from "./message/MessageSender";
 
 export default function ChatRoom() {
-  const hasJoinedRoom = useSelector(selectHasJoinedRoom,);
+  const hasJoinedRoom = useSelector(selectHasJoinedRoom);
 
   if (!hasJoinedRoom) {
     return <Navigate to={"/room-list"} />;

@@ -122,6 +122,9 @@ export default {
   getPeerNameById(peerId) {
     return WebRTCPeerConnectionManager.getPeerNameById(peerId);
   },
+  onPeersInfoChanged: function (handler) {
+    WebRTCPeerConnectionManager.onPeersInfoChanged(handler);
+  },
 
   /**
    * Messaging
@@ -209,7 +212,7 @@ export default {
    */
 
   callingInputTypeEnum: WebRTCMediaCallingManager.callingInputTypeEnum,
-  
+
   applyCallingInputTypes(callingInputTypes) {
     WebRTCMediaCallingManager.applyCallingInputTypes(callingInputTypes);
   },

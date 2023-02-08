@@ -10,6 +10,8 @@ import * as localizableEnum from "constant/enum/localizable";
 import LocalizationSwitch from "../localization/LocalizationSwitch";
 import globalWhiteImageUrl from "resource/image/gobal_white_3x.png";
 import { GlobalContext } from "context/global-context";
+import MembershipRenderer from "../membership/MembershipRenderer";
+import { selectHasJoinedRoom } from "store/roomSlice";
 
 export default function NavigationBar() {
   const { localizedStrings } = useContext(GlobalContext);
@@ -25,20 +27,30 @@ export default function NavigationBar() {
 const MemorizedNavigationBar = React.memo(NavigationBarToMemo, arePropsEqual);
 
 function NavigationBarToMemo({ localizedStrings, authenticatedUserName }) {
+  const hasJoinedRoom = useSelector(selectHasJoinedRoom);
+  const leftContainerVisibility = !hasJoinedRoom ? "hidden" : "visible";
+
   const welcomeUserMessage = `${
     localizedStrings[localizableEnum.key.NAVIGATION_WELCOME]
   }, ${authenticatedUserName}`;
 
   return (
     <Wrapper>
-      <LeftContainer>
+      <LeftContainer visibility={leftContainerVisibility}>
         <GoBackNavigator />
       </LeftContainer>
       <MiddleContainer>
         <NewRoomNavigator />
       </MiddleContainer>
       <RightContainer>
+        {hasJoinedRoom && (
+          <MembershipRendererContainer>
+            <MembershipRenderer />
+          </MembershipRendererContainer>
+        )}
+
         <WelcomeUserWrapper>{welcomeUserMessage}</WelcomeUserWrapper>
+
         <LocalizationSwitchContainer>
           <LocalizationSwitch
             iconImageUrl={globalWhiteImageUrl}
@@ -80,6 +92,7 @@ const LeftContainer = styled.div`
   flex: 0 0 49px;
   height: 100%;
   margin-right: 15px;
+  visibility: ${(props) => props.visibility};
 `;
 
 const MiddleContainer = styled.div`
@@ -98,8 +111,16 @@ const RightContainer = styled.div`
   align-items: center;
 `;
 
+const MembershipRendererContainer = styled.div`
+  flex: 0 0 134px;
+  height: 30px;
+  margin-left: ${sharedStyleValues.rightContainerInnerHorizontalMargin}px;
+  margin-right: ${sharedStyleValues.rightContainerInnerHorizontalMargin}px;
+  box-sizing: border-box;
+`;
+
 const WelcomeUserWrapper = styled.div`
-  flex: 1 0 250px;
+  flex: 0 0 content;
   text-align: end;
   color: rgb(255, 255, 255);
   margin-right: ${sharedStyleValues.welcomeUserWrapperMarginRight}px;
