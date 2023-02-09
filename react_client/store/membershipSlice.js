@@ -61,7 +61,7 @@ export const selectAllMembersOverview = createSelector(
       const content = allMembersOverview[id];
 
       if (content && typeof content.name === "string" && content.name.length > 0) {
-        initialLetterOfName = content.name.slice(0, 1);
+        initialLetterOfName = content.name.slice(0, 1).toUpperCase();
       }
 
       allMembersOverview[id] = initialLetterOfName;

@@ -6,7 +6,7 @@ import { selectAllMembersCount, selectAllMembersOverview } from "store/membershi
 
 const visualAvatarsCount = 4;
 
-export default function MemberAvatarStack({}) {
+export default function MemberOverview({ visualAvatarMarginLeft }) {
   const allMembersOverview = useSelector(selectAllMembersOverview);
   const allMembersCount = useSelector(selectAllMembersCount);
 
@@ -17,8 +17,12 @@ export default function MemberAvatarStack({}) {
           const hiddenAvatarsCount = allMembersCount - visualAvatarsCount;
           return <HiddenAvatarWrapper>{`+${hiddenAvatarsCount}`}</HiddenAvatarWrapper>;
         } else if (index <= visualAvatarsCount - 1) {
+          const marginLeft = index !== 0 ? visualAvatarMarginLeft : 0;
           return (
-            <VistualAvatarWrapper zIndex={allMembersCount - index}>
+            <VistualAvatarWrapper
+              zIndex={allMembersCount - index}
+              marginLeft={marginLeft}
+            >
               {initialLetterOfName}
             </VistualAvatarWrapper>
           );
@@ -48,7 +52,7 @@ const AvatarWrapper = styled.div`
 `;
 
 const VistualAvatarWrapper = styled(AvatarWrapper)`
-  margin-left: -5%;
+  margin-left: ${(props) => props.marginLeft}px;
   z-index: ${(props) => props.zIndex};
 `;
 
@@ -58,14 +62,11 @@ const HiddenAvatarWrapper = styled(AvatarWrapper)`
 
 const Wrapper = styled.div`
   width: 100%;
-  height: 100%;
+  height: calc(100% - 10px);
   display: flex;
   flex-direction: row;
   justify-content: start;
 
-  &:hover {
-    ${VistualAvatarWrapper}:not(:first-child) {
-      margin-left: 0;
-    }
-  }
+  padding-top: 5px;
+  padding-bottom: 5px;
 `;

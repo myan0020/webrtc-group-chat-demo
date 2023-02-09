@@ -113,7 +113,7 @@ const RightContainer = styled.div`
 
 const MembershipRendererContainer = styled.div`
   flex: 0 0 134px;
-  height: 30px;
+  height: 40px;
   margin-left: ${sharedStyleValues.rightContainerInnerHorizontalMargin}px;
   margin-right: ${sharedStyleValues.rightContainerInnerHorizontalMargin}px;
   box-sizing: border-box;
@@ -123,6 +123,7 @@ const WelcomeUserWrapper = styled.div`
   flex: 0 0 content;
   text-align: end;
   color: rgb(255, 255, 255);
+  margin-left: ${sharedStyleValues.rightContainerInnerHorizontalMargin}px;
   margin-right: ${sharedStyleValues.welcomeUserWrapperMarginRight}px;
 `;
 
