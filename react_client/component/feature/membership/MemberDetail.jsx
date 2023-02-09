@@ -35,7 +35,6 @@ const DetailListWrapper = styled.ul`
   position: absolute;
   top: -1px;
   left: -5px;
-  z-index: 1;
   background-color: rgb(255, 255, 255);
 `;
 
@@ -58,4 +57,5 @@ const DetailListItemWrapper = styled.li`
 const Wrapper = styled.div`
   position: relative;
   display: ${(props) => props.display};
+  z-index: 2;
 `;

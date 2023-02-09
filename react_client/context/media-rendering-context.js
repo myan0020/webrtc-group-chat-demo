@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 
 import WebRTCGroupChatService from "service/WebRTCGroupChatService/WebRTCGroupChatService";
-import { selectAuthenticatedUserId } from "store/authSlice";
+import { selectAuthenticatedUserId, selectAuthenticatedUserName } from "store/authSlice";
 import * as mediaChatEnum from "constant/enum/media-chat";
 
 const MediaRenderingContext = React.createContext();
@@ -12,6 +12,7 @@ const numberOfInitialVisibleMediaMembers = 4;
 
 function MediaRenderingContextProvider({ children }) {
   const authenticatedUserId = useSelector(selectAuthenticatedUserId);
+  const authenticatedUserName = useSelector(selectAuthenticatedUserName);
   const [localMediaStream, setLocalMediaStream] = useState();
   const [peerUserMediaStreamMap, setPeerUserMediaStreamMap] = useState();
   const [mediaAccessibilityType, setMediaAccessibilityType] = useState(
@@ -38,7 +39,12 @@ function MediaRenderingContextProvider({ children }) {
 
   // config media rendering data source list
   const mediaRenderingDataSourceList = [
-    { userId: authenticatedUserId, userName: "You", mediaStream: localMediaStream, volume: 0 },
+    {
+      userId: authenticatedUserId,
+      userName: authenticatedUserName,
+      mediaStream: localMediaStream,
+      volume: 0,
+    },
   ];
   if (
     peerUserMediaStreamMap &&
@@ -46,8 +52,13 @@ function MediaRenderingContextProvider({ children }) {
     peerUserMediaStreamMap.peerMap
   ) {
     Array.from(peerUserMediaStreamMap.peerMap.entries()).forEach(([peerId, mediaStream]) => {
-      const peerName = WebRTCGroupChatService.getPeerNameById(peerId)
-      mediaRenderingDataSourceList.push({ userId: peerId, userName: peerName, mediaStream, volume: 1 });
+      const peerName = WebRTCGroupChatService.getPeerNameById(peerId);
+      mediaRenderingDataSourceList.push({
+        userId: peerId,
+        userName: peerName,
+        mediaStream,
+        volume: 1,
+      });
     });
   }
   if (mediaRenderingDataSourceList.length < numberOfInitialVisibleMediaMembers) {
@@ -69,7 +80,8 @@ function MediaRenderingContextProvider({ children }) {
 
   const updatePresenterId = (presenterId) => {
     if (
-      mediaAccessibilityType === mediaChatEnum.mediaAccessibilityType.MEDIA_ACCESSIBILITY_TYPE_PRESENTATION
+      mediaAccessibilityType ===
+      mediaChatEnum.mediaAccessibilityType.MEDIA_ACCESSIBILITY_TYPE_PRESENTATION
     ) {
       setPresenterId(presenterId);
     }
@@ -84,9 +96,11 @@ function MediaRenderingContextProvider({ children }) {
   const resetMediaRenderingContext = () => {
     setLocalMediaStream(null);
     setPeerUserMediaStreamMap(null);
-    setMediaAccessibilityType(mediaChatEnum.mediaAccessibilityType.MEDIA_ACCESSIBILITY_TYPE_PRESENTATION);
+    setMediaAccessibilityType(
+      mediaChatEnum.mediaAccessibilityType.MEDIA_ACCESSIBILITY_TYPE_PRESENTATION
+    );
     setPresenterId(undefined);
-  }
+  };
 
   const contextValue = {
     numberOfInitialVisibleMediaMembers: numberOfInitialVisibleMediaMembers,

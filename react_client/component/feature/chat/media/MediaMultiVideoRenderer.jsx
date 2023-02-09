@@ -34,11 +34,15 @@ function MediaMultiVideoRendererToMemo({
   let shouldDisplayForEquality;
   let shouldDisplayForPresentation;
 
-  if (mediaAccessibilityType === mediaChatEnum.mediaAccessibilityType.MEDIA_ACCESSIBILITY_TYPE_EQUALITY) {
+  if (
+    mediaAccessibilityType ===
+    mediaChatEnum.mediaAccessibilityType.MEDIA_ACCESSIBILITY_TYPE_EQUALITY
+  ) {
     shouldDisplayForEquality = true;
     shouldDisplayForPresentation = false;
   } else if (
-    mediaAccessibilityType === mediaChatEnum.mediaAccessibilityType.MEDIA_ACCESSIBILITY_TYPE_PRESENTATION
+    mediaAccessibilityType ===
+    mediaChatEnum.mediaAccessibilityType.MEDIA_ACCESSIBILITY_TYPE_PRESENTATION
   ) {
     shouldDisplayForEquality = false;
     shouldDisplayForPresentation = true;
