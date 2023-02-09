@@ -30,15 +30,7 @@ export default function MemberAvatarStack({}) {
   );
 }
 
-const Wrapper = styled.div`
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-`;
-
-const VistualAvatarWrapper = styled.div`
+const AvatarWrapper = styled.div`
   box-sizing: border-box;
   height: 100%;
   aspect-ratio: 1 / 1;
@@ -49,20 +41,31 @@ const VistualAvatarWrapper = styled.div`
   font-weight: 500;
   color: rgb(120, 144, 156);
   text-align: center;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const VistualAvatarWrapper = styled(AvatarWrapper)`
   margin-left: -5%;
   z-index: ${(props) => props.zIndex};
 `;
 
-const HiddenAvatarWrapper = styled.div`
-  box-sizing: border-box;
-  height: 100%;
-  aspect-ratio: 1 / 1;
-  border: 1px solid rgb(36, 41, 47);
-  border-radius: 50%;
-  background-color: rgb(255, 255, 255);
-  color: rgb(0, 0, 0);
-  font-size: 18px;
-  font-weight: 500;
-  text-align: center;
+const HiddenAvatarWrapper = styled(AvatarWrapper)`
   margin-left: 3px;
+`;
+
+const Wrapper = styled.div`
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: start;
+
+  &:hover {
+    ${VistualAvatarWrapper}:not(:first-child) {
+      margin-left: 0;
+    }
+  }
 `;

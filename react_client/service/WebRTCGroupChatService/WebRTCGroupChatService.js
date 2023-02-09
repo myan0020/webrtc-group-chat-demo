@@ -66,7 +66,7 @@ export default {
       }
 
       console.debug(
-        `WebRTCGroupChatService: will use a default WebSocket url to coonect`,
+        `WebRTCGroupChatService: will use a default WebSocket url to connect`,
         url
       );
     }
