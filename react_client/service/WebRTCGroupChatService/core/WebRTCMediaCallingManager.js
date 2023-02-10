@@ -69,8 +69,8 @@ function _pauseAllTransceiverSending() {
  * peer track receiving
  */
 
-let _handlePeerUserMediaStreamMapChanged;
-const _peerUserMediaStreamMap = {
+let _handlePeerMediaStreamMapChanged;
+const _peerMediaStreamMap = {
   peerMap: new Map(),
   has(key) {
     return this.peerMap.has(key);
@@ -112,14 +112,14 @@ const _peerUserMediaStreamMap = {
       this.peerMap.delete(peerId);
       const curSize = this.peerMap.size;
       console.debug(
-        `WebRTCGroupChatController: _peerUserMediaStreamMap delete executed, and its size changed from ${prevSize} to ${curSize}`
+        `WebRTCGroupChatController: _peerMediaStreamMap delete executed, and its size changed from ${prevSize} to ${curSize}`
       );
     } else {
       this.peerMap.set(peerId, newMediaStream);
     }
 
-    if (_handlePeerUserMediaStreamMapChanged) {
-      _handlePeerUserMediaStreamMapChanged(_shadowCopyPlainObject(this));
+    if (_handlePeerMediaStreamMapChanged) {
+      _handlePeerMediaStreamMapChanged(_shadowCopyPlainObject(this));
     }
   },
 
@@ -141,11 +141,11 @@ const _peerUserMediaStreamMap = {
     this.peerMap.set(peerId, newMediaStream);
 
     console.debug(
-      `WebRTCGroupChatController: _peerUserMediaStreamMap size changed from ${prevSize} to ${this.peerMap.size}`
+      `WebRTCGroupChatController: _peerMediaStreamMap size changed from ${prevSize} to ${this.peerMap.size}`
     );
 
-    if (_handlePeerUserMediaStreamMapChanged) {
-      _handlePeerUserMediaStreamMapChanged(_shadowCopyPlainObject(this));
+    if (_handlePeerMediaStreamMapChanged) {
+      _handlePeerMediaStreamMapChanged(_shadowCopyPlainObject(this));
     }
   },
 };
@@ -170,7 +170,7 @@ function _setupTrackEventHandlers(track, peerId, peerConnection) {
     peerConnection.callingConstraints &&
     peerConnection.callingConstraints[_callingInputTypeEnum.CALLING_INPUT_TYPE_VIDEO_SCREEN]
   ) {
-    _peerUserMediaStreamMap.setTrack(peerId, track);
+    _peerMediaStreamMap.setTrack(peerId, track);
     return;
   }
 
@@ -187,13 +187,13 @@ function _setupTrackEventHandlers(track, peerId, peerConnection) {
 
 function _handleIncomingTrackUnmute(event, peerId) {
   const track = event.target;
-  _peerUserMediaStreamMap.setTrack(peerId, track);
+  _peerMediaStreamMap.setTrack(peerId, track);
   console.debug(`WebRTCGroupChatController: unmute a track for a peer( ${peerId} )`, track);
 }
 
 function _handleIncomingTrackMute(event, peerId) {
   const track = event.target;
-  _peerUserMediaStreamMap.deleteTrack(peerId, track.kind);
+  _peerMediaStreamMap.deleteTrack(peerId, track.kind);
   console.debug(
     `WebRTCGroupChatController: muted a track for a peer( ${peerId}, kind(${track.kind}) )`,
     track
@@ -202,7 +202,7 @@ function _handleIncomingTrackMute(event, peerId) {
 
 function _handleIncomingTrackEnded(event, peerId) {
   const track = event.target;
-  _peerUserMediaStreamMap.deleteTrack(peerId, track.kind);
+  _peerMediaStreamMap.deleteTrack(peerId, track.kind);
   console.debug(`WebRTCGroupChatController: ended a track for a peer( ${peerId} )`, track);
 }
 
@@ -210,16 +210,21 @@ function _handleIncomingTrackEnded(event, peerId) {
  * local track sending
  */
 
-let _handleLocalUserMediaStreamChanged;
-let _localMediaStreamPromise;
-let _localMediaStream;
-let _callingConstraints;
 const _localMediaSourceStreams = [];
+let _localMediaDestinationStream;
+let _localMediaDestinationStreamPromise;
+let _localAudioCtx;
+let _localAudioDestinationNode;
+let _localAudioGainNode;
+const _localAudioSourceNodes = [];
 
+let _handleLocalMediaStreamChanged;
 let _handleLocalAudioEnableAvaliableChanged;
 let _handleLocalVideoEnableAvaliableChanged;
 let _handleLocalAudioMuteAvaliableChanged;
 let _handleLocalVideoMuteAvaliableChanged;
+
+let _callingConstraints;
 
 const _callingInputTypeEnum = {
   CALLING_INPUT_TYPE_AUDIO_MICROPHONE: "microphone_audio",
@@ -235,7 +240,7 @@ function _applyCallingInputTypes(callingInputTypes) {
     _callingConstraints[callingInputType] = true;
   });
 
-  _localMediaStreamPromise = _createLocalMediaStream();
+  _localMediaDestinationStreamPromise = _createLocalMediaStream();
 }
 
 async function _createLocalMediaStream() {
@@ -308,7 +313,11 @@ async function _createLocalMediaStream() {
 
       // perform audio track mixing
 
-      const audioCtx = new AudioContext();
+      _localAudioCtx = new AudioContext();
+      _localAudioGainNode = _localAudioCtx.createGain();
+      _localAudioDestinationNode = _localAudioCtx.createMediaStreamDestination();
+      _localAudioGainNode.connect(_localAudioCtx.destination);
+      _localAudioGainNode.gain.value = 0; // use gain node to prevent echo
 
       mediaStreams.forEach(function (mediaStream) {
         if (
@@ -319,18 +328,19 @@ async function _createLocalMediaStream() {
           return;
         }
 
-        const audioSourceNode = new MediaStreamAudioSourceNode(audioCtx, {
-          mediaStream: mediaStream,
-        });
-        audioSourceNode.connect(audioCtx.destination);
+        const audioSourceNode = _localAudioCtx.createMediaStreamSource(mediaStream);
+        audioSourceNode.connect(_localAudioGainNode);
+        _localAudioSourceNodes.push(audioSourceNode);
       });
 
       const [localDisplayMediaStream] = mediaStreams;
       const localScreenVideoTrack = localDisplayMediaStream.getVideoTracks()[0];
 
-      const mixedAudioDestinationNode = audioCtx.createMediaStreamDestination();
+      _localAudioSourceNodes.forEach(function (audioSourceNode) {
+        audioSourceNode.connect(_localAudioDestinationNode);
+      });
       const localMediaStream = new MediaStream([
-        ...mixedAudioDestinationNode.stream.getTracks(),
+        ..._localAudioDestinationNode.stream.getTracks(),
         localScreenVideoTrack,
       ]);
 
@@ -344,9 +354,9 @@ async function _createLocalMediaStream() {
   promise = promise.then((localMediaStream) => {
     console.debug(`WebRTCGroupChatController: local media stream created`);
 
-    _localMediaStream = localMediaStream;
-    if (_handleLocalUserMediaStreamChanged) {
-      _handleLocalUserMediaStreamChanged(localMediaStream);
+    _localMediaDestinationStream = localMediaStream;
+    if (_handleLocalMediaStreamChanged) {
+      _handleLocalMediaStreamChanged(localMediaStream);
     }
     // 'getUserMedia' or 'getDisplayMedia' may return a media stream that contains a lower number of tracks than expected
     localMediaStream.getTracks().forEach((track, index) => {
@@ -365,14 +375,14 @@ async function _createLocalMediaStream() {
 }
 
 function _addLocalMediaStream(peerConnectionMap) {
-  if (!_localMediaStream) {
+  if (!_localMediaDestinationStream) {
     console.debug(
-      `WebRTCGroupChatController: unexpected _localMediaStream of ${_localMediaStream} when adding local media stream to peer connection (peerId: ${peerId})`
+      `WebRTCGroupChatController: unexpected _localMediaDestinationStream of ${_localMediaDestinationStream} when adding local media stream to peer connection (peerId: ${peerId})`
     );
     return;
   }
 
-  _localMediaStream.getTracks().forEach((track, index) => {
+  _localMediaDestinationStream.getTracks().forEach((track, index) => {
     let reusableTransceiversMap;
     let handleLocalMuteAvaliableChanged;
     if (track.kind === "audio") {
@@ -404,8 +414,8 @@ function _addLocalMediaStream(peerConnectionMap) {
 }
 
 function _addLocalTracksIfPossible(peerId, peerConnection) {
-  if (_localMediaStream) {
-    _localMediaStream.getTracks().forEach((track, index) => {
+  if (_localMediaDestinationStream) {
+    _localMediaDestinationStream.getTracks().forEach((track, index) => {
       let reusableTransceiversMap;
       if (track.kind === "audio") {
         reusableTransceiversMap = _reusableAudioTransceiversMap;
@@ -435,22 +445,12 @@ function _addLocalTracksIfPossible(peerId, peerConnection) {
   }
 }
 
-function _stopLocalUserMediaTracks() {
-  // stop all media source streams for mixing
-  if (_localMediaSourceStreams.length > 0) {
-    _localMediaSourceStreams.forEach((localMediaSourceStream) => {
-      localMediaSourceStream.getTracks().forEach((localMediaSourceTrack) => {
-        localMediaSourceTrack.stop();
-      });
-    });
-    _localMediaSourceStreams.length = 0;
-  }
-
-  // stop mixed media stream
-  if (_localMediaStream) {
+function _releaseLocalMediaDestination() {
+  if (_localMediaDestinationStream) {
     let handleLocalEnableAvaliableChanged;
     let handleLocalMuteAvaliableChanged;
-    _localMediaStream.getTracks().forEach(function (track) {
+
+    _localMediaDestinationStream.getTracks().forEach(function (track) {
       if (track.kind === "audio") {
         handleLocalEnableAvaliableChanged = _handleLocalAudioEnableAvaliableChanged;
         handleLocalMuteAvaliableChanged = _handleLocalAudioMuteAvaliableChanged;
@@ -458,7 +458,9 @@ function _stopLocalUserMediaTracks() {
         handleLocalEnableAvaliableChanged = _handleLocalVideoEnableAvaliableChanged;
         handleLocalMuteAvaliableChanged = _handleLocalVideoMuteAvaliableChanged;
       }
+
       track.stop();
+
       if (handleLocalEnableAvaliableChanged) {
         handleLocalEnableAvaliableChanged(false);
       }
@@ -467,25 +469,60 @@ function _stopLocalUserMediaTracks() {
       }
     });
 
-    _localMediaStream = null;
-    if (_handleLocalUserMediaStreamChanged) {
-      _handleLocalUserMediaStreamChanged(_localMediaStream);
+    _localMediaDestinationStream = null;
+    if (_handleLocalMediaStreamChanged) {
+      _handleLocalMediaStreamChanged(_localMediaDestinationStream);
     }
+  }
+}
+
+function _releaseLocalMediaSources() {
+  if (_localMediaSourceStreams.length > 0) {
+    _localMediaSourceStreams.forEach((localMediaSourceStream) => {
+      localMediaSourceStream.getTracks().forEach((localMediaSourceTrack) => {
+        localMediaSourceTrack.stop();
+      });
+    });
+    _localMediaSourceStreams.length = 0;
+  }
+}
+
+function _releaseLocalAudioGraph() {
+  if (_localAudioGainNode) {
+    _localAudioGainNode.disconnect();
+    _localAudioGainNode = null;
+  }
+
+  if (_localAudioSourceNodes.length > 0) {
+    _localAudioSourceNodes.forEach(function (audioSourceNode) {
+      audioSourceNode.disconnect();
+    });
+    _localAudioSourceNodes.length = 0;
+  }
+
+  if (_localAudioDestinationNode) {
+    _localAudioDestinationNode.disconnect();
+    _localAudioDestinationNode = null;
+  }
+
+  if (_localAudioCtx) {
+    _localAudioCtx.close();
+    _localAudioCtx = null;
   }
 }
 
 function _getLocalMediaTrackEnabled(trackKind) {
   let trackEnabled = false;
 
-  if (!_localMediaStream) {
+  if (!_localMediaDestinationStream) {
     return trackEnabled;
   }
 
   let track;
-  if (trackKind === "audio" && _localMediaStream.getAudioTracks()) {
-    track = _localMediaStream.getAudioTracks()[0];
-  } else if (trackKind === "video" && _localMediaStream.getVideoTracks()) {
-    track = _localMediaStream.getVideoTracks()[0];
+  if (trackKind === "audio" && _localMediaDestinationStream.getAudioTracks()) {
+    track = _localMediaDestinationStream.getAudioTracks()[0];
+  } else if (trackKind === "video" && _localMediaDestinationStream.getVideoTracks()) {
+    track = _localMediaDestinationStream.getVideoTracks()[0];
   }
 
   if (!track) {
@@ -500,18 +537,18 @@ function _getLocalMediaTrackEnabled(trackKind) {
 }
 
 function _setLocalMediaTrackEnabled(trackKind, enabled) {
-  if (!_localMediaStream) {
+  if (!_localMediaDestinationStream) {
     console.error(
-      `WebRTCGroupChatController: unexpected empty _localMediaStream when 'set' enabling ( ${trackKind} ) kind of local media device`
+      `WebRTCGroupChatController: unexpected empty _localMediaDestinationStream when 'set' enabling ( ${trackKind} ) kind of local media device`
     );
     return;
   }
 
   let track;
-  if (trackKind === "audio" && _localMediaStream.getAudioTracks()) {
-    track = _localMediaStream.getAudioTracks()[0];
-  } else if (trackKind === "video" && _localMediaStream.getVideoTracks()) {
-    track = _localMediaStream.getVideoTracks()[0];
+  if (trackKind === "audio" && _localMediaDestinationStream.getAudioTracks()) {
+    track = _localMediaDestinationStream.getAudioTracks()[0];
+  } else if (trackKind === "video" && _localMediaDestinationStream.getVideoTracks()) {
+    track = _localMediaDestinationStream.getVideoTracks()[0];
   }
 
   if (!track) {
@@ -524,7 +561,7 @@ function _setLocalMediaTrackEnabled(trackKind, enabled) {
 }
 
 function _getLocalMediaTrackMuted(trackKind) {
-  if (!_localMediaStream) {
+  if (!_localMediaDestinationStream) {
     return true;
   }
 
@@ -552,10 +589,10 @@ function _getLocalMediaTrackMuted(trackKind) {
   }
 
   let track;
-  if (trackKind === "audio" && _localMediaStream.getAudioTracks()) {
-    track = _localMediaStream.getAudioTracks()[0];
-  } else if (trackKind === "video" && _localMediaStream.getVideoTracks()) {
-    track = _localMediaStream.getVideoTracks()[0];
+  if (trackKind === "audio" && _localMediaDestinationStream.getAudioTracks()) {
+    track = _localMediaDestinationStream.getAudioTracks()[0];
+  } else if (trackKind === "video" && _localMediaDestinationStream.getVideoTracks()) {
+    track = _localMediaDestinationStream.getVideoTracks()[0];
   }
   if (!track) {
     console.error(
@@ -592,13 +629,13 @@ let _isCalling = false;
 let _handleCallingStateChanged;
 
 function _startCalling(peerConnectionMap) {
-  if (!_localMediaStreamPromise) {
-    console.debug(`unexpected empty '_localMediaStreamPromise' during starting calling`);
+  if (!_localMediaDestinationStreamPromise) {
+    console.debug(`unexpected empty '_localMediaDestinationStreamPromise' during starting calling`);
     return;
   }
 
   _changeCallingState(true);
-  _localMediaStreamPromise.then(
+  _localMediaDestinationStreamPromise.then(
     () => {
       _addLocalMediaStream(peerConnectionMap);
     },
@@ -617,7 +654,10 @@ function _hangUpCalling(isLeavingRoom) {
   }
 
   _changeCallingState(false);
-  _stopLocalUserMediaTracks();
+
+  _releaseLocalMediaSources();
+  _releaseLocalMediaDestination();
+  _releaseLocalAudioGraph();
 
   if (!isLeavingRoom) {
     _pauseAllTransceiverSending();
@@ -758,10 +798,10 @@ export default {
     _handleCallingStateChanged = handler;
   },
   onLocalMediaStreamChanged: function (handler) {
-    _handleLocalUserMediaStreamChanged = handler;
+    _handleLocalMediaStreamChanged = handler;
   },
   onPeerMediaStreamMapChanged: function (handler) {
-    _handlePeerUserMediaStreamMapChanged = handler;
+    _handlePeerMediaStreamMapChanged = handler;
   },
   onLocalAudioEnableAvaliableChanged: function (handler) {
     _handleLocalAudioEnableAvaliableChanged = handler;
