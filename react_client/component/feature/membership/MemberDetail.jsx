@@ -9,8 +9,8 @@ export default function MemberDetail({ display }) {
   return (
     <Wrapper display={display}>
       <DetailListWrapper>
-        {Object.entries(allMembers).map(([_, { name }]) => {
-          return <DetailListItemWrapper>{name}</DetailListItemWrapper>;
+        {Object.entries(allMembers).map(([id, { name }]) => {
+          return <DetailListItemWrapper key={id}>{name}</DetailListItemWrapper>;
         })}
       </DetailListWrapper>
     </Wrapper>

@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import styled from "styled-components";
 
 import MediaUserTag from "./MediaUserTag";
@@ -6,24 +6,26 @@ import cancelImageUrl from "resource/image/cancel_media_presenting_3x.png";
 import { GlobalContext } from "context/global-context";
 
 export default function MediaVideoRenderer(props) {
+  const ignoreAudioAvaliablity = props.ignoreAudioAvaliablity;
   const userId = props.userId;
   const userName = props.userName;
-  const mediaStream = props.mediaStream;
-  const volume = props.volume;
+  const videoStream = props.videoStream;
   const isCancellable = props.isCancellable;
   const isVideoClickable = props.isVideoClickable;
+  const audioProcessor = props.audioProcessor;
 
   const { updatePresenterId } = useContext(GlobalContext);
 
   return (
     <MemorizedMediaVideoRenderer
+      ignoreAudioAvaliablity={ignoreAudioAvaliablity}
       userId={userId}
       userName={userName}
-      mediaStream={mediaStream}
-      volume={volume}
+      videoStream={videoStream}
       isCancellable={isCancellable}
       isVideoClickable={isVideoClickable}
       updatePresenterId={updatePresenterId}
+      audioProcessor={audioProcessor}
     />
   );
 }
@@ -31,21 +33,25 @@ export default function MediaVideoRenderer(props) {
 const MemorizedMediaVideoRenderer = React.memo(MediaVideoRendererToMemo, arePropsEqual);
 
 function MediaVideoRendererToMemo(props) {
+  const ignoreAudioAvaliablity = props.ignoreAudioAvaliablity;
   const userId = props.userId;
   const userName = props.userName;
-  const mediaStream = props.mediaStream;
-  const volume = props.volume;
+  const videoStream = props.videoStream;
   const isCancellable = props.isCancellable;
   const isVideoClickable = props.isVideoClickable;
   const updatePresenterId = props.updatePresenterId;
 
-  const addMediaStreamToVideoDOM = (videoDOM, mediaStream) => {
+  const audioProcessor = props.audioProcessor;
+
+  const isAudioAvaliable = audioProcessor && audioProcessor.audioGainNode;
+  const isVideoAvaliable = videoStream instanceof MediaStream && videoStream.getTracks().length > 0;
+
+  const addVideoStreamToVideoDOM = (videoDOM, videoStream) => {
     if (!videoDOM) return;
-    if (typeof volume === "number") {
-      videoDOM.volume = volume;
-    }
-    videoDOM.srcObject = mediaStream;
+    if (!(videoStream instanceof MediaStream)) return;
+    videoDOM.srcObject = videoStream;
   };
+
   const handleVideoClick = () => {
     if (!isVideoClickable) {
       return;
@@ -56,15 +62,20 @@ function MediaVideoRendererToMemo(props) {
     updatePresenterId(undefined);
   };
 
+  const isMediaUserTagAvaliable =
+    (ignoreAudioAvaliablity ? false : isAudioAvaliable) || isVideoAvaliable;
+  const isCancelButtonAvaliable = isVideoAvaliable && isCancellable;
+  const isAudioVolumeControlAvaliable = ignoreAudioAvaliablity ? false : isAudioAvaliable;
+
   return (
     <Wrapper>
-      <MediaUserTagContainer visibility={mediaStream ? "visible" : "hidden"}>
+      <MediaUserTagContainer visibility={isMediaUserTagAvaliable ? "visible" : "hidden"}>
         <MediaUserTag userName={userName} />
       </MediaUserTagContainer>
-      {mediaStream && (
+      {isVideoAvaliable && (
         <Video
           ref={(videoDOM) => {
-            addMediaStreamToVideoDOM(videoDOM, mediaStream);
+            addVideoStreamToVideoDOM(videoDOM, videoStream);
           }}
           autoPlay
           isClickable={isVideoClickable}
@@ -72,32 +83,64 @@ function MediaVideoRendererToMemo(props) {
         ></Video>
       )}
       <CancelButton
-        visibility={isCancellable ? "visible" : "hidden"}
+        visibility={isCancelButtonAvaliable ? "visible" : "hidden"}
         onClick={handleCancelClick}
       />
+
+      {isAudioVolumeControlAvaliable && <AudioVolumeControl audioProcessor={audioProcessor} />}
     </Wrapper>
   );
 }
 
+function AudioVolumeControl({ audioProcessor }) {
+  const [volumeMultipler, setVolumeMultipler] = useState(audioProcessor.volumeMultipler);
+  const handleVolumnMultiplierChange = (e) => {
+    if (!audioProcessor) {
+      return;
+    }
+    audioProcessor.volumeMultipler = e.target.value;
+    setVolumeMultipler(e.target.value);
+  };
+
+  return (
+    <VolumeMultiplierInput
+      type='range'
+      visibility={"visible"}
+      min='0'
+      max='2'
+      value={volumeMultipler}
+      step='0.1'
+      onChange={handleVolumnMultiplierChange}
+    />
+  );
+}
+
 const arePropsEqual = (prevProps, nextProps) => {
+  const isIgnoreAudioAvaliablityEqual = Object.is(
+    prevProps.ignoreAudioAvaliablity,
+    nextProps.ignoreAudioAvaliablity
+  );
   const isUserIdEqual = Object.is(prevProps.userId, nextProps.userId);
   const isUserNameEqual = Object.is(prevProps.userName, nextProps.userName);
-  const isMediaStreamEqual = Object.is(prevProps.mediaStream, nextProps.mediaStream);
-  const isVolumeEqual = Object.is(prevProps.volume, nextProps.volume);
+  const isVideoStreamEqual = Object.is(prevProps.videoStream, nextProps.videoStream);
   const isIsCancellableEqual = Object.is(prevProps.isCancellable, nextProps.isCancellable);
   const isIsVideoClickableEqual = Object.is(prevProps.isVideoClickable, nextProps.isVideoClickable);
   const isUpdatePresenterIdEqual = Object.is(
     prevProps.updatePresenterId,
     nextProps.updatePresenterId
   );
+
+  const isMediaProcessorEqual = Object.is(prevProps.mediaProcessor, nextProps.mediaProcessor);
+
   return (
+    isIgnoreAudioAvaliablityEqual &&
     isUserIdEqual &&
     isUserNameEqual &&
-    isMediaStreamEqual &&
-    isVolumeEqual &&
+    isVideoStreamEqual &&
     isIsCancellableEqual &&
     isIsVideoClickableEqual &&
-    isUpdatePresenterIdEqual
+    isUpdatePresenterIdEqual &&
+    isMediaProcessorEqual
   );
 };
 
@@ -139,6 +182,15 @@ const CancelButton = styled.button`
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
+`;
+
+const VolumeMultiplierInput = styled.input`
+  visibility: ${(props) => props.visibility};
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  width: 100px;
+  height: 30px;
 `;
 
 const Video = styled.video`

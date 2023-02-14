@@ -13,8 +13,8 @@ const numberOfInitialVisibleMediaMembers = 4;
 function MediaRenderingContextProvider({ children }) {
   const authenticatedUserId = useSelector(selectAuthenticatedUserId);
   const authenticatedUserName = useSelector(selectAuthenticatedUserName);
-  const [localMediaStream, setLocalMediaStream] = useState();
-  const [peerUserMediaStreamMap, setPeerUserMediaStreamMap] = useState();
+  const [localMediaContext, setLocalMediaContext] = useState();
+  const [peerMediaContextMap, setPeerMediaContextMap] = useState();
   const [mediaAccessibilityType, setMediaAccessibilityType] = useState(
     mediaChatEnum.mediaAccessibilityType.MEDIA_ACCESSIBILITY_TYPE_PRESENTATION
   );
@@ -24,40 +24,45 @@ function MediaRenderingContextProvider({ children }) {
   mediaAccessibilityTypeRef.current = mediaAccessibilityType;
 
   useEffect(() => {
-    WebRTCGroupChatService.onLocalMediaStreamChanged((mediaStream) => {
-      setLocalMediaStream(mediaStream);
+    WebRTCGroupChatService.onLocalMediaContextChanged((localMediaContext) => {
+      setLocalMediaContext(localMediaContext);
     });
-    WebRTCGroupChatService.onPeerMediaStreamMapChanged((peerUserMediaStreamMap) => {
+    WebRTCGroupChatService.onPeerMediaContextMapChanged((peerMediaContextMap) => {
       console.debug(
-        `onPeerMediaStreamMapChanged called with peer stream map size ${
-          peerUserMediaStreamMap ? peerUserMediaStreamMap.size() : "unknown"
+        `onPeerMediaContextMapChanged called with peer stream map size ${
+          peerMediaContextMap ? peerMediaContextMap.size() : "unknown"
         }`
       );
-      setPeerUserMediaStreamMap(peerUserMediaStreamMap);
+      setPeerMediaContextMap(peerMediaContextMap);
     });
   }, []);
 
   // config media rendering data source list
+
   const mediaRenderingDataSourceList = [
     {
       userId: authenticatedUserId,
       userName: authenticatedUserName,
-      mediaStream: localMediaStream,
-      volume: 0,
+      videoStream:
+        localMediaContext && localMediaContext.videoTrack
+          ? new MediaStream([localMediaContext.videoTrack])
+          : undefined,
+      audioProcessor: localMediaContext ? localMediaContext.audioProcessor : undefined,
     },
   ];
-  if (
-    peerUserMediaStreamMap &&
-    peerUserMediaStreamMap.size() > 0 &&
-    peerUserMediaStreamMap.peerMap
-  ) {
-    Array.from(peerUserMediaStreamMap.peerMap.entries()).forEach(([peerId, mediaStream]) => {
+  if (peerMediaContextMap && peerMediaContextMap.size() > 0 && peerMediaContextMap.map) {
+    Array.from(peerMediaContextMap.map.entries()).forEach(([peerId, peerMediaContext]) => {
       const peerName = WebRTCGroupChatService.getPeerNameById(peerId);
+      if (typeof peerName === undefined) {
+        return;
+      }
       mediaRenderingDataSourceList.push({
         userId: peerId,
         userName: peerName,
-        mediaStream,
-        volume: 1,
+        videoStream: peerMediaContext.videoTrack
+          ? new MediaStream([peerMediaContext.videoTrack])
+          : undefined,
+        audioProcessor: peerMediaContext.audioProcessor,
       });
     });
   }
@@ -71,6 +76,7 @@ function MediaRenderingContextProvider({ children }) {
   }
 
   // config presenter's media rendering data source
+
   let mediaRenderingDataSourceForPresenter;
   if (typeof presenterId === "string" && presenterId.length > 0) {
     mediaRenderingDataSourceForPresenter = mediaRenderingDataSourceList.find(
@@ -94,8 +100,8 @@ function MediaRenderingContextProvider({ children }) {
   };
 
   const resetMediaRenderingContext = () => {
-    setLocalMediaStream(null);
-    setPeerUserMediaStreamMap(null);
+    setLocalMediaContext(null);
+    setPeerMediaContextMap(null);
     setMediaAccessibilityType(
       mediaChatEnum.mediaAccessibilityType.MEDIA_ACCESSIBILITY_TYPE_PRESENTATION
     );
@@ -105,7 +111,7 @@ function MediaRenderingContextProvider({ children }) {
   const contextValue = {
     numberOfInitialVisibleMediaMembers: numberOfInitialVisibleMediaMembers,
     mediaRenderingDataSourceList,
-    mediaRenderingDataSourceForPresenter: { ...mediaRenderingDataSourceForPresenter, volume: 0 },
+    mediaRenderingDataSourceForPresenter: { ...mediaRenderingDataSourceForPresenter },
     updatePresenterId,
     mediaAccessibilityType,
     updateMediaAccessibilityType,

@@ -12,14 +12,15 @@ export default function MemberOverview({ visualAvatarMarginLeft }) {
 
   return (
     <Wrapper>
-      {Object.entries(allMembersOverview).map(([_, initialLetterOfName], index) => {
+      {Object.entries(allMembersOverview).map(([id, initialLetterOfName], index) => {
         if (index > visualAvatarsCount - 1 && index === allMembersCount - 1) {
           const hiddenAvatarsCount = allMembersCount - visualAvatarsCount;
-          return <HiddenAvatarWrapper>{`+${hiddenAvatarsCount}`}</HiddenAvatarWrapper>;
+          return <HiddenAvatarWrapper key={id}>{`+${hiddenAvatarsCount}`}</HiddenAvatarWrapper>;
         } else if (index <= visualAvatarsCount - 1) {
           const marginLeft = index !== 0 ? visualAvatarMarginLeft : 0;
           return (
             <VistualAvatarWrapper
+              key={id}
               zIndex={allMembersCount - index}
               marginLeft={marginLeft}
             >

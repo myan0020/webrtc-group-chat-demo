@@ -52,11 +52,13 @@ function MediaMultiVideoRendererToMemo({
     <Wrapper>
       <PresenterRendererContainer shouldDisplay={shouldDisplayForPresentation}>
         <MediaVideoRenderer
+          ignoreAudioAvaliablity={true}
           userId={mediaRenderingDataSourceForPresenter.userId}
           userName={mediaRenderingDataSourceForPresenter.userName}
-          mediaStream={mediaRenderingDataSourceForPresenter.mediaStream}
-          volume={mediaRenderingDataSourceForPresenter.volume}
-          isCancellable={mediaRenderingDataSourceForPresenter.mediaStream !== undefined}
+          videoStream={mediaRenderingDataSourceForPresenter.videoStream}
+          isVideoClickable={false}
+          isCancellable={mediaRenderingDataSourceForPresenter.videoStream !== undefined}
+          audioProcessor={mediaRenderingDataSourceForPresenter.audioProcessor}
         />
       </PresenterRendererContainer>
       <EqualityTypeMembersRendererContainer shouldDisplay={shouldDisplayForEquality}>
@@ -68,10 +70,13 @@ function MediaMultiVideoRendererToMemo({
             >
               <MediaVideoRenderer
                 key={index}
+                ignoreAudioAvaliablity={false}
                 userId={mediaRenderingDataSource.userId}
                 userName={mediaRenderingDataSource.userName}
-                mediaStream={mediaRenderingDataSource.mediaStream}
-                volume={mediaRenderingDataSource.volume}
+                videoStream={mediaRenderingDataSource.videoStream}
+                isVideoClickable={true}
+                isCancellable={false}
+                audioProcessor={mediaRenderingDataSource.audioProcessor}
               />
             </EqualityTypeMemberRendererContainer>
           );
@@ -89,11 +94,13 @@ function MediaMultiVideoRendererToMemo({
             >
               <MediaVideoRenderer
                 key={index}
+                ignoreAudioAvaliablity={false}
                 userId={mediaRenderingDataSource.userId}
                 userName={mediaRenderingDataSource.userName}
-                mediaStream={mediaRenderingDataSource.mediaStream}
-                volume={mediaRenderingDataSource.volume}
+                videoStream={mediaRenderingDataSource.videoStream}
                 isVideoClickable={true}
+                isCancellable={false}
+                audioProcessor={mediaRenderingDataSource.audioProcessor}
               />
             </PresentationTypeMemberRendererContainer>
           );

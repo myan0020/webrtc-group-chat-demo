@@ -253,11 +253,11 @@ export default {
   onWebRTCCallingStateChanged: function (handler) {
     WebRTCMediaCallingManager.onWebRTCCallingStateChanged(handler);
   },
-  onLocalMediaStreamChanged: function (handler) {
-    WebRTCMediaCallingManager.onLocalMediaStreamChanged(handler);
+  onLocalMediaContextChanged: function (handler) {
+    WebRTCMediaCallingManager.onLocalMediaContextChanged(handler);
   },
-  onPeerMediaStreamMapChanged: function (handler) {
-    WebRTCMediaCallingManager.onPeerMediaStreamMapChanged(handler);
+  onPeerMediaContextMapChanged: function (handler) {
+    WebRTCMediaCallingManager.onPeerMediaContextMapChanged(handler);
   },
   onLocalAudioEnableAvaliableChanged: function (handler) {
     WebRTCMediaCallingManager.onLocalAudioEnableAvaliableChanged(handler);

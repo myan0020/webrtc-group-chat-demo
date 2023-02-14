@@ -215,6 +215,7 @@ export const {
   updateAudioEnabling,
   updateAudioMutingAvaliable,
   updateAudioMuting,
+
   updateVideoEnablingAvaliable,
   updateVideoEnabling,
   updateVideoMutingAvaliable,
