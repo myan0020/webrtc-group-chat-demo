@@ -238,6 +238,7 @@ function _handleIncomingTrackEnded(event, peerId) {
  */
 
 let _localMediaContext = {
+  id: crypto.randomUUID(),
   mediaSourceStreams: [],
   videoTrack: null,
   audioTrack: null,
@@ -412,6 +413,7 @@ async function _createLocalMediaContext() {
     }
 
     if (_handleLocalMediaContextChanged) {
+      _localMediaContext.audioProcessor.id = crypto.randomUUID();
       _handleLocalMediaContextChanged(_shadowCopyPlainObject(_localMediaContext));
     }
   });
@@ -576,6 +578,7 @@ function _releaseLocalMediaContext() {
 
   // call listener
   if (_handleLocalMediaContextChanged) {
+    audioProcessor.id = crypto.randomUUID();
     _handleLocalMediaContextChanged(_shadowCopyPlainObject(_localMediaContext));
   }
 }

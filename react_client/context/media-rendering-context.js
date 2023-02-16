@@ -47,7 +47,7 @@ function MediaRenderingContextProvider({ children }) {
         localMediaContext && localMediaContext.videoTrack
           ? new MediaStream([localMediaContext.videoTrack])
           : undefined,
-      audioProcessor: localMediaContext ? localMediaContext.audioProcessor : undefined,
+      audioProcessor: localMediaContext ? localMediaContext.audioProcessor : {},
     },
   ];
   if (peerMediaContextMap && peerMediaContextMap.size() > 0 && peerMediaContextMap.map) {
