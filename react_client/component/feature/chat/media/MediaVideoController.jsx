@@ -120,8 +120,8 @@ const Wrapper = styled.div`
 `;
 
 const UpdatePresenterButton = styled.button`
-  width: 200px;
-  height: 150px;
+  width: 50%;
+  height: 40%;
   visibility: ${(props) => props.visibility};
   background-image: url(${updatePresenterImageUrl});
   background-position: center;
@@ -152,5 +152,5 @@ const MediaVideoVolumeControllerContainer = styled.div`
   bottom: 5%;
   right: 10%;
   width: 80%;
-  height: 50px;
+  height: 28px;
 `;

@@ -87,15 +87,16 @@ const VolumeMultiplierInput = styled.input`
     appearance: none;
     background: #04aa6d;
     cursor: pointer;
-    width: 30px;
-    height: 30px;
-    border-radius: 15px;
+    width: 16px;
+    height: 16px;
+    border-radius: 8px;
   }
 
   &::-moz-range-thumb {
     background: #04aa6d;
     cursor: pointer;
-    width: 25px;
-    height: 25px;
+    width: 16px;
+    height: 16px;
+    border-radius: 8px;
   }
 `;
