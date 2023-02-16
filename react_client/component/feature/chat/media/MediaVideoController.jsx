@@ -129,6 +129,12 @@ const UpdatePresenterButton = styled.button`
   background-size: contain;
   background-color: transparent;
   border-color: transparent;
+
+  opacity: 0.4;
+
+  &:hover {
+    opacity: 1;
+  }
 `;
 
 const CancelButton = styled.button`
@@ -145,6 +151,12 @@ const CancelButton = styled.button`
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
+
+  opacity: 0.4;
+
+  &:hover {
+    opacity: 1;
+  }
 `;
 
 const MediaVideoVolumeControllerContainer = styled.div`

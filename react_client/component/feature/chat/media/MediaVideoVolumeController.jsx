@@ -61,6 +61,11 @@ const VolumeIconWrapper = styled.button`
   background-size: contain;
   background-color: transparent;
   border-color: transparent;
+  opacity: 0.4;
+
+  &:hover {
+    opacity: 1;
+  }
 `;
 
 const VolumeMultiplierInput = styled.input`
@@ -72,7 +77,7 @@ const VolumeMultiplierInput = styled.input`
   -webkit-appearance: none;
   background: #d3d3d3;
   outline: none;
-  opacity: 0.7;
+  opacity: 0.4;
   -webkit-transition: 0.2s;
   transition: opacity 0.2s;
 
