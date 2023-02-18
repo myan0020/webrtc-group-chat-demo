@@ -13,6 +13,7 @@ function MediaVideoRendererToMemo({ videoStream }) {
     if (!(videoStream instanceof MediaStream)) return;
     videoDOM.srcObject = videoStream;
   };
+
   return (
     <Wrapper>
       <Video

@@ -6,23 +6,29 @@ import MediaVideoRenderer from "./MediaVideoRenderer";
 import MediaVideoController from "./MediaVideoController";
 
 export default function MediaVideo(props) {
+  // required props
   const userId = props.userId;
   const userName = props.userName;
-
-  const forceAudioControlUnavaliable = props.forceAudioControlUnavaliable;
-  const audioProcessor = props.audioProcessor;
-
+  const forceAudioOutputUnavaliable = props.forceAudioOutputUnavaliable;
   const forceVideoUnpresentable = props.forceVideoUnpresentable;
   const videoStream = props.videoStream;
   const isVideoCancellable = props.isVideoCancellable;
 
+  // nullable props
+  const isAudioSourceAvaliable = props.isAudioSourceAvaliable;
+  const audioProcessor = props.audioProcessor;
+
   const [isMediaControllerVisible, setIsMediaControllerVisible] = useState(false);
 
-  const isAudioAvaliable = audioProcessor && audioProcessor.audioGainNode ? true : false;
-  const isVideoAvaliable = videoStream instanceof MediaStream && videoStream.getTracks().length > 0;
-  const isControllable =
-    (forceAudioControlUnavaliable ? false : isAudioAvaliable) || isVideoAvaliable;
-  const isUserTagAvaliable = isAudioAvaliable || isVideoAvaliable;
+  const isAudioGainNodeAvaliable = audioProcessor && audioProcessor.audioGainNode ? true : false;
+  const isVideoSourceAvaliable =
+    videoStream instanceof MediaStream && videoStream.getTracks().length > 0;
+  const isUserTagAvaliable = isAudioSourceAvaliable || isVideoSourceAvaliable;
+  const isAudioControlAvaliable =
+    !forceAudioOutputUnavaliable && isAudioSourceAvaliable && isAudioGainNodeAvaliable;
+  const isVideoControlAvaliable =
+    isVideoSourceAvaliable && (!forceVideoUnpresentable || isVideoCancellable);
+  const isMediaControlAvaliable = isAudioControlAvaliable || isVideoControlAvaliable;
 
   const handleMouseOverMediaVideoControllerContainer = () => {
     setIsMediaControllerVisible(true);
@@ -31,35 +37,54 @@ export default function MediaVideo(props) {
     setIsMediaControllerVisible(false);
   };
 
+  const playAudioIfPossible = (audioDOM) => {
+    if (!audioDOM) return;
+    if (audioProcessor && audioProcessor.playWithAudioDOMLoaded) {
+      audioProcessor.playWithAudioDOMLoaded(audioDOM);
+    }
+  };
+
   return (
     <Wrapper
       onMouseOver={handleMouseOverMediaVideoControllerContainer}
       onMouseLeave={handleMouseLeaveMediaVideoControllerContainer}
     >
-      <MediaUserTagContainer visibility={isUserTagAvaliable ? "visible" : "hidden"}>
-        <MediaUserTag userName={userName} />
-      </MediaUserTagContainer>
-
-      <MediaVideoRendererContainer>
-        {isVideoAvaliable && <MediaVideoRenderer videoStream={videoStream} />}
-      </MediaVideoRendererContainer>
-
-      <MediaVideoControllerContainer
-        display={isControllable && isMediaControllerVisible ? "block" : "none"}
-      >
-        <MediaVideoController
-          userId={userId}
-          forceAudioUnavaliable={forceAudioControlUnavaliable}
-          audioProcessor={audioProcessor}
-          forceVideoUnpresentable={forceVideoUnpresentable}
-          isVideoAvaliable={isVideoAvaliable}
-          isVideoCancellable={isVideoCancellable}
-        />
-      </MediaVideoControllerContainer>
+      {isAudioSourceAvaliable && (
+        <MediaAudioRendererContainer>
+          <Audio
+            ref={(audioDOM) => {
+              playAudioIfPossible(audioDOM);
+            }}
+            autoPlay
+          />
+        </MediaAudioRendererContainer>
+      )}
+      {isVideoSourceAvaliable && (
+        <MediaVideoRendererContainer>
+          <MediaVideoRenderer videoStream={videoStream} />
+        </MediaVideoRendererContainer>
+      )}
+      {isMediaControlAvaliable && isMediaControllerVisible && (
+        <MediaVideoControllerContainer>
+          <MediaVideoController
+            userId={userId}
+            isAudioControlAvaliable={isAudioControlAvaliable}
+            audioProcessor={audioProcessor}
+            forceVideoUnpresentable={forceVideoUnpresentable}
+            isVideoSourceAvaliable={isVideoSourceAvaliable}
+            isVideoCancellable={isVideoCancellable}
+          />
+        </MediaVideoControllerContainer>
+      )}
+      {isUserTagAvaliable && (
+        <MediaUserTagContainer>
+          <MediaUserTag userName={userName} />
+        </MediaUserTagContainer>
+      )}
     </Wrapper>
   );
 
-  // TODO: 'React.memo' and 'arePropsEqual' not work correctly when checking the prop named 'audioProcessor' 
+  // TODO: 'React.memo' and 'arePropsEqual' not work correctly when checking the prop named 'audioProcessor'
 
   // return (
   //   <MemorizedMediaVideo
@@ -149,7 +174,6 @@ export default function MediaVideo(props) {
 //     nextId = nextProps.audioProcessor.id;
 //   }
 
-
 //   const isAudioProcessorEqual = Object.is(prevId, nextId);
 
 //   const isForceVideoUnpresentableEqual = Object.is(
@@ -186,15 +210,26 @@ const Wrapper = styled.div`
   background-color: rgb(236, 239, 241);
 `;
 
+const MediaAudioRendererContainer = styled.div`
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  position: absolute;
+`;
+
+const Audio = styled.audio``;
+
 const MediaVideoRendererContainer = styled.div`
   display: block;
   width: 100%;
   height: 100%;
-  position: relative;
+  top: 0;
+  left: 0;
+  position: absolute;
 `;
 
 const MediaUserTagContainer = styled.div`
-  visibility: ${(props) => props.visibility};
   position: absolute;
   top: 5px;
   left: 5px;
@@ -203,15 +238,12 @@ const MediaUserTagContainer = styled.div`
   border-radius: 10px;
   border-color: transparent;
   overflow: hidden;
-  z-index: 1;
 `;
 
 const MediaVideoControllerContainer = styled.div`
-  display: ${(props) => props.display};
   width: 100%;
   height: 100%;
   top: 0;
   left: 0;
-  visibility: ${(props) => props.visibility};
   position: absolute;
 `;

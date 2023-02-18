@@ -54,15 +54,18 @@ function MediaMultiVideoRendererToMemo({
         <MediaVideo
           userId={mediaRenderingDataSourceForPresenter.userId}
           userName={mediaRenderingDataSourceForPresenter.userName}
-          forceAudioControlUnavaliable={true}
-          audioProcessor={mediaRenderingDataSourceForPresenter.audioProcessor}
+          forceAudioOutputUnavaliable={true}
           forceVideoUnpresentable={true}
+          isAudioSourceAvaliable={mediaRenderingDataSourceForPresenter.isAudioSourceAvaliable}
+          audioProcessor={mediaRenderingDataSourceForPresenter.audioProcessor}
           videoStream={mediaRenderingDataSourceForPresenter.videoStream}
           isVideoCancellable={mediaRenderingDataSourceForPresenter.videoStream !== undefined}
         />
       </PresenterVideoContainer>
       <EqualityTypeMembersContainer shouldDisplay={shouldDisplayForEquality}>
         {mediaRenderingDataSourceList.map((mediaRenderingDataSource, index) => {
+          const forceAudioOutputUnavaliable = index === 0;
+
           return (
             <EqualityTypeMemberContainer
               key={index}
@@ -72,9 +75,10 @@ function MediaMultiVideoRendererToMemo({
                 key={index}
                 userId={mediaRenderingDataSource.userId}
                 userName={mediaRenderingDataSource.userName}
-                forceAudioControlUnavaliable={false}
+                forceAudioOutputUnavaliable={forceAudioOutputUnavaliable}
                 audioProcessor={mediaRenderingDataSource.audioProcessor}
                 forceVideoUnpresentable={true}
+                isAudioSourceAvaliable={mediaRenderingDataSource.isAudioSourceAvaliable}
                 videoStream={mediaRenderingDataSource.videoStream}
                 isVideoCancellable={false}
               />
@@ -87,6 +91,8 @@ function MediaMultiVideoRendererToMemo({
         numberOfInitialVisibleMembers={numberOfInitialVisibleMediaMembers}
       >
         {mediaRenderingDataSourceList.map((mediaRenderingDataSource, index) => {
+          const forceAudioOutputUnavaliable = index === 0;
+
           return (
             <PresentationTypeMemberContainer
               key={index}
@@ -96,11 +102,12 @@ function MediaMultiVideoRendererToMemo({
                 key={index}
                 userId={mediaRenderingDataSource.userId}
                 userName={mediaRenderingDataSource.userName}
-                forceAudioControlUnavaliable={false}
+                forceAudioOutputUnavaliable={forceAudioOutputUnavaliable}
                 audioProcessor={mediaRenderingDataSource.audioProcessor}
                 forceVideoUnpresentable={false}
                 videoStream={mediaRenderingDataSource.videoStream}
                 isVideoCancellable={false}
+                isAudioSourceAvaliable={mediaRenderingDataSource.isAudioSourceAvaliable}
               />
             </PresentationTypeMemberContainer>
           );

@@ -128,22 +128,62 @@ const _peerMediaContextMap = {
     const prevSize = this.map.size;
 
     if (!this.getMediaContext(peerId)) {
-      const audioContext = new AudioContext();
-      const audioGainNode = audioContext.createGain();
-      audioGainNode.connect(audioContext.destination);
+      const thatPeerMediaContextMap = this;
 
       const newMediaContext = {
         videoTrack: null,
         audioTrack: null,
         audioProcessor: {
-          audioContext,
-          audioGainNode,
+          audioContext: null,
+          audioGainNode: null,
           audioSourceNode: null,
 
+          // Chromium Issue: MediaStream from RTC is silent for Web Audio API
+          // https://bugs.chromium.org/p/chromium/issues/detail?id=933677#c4
+          playWithAudioDOMLoaded(audioDOMLoaded) {
+            if (!(audioDOMLoaded instanceof HTMLMediaElement)) {
+              return;
+            }
+            if (this.audioSourceNode) {
+              return;
+            }
+            if (
+              !(newMediaContext.audioTrack instanceof MediaStreamTrack) ||
+              newMediaContext.audioTrack.kind !== "audio"
+            ) {
+              return;
+            }
+
+            const audioStream = new MediaStream([newMediaContext.audioTrack]);
+
+            // It is a required step to output audio stream before using audio context
+            audioDOMLoaded.srcObject = audioStream;
+            // Make sure that only audio context instead of audio DOM element can output this audio stream
+            audioDOMLoaded.volume = 0;
+
+            this.audioContext = new AudioContext();
+            this.audioGainNode = this.audioContext.createGain();
+
+            const audioSourceNode = this.audioContext.createMediaStreamSource(audioStream);
+            audioSourceNode.connect(this.audioGainNode);
+            this.audioGainNode.connect(this.audioContext.destination);
+            this.audioSourceNode = audioSourceNode;
+
+            if (_handlePeerMediaContextMapChanged) {
+              _handlePeerMediaContextMapChanged(_shadowCopyPlainObject(thatPeerMediaContextMap));
+            }
+          },
+
           set volumeMultipler(newMultipler) {
+            if (!this.audioGainNode) {
+              return;
+            }
             this.audioGainNode.gain.value = newMultipler;
           },
           get volumeMultipler() {
+            if (!this.audioGainNode) {
+              return 0;
+            }
             return this.audioGainNode.gain.value;
           },
         },
@@ -157,12 +197,6 @@ const _peerMediaContextMap = {
       mediaContext.videoTrack = track;
     } else if (track.kind === "audio") {
       mediaContext.audioTrack = track;
-      const audioProcessor = mediaContext.audioProcessor;
-      const audioSourceNode = audioProcessor.audioContext.createMediaStreamSource(
-        new MediaStream([track])
-      );
-      audioSourceNode.connect(audioProcessor.audioGainNode);
-      audioProcessor.audioSourceNode = audioSourceNode;
     }
 
     this.map.set(peerId, mediaContext);
@@ -192,7 +226,8 @@ function _handlePeerConnectionTrackEvent(event, peerId) {
 }
 
 function _setupTrackEventHandlers(track, peerId, peerConnection) {
-  // chromium issue: https://bugs.chromium.org/p/chromium/issues/detail?id=931033
+  // Chromium Issue: Video Track repeatedly firing muted and unmuted when using Tab Sharing
+  // https://bugs.chromium.org/p/chromium/issues/detail?id=931033
   if (
     peerConnection.callingConstraints &&
     peerConnection.callingConstraints[_callingInputTypeEnum.CALLING_INPUT_TYPE_VIDEO_SCREEN]
@@ -238,7 +273,6 @@ function _handleIncomingTrackEnded(event, peerId) {
  */
 
 let _localMediaContext = {
-  id: crypto.randomUUID(),
   mediaSourceStreams: [],
   videoTrack: null,
   audioTrack: null,
@@ -289,91 +323,117 @@ function _applyCallingInputTypes(callingInputTypes) {
 }
 
 async function _createLocalMediaContext() {
-  let promise = new Promise((resolve, _) => {
-    resolve(undefined);
+  const promise = new Promise((resolve, _) => {
+    const enableCameraVideoTrack =
+      _callingConstraints[_callingInputTypeEnum.CALLING_INPUT_TYPE_VIDEO_CAMERA];
+    const enableMicrophoneAudioTrack =
+      _callingConstraints[_callingInputTypeEnum.CALLING_INPUT_TYPE_AUDIO_MICROPHONE];
+    const enableScreenVideoTrack =
+      _callingConstraints[_callingInputTypeEnum.CALLING_INPUT_TYPE_VIDEO_SCREEN];
+    const enableScreenAudioTrack =
+      _callingConstraints[_callingInputTypeEnum.CALLING_INPUT_TYPE_AUDIO_SCREEN];
+
+    const mediaDevices = navigator.mediaDevices;
+
+    if (
+      enableMicrophoneAudioTrack &&
+      !enableCameraVideoTrack &&
+      !enableScreenAudioTrack &&
+      !enableScreenVideoTrack
+    ) {
+      mediaDevices.getUserMedia({ audio: true, video: false }).then((mediaStream) => {
+        _localMediaContext.mediaSourceStreams.push(mediaStream);
+        _buildLocalMediaDestinationTrancks();
+        resolve();
+      });
+    } else if (
+      enableMicrophoneAudioTrack &&
+      enableCameraVideoTrack &&
+      !enableScreenAudioTrack &&
+      !enableScreenVideoTrack
+    ) {
+      mediaDevices.getUserMedia({ audio: true, video: true }).then((mediaStream) => {
+        _localMediaContext.mediaSourceStreams.push(mediaStream);
+        _buildLocalMediaDestinationTrancks();
+        resolve();
+      });
+    } else if (
+      enableScreenAudioTrack &&
+      enableScreenVideoTrack &&
+      !enableMicrophoneAudioTrack &&
+      !enableCameraVideoTrack
+    ) {
+      mediaDevices.getDisplayMedia({ audio: true, video: false }).then((mediaStream) => {
+        _localMediaContext.mediaSourceStreams.push(mediaStream);
+        _buildLocalMediaDestinationTrancks();
+        resolve();
+      });
+    } else if (
+      enableScreenAudioTrack &&
+      enableScreenVideoTrack &&
+      enableMicrophoneAudioTrack &&
+      !enableCameraVideoTrack
+    ) {
+      Promise.all([
+        mediaDevices.getDisplayMedia({ audio: true, video: true }),
+        mediaDevices.getUserMedia({ audio: true, video: false }),
+      ]).then((mediaStreams) => {
+        if (!(mediaStreams instanceof Array)) {
+          return;
+        }
+
+        mediaStreams.forEach((mediaStream) => {
+          _localMediaContext.mediaSourceStreams.push(mediaStream);
+        });
+        _buildLocalMediaDestinationTrancks();
+        resolve();
+      });
+    } else {
+      // use no video, only microphone
+      mediaDevices.getUserMedia({ audio: true, video: false }).then((mediaStream) => {
+        _localMediaContext.mediaSourceStreams.push(mediaStream);
+        _buildLocalMediaDestinationTrancks();
+        resolve();
+      });
+    }
   });
 
-  const enableCameraVideoTrack =
-    _callingConstraints[_callingInputTypeEnum.CALLING_INPUT_TYPE_VIDEO_CAMERA];
-  const enableMicrophoneAudioTrack =
-    _callingConstraints[_callingInputTypeEnum.CALLING_INPUT_TYPE_AUDIO_MICROPHONE];
-  const enableScreenVideoTrack =
-    _callingConstraints[_callingInputTypeEnum.CALLING_INPUT_TYPE_VIDEO_SCREEN];
-  const enableScreenAudioTrack =
-    _callingConstraints[_callingInputTypeEnum.CALLING_INPUT_TYPE_AUDIO_SCREEN];
+  return promise;
+}
 
-  const mediaDevices = navigator.mediaDevices;
-
-  const localAudioCtx = new AudioContext();
-  const localAudioGainNode = localAudioCtx.createGain();
-  const localAudioDestinationNode = localAudioCtx.createMediaStreamDestination();
-  localAudioGainNode.connect(localAudioCtx.destination);
-  localAudioGainNode.gain.value = 0; // use gain node to prevent echo
-
-  _localMediaContext.audioProcessor.audioContext = localAudioCtx;
-  _localMediaContext.audioProcessor.audioGainNode = localAudioGainNode;
-  _localMediaContext.audioProcessor.audioDestinationNode = localAudioDestinationNode;
-
-  if (
-    enableMicrophoneAudioTrack &&
-    !enableCameraVideoTrack &&
-    !enableScreenAudioTrack &&
-    !enableScreenVideoTrack
-  ) {
-    promise = mediaDevices.getUserMedia({ audio: true, video: false }).then((mediaStream) => {
-      _localMediaContext.mediaSourceStreams.push(mediaStream);
-      return mediaStream;
-    });
-  } else if (
-    enableMicrophoneAudioTrack &&
-    enableCameraVideoTrack &&
-    !enableScreenAudioTrack &&
-    !enableScreenVideoTrack
-  ) {
-    promise = mediaDevices.getUserMedia({ audio: true, video: true }).then((mediaStream) => {
-      _localMediaContext.mediaSourceStreams.push(mediaStream);
-      return mediaStream;
-    });
-  } else if (
-    enableScreenAudioTrack &&
-    enableScreenVideoTrack &&
-    !enableMicrophoneAudioTrack &&
-    !enableCameraVideoTrack
-  ) {
-    promise = mediaDevices.getDisplayMedia({ audio: true, video: false }).then((mediaStream) => {
-      _localMediaContext.mediaSourceStreams.push(mediaStream);
-      return mediaStream;
-    });
-  } else if (
-    enableScreenAudioTrack &&
-    enableScreenVideoTrack &&
-    enableMicrophoneAudioTrack &&
-    !enableCameraVideoTrack
-  ) {
-    promise = Promise.all([
-      mediaDevices.getDisplayMedia({ audio: true, video: true }),
-      mediaDevices.getUserMedia({ audio: true, video: false }),
-    ]).then((mediaStreams) => {
-      if (!(mediaStreams instanceof Array)) {
-        return;
-      }
-
-      mediaStreams.forEach((mediaStream) => {
-        _localMediaContext.mediaSourceStreams.push(mediaStream);
-      });
-
-      return;
-    });
-  } else {
-    // use no video, only microphone
-    promise = mediaDevices.getUserMedia({ audio: true, video: false }).then((mediaStream) => {
-      _localMediaContext.mediaSourceStreams.push(mediaStream);
-      return;
-    });
+function _buildLocalMediaDestinationTrancks() {
+  if (_localMediaContext.mediaSourceStreams.length === 0) {
+    return;
   }
 
-  promise = promise.then(() => {
-    let videoDestinationTrack;
+  let audioDestinationTrack;
+  let videoDestinationTrack;
+
+  if (_localMediaContext.mediaSourceStreams.length === 1) {
+    const singleMediaSourceStream = _localMediaContext.mediaSourceStreams[0];
+
+    const videoTracks = singleMediaSourceStream.getTracks().filter((track) => {
+      return track.kind === "video";
+    });
+    const audioTracks = singleMediaSourceStream.getTracks().filter((track) => {
+      return track.kind === "audio";
+    });
+    if (audioTracks.length > 0) {
+      audioDestinationTrack = audioTracks[0];
+    }
+    if (videoTracks.length > 0) {
+      videoDestinationTrack = videoTracks[0];
+    }
+  } else if (_localMediaContext.mediaSourceStreams.length > 1) {
+    const audioCtx = new AudioContext();
+    const audioGainNode = audioCtx.createGain();
+    const audioDestinationNode = audioCtx.createMediaStreamDestination();
+    audioGainNode.connect(audioCtx.destination);
+    // audioGainNode.gain.value = 1; // use gain node to prevent echo
+
+    _localMediaContext.audioProcessor.audioContext = audioCtx;
+    _localMediaContext.audioProcessor.audioGainNode = audioGainNode;
+    _localMediaContext.audioProcessor.audioDestinationNode = audioDestinationNode;
 
     _localMediaContext.mediaSourceStreams.forEach((mediaStream) => {
       const videoTracks = mediaStream.getTracks().filter((track) => {
@@ -386,11 +446,9 @@ async function _createLocalMediaContext() {
         videoDestinationTrack = videoTracks[0];
       }
       if (audioTracks.length > 0) {
-        const audioSourceNode = localAudioCtx.createMediaStreamSource(
-          new MediaStream([audioTracks[0]])
-        );
-        audioSourceNode.connect(localAudioGainNode);
-        audioSourceNode.connect(localAudioDestinationNode);
+        const audioSourceNode = audioCtx.createMediaStreamSource(mediaStream);
+        audioSourceNode.connect(audioGainNode);
+        audioSourceNode.connect(audioDestinationNode);
         _localMediaContext.audioProcessor.audioSourceNodeMap.set(
           audioTracks[0].id,
           audioSourceNode
@@ -398,27 +456,30 @@ async function _createLocalMediaContext() {
       }
     });
 
-    if (localAudioDestinationNode.stream.getAudioTracks().length > 0) {
-      _localMediaContext.audioTrack = localAudioDestinationNode.stream.getAudioTracks()[0];
-      if (_handleLocalAudioEnableAvaliableChanged) {
-        _handleLocalAudioEnableAvaliableChanged(true);
-      }
+    if (audioDestinationNode.stream.getAudioTracks().length > 0) {
+      audioDestinationTrack = audioDestinationNode.stream.getAudioTracks()[0];
     }
+  }
 
-    if (videoDestinationTrack) {
-      _localMediaContext.videoTrack = videoDestinationTrack;
-      if (_handleLocalVideoEnableAvaliableChanged) {
-        _handleLocalVideoEnableAvaliableChanged(true);
-      }
+  if (audioDestinationTrack) {
+    _localMediaContext.audioTrack = audioDestinationTrack;
+    if (_handleLocalAudioEnableAvaliableChanged) {
+      _handleLocalAudioEnableAvaliableChanged(true);
     }
+  }
 
+  if (videoDestinationTrack) {
+    _localMediaContext.videoTrack = videoDestinationTrack;
+    if (_handleLocalVideoEnableAvaliableChanged) {
+      _handleLocalVideoEnableAvaliableChanged(true);
+    }
+  }
+
+  if (audioDestinationTrack || videoDestinationTrack) {
     if (_handleLocalMediaContextChanged) {
-      _localMediaContext.audioProcessor.id = crypto.randomUUID();
       _handleLocalMediaContextChanged(_shadowCopyPlainObject(_localMediaContext));
     }
-  });
-
-  return promise;
+  }
 }
 
 function _addLocalMediaStream(peerConnectionMap) {
@@ -578,7 +639,6 @@ function _releaseLocalMediaContext() {
 
   // call listener
   if (_handleLocalMediaContextChanged) {
-    audioProcessor.id = crypto.randomUUID();
     _handleLocalMediaContextChanged(_shadowCopyPlainObject(_localMediaContext));
   }
 }

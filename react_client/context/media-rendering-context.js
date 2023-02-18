@@ -39,33 +39,41 @@ function MediaRenderingContextProvider({ children }) {
 
   // config media rendering data source list
 
+  let localVideoStream;
+  if (localMediaContext && localMediaContext.videoTrack) {
+    localVideoStream = new MediaStream([localMediaContext.videoTrack]);
+  }
+
   const mediaRenderingDataSourceList = [
     {
       userId: authenticatedUserId,
       userName: authenticatedUserName,
-      videoStream:
-        localMediaContext && localMediaContext.videoTrack
-          ? new MediaStream([localMediaContext.videoTrack])
-          : undefined,
-      audioProcessor: localMediaContext ? localMediaContext.audioProcessor : {},
+      isAudioSourceAvaliable: localMediaContext && localMediaContext.audioTrack ? true : false,
+      audioProcessor: null,
+      videoStream: localVideoStream,
     },
   ];
+
   if (peerMediaContextMap && peerMediaContextMap.size() > 0 && peerMediaContextMap.map) {
     Array.from(peerMediaContextMap.map.entries()).forEach(([peerId, peerMediaContext]) => {
       const peerName = WebRTCGroupChatService.getPeerNameById(peerId);
       if (typeof peerName === undefined) {
         return;
       }
+      let videoStream;
+      if (peerMediaContext.videoTrack) {
+        videoStream = new MediaStream([peerMediaContext.videoTrack]);
+      }
       mediaRenderingDataSourceList.push({
         userId: peerId,
         userName: peerName,
-        videoStream: peerMediaContext.videoTrack
-          ? new MediaStream([peerMediaContext.videoTrack])
-          : undefined,
+        isAudioSourceAvaliable: peerMediaContext && peerMediaContext.audioTrack ? true : false,
         audioProcessor: peerMediaContext.audioProcessor,
+        videoStream: videoStream,
       });
     });
   }
+
   if (mediaRenderingDataSourceList.length < numberOfInitialVisibleMediaMembers) {
     const numberOfRestVisibleMediaMembers =
       numberOfInitialVisibleMediaMembers - mediaRenderingDataSourceList.length;

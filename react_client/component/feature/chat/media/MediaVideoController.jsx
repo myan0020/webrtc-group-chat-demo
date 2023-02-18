@@ -9,11 +9,11 @@ import cancelImageUrl from "resource/image/cancel_media_presenting_3x.png";
 export default function MediaVideoController(props) {
   const userId = props.userId;
 
-  const forceAudioUnavaliable = props.forceAudioUnavaliable;
+  const isAudioControlAvaliable = props.isAudioControlAvaliable;
   const audioProcessor = props.audioProcessor;
 
   const forceVideoUnpresentable = props.forceVideoUnpresentable;
-  const isVideoAvaliable = props.isVideoAvaliable;
+  const isVideoSourceAvaliable = props.isVideoSourceAvaliable;
   const isVideoCancellable = props.isVideoCancellable;
 
   const { updatePresenterId } = useContext(GlobalContext);
@@ -21,11 +21,14 @@ export default function MediaVideoController(props) {
   return (
     <MemorizedMediaVideoController
       userId={userId}
-      forceAudioUnavaliable={forceAudioUnavaliable}
+
+      isAudioControlAvaliable={isAudioControlAvaliable}
       audioProcessor={audioProcessor}
+
       forceVideoUnpresentable={forceVideoUnpresentable}
-      isVideoAvaliable={isVideoAvaliable}
+      isVideoSourceAvaliable={isVideoSourceAvaliable}
       isVideoCancellable={isVideoCancellable}
+
       updatePresenterId={updatePresenterId}
     />
   );
@@ -36,18 +39,16 @@ const MemorizedMediaVideoController = React.memo(MediaVideoControllerToMemo, are
 function MediaVideoControllerToMemo(props) {
   const userId = props.userId;
 
-  const forceAudioUnavaliable = props.forceAudioUnavaliable;
+  const isAudioControlAvaliable = props.isAudioControlAvaliable;
   const audioProcessor = props.audioProcessor;
 
   const forceVideoUnpresentable = props.forceVideoUnpresentable;
-  const isVideoAvaliable = props.isVideoAvaliable;
+  const isVideoSourceAvaliable = props.isVideoSourceAvaliable;
   const isVideoCancellable = props.isVideoCancellable;
 
   const updatePresenterId = props.updatePresenterId;
 
-  const isAudioGainNodeAvaliable = audioProcessor && audioProcessor.audioGainNode ? true : false;
-  const isAudioVolumeControlAvaliable = forceAudioUnavaliable ? false : isAudioGainNodeAvaliable;
-  const isVideoPresentable = forceVideoUnpresentable ? false : isVideoAvaliable;
+  const isVideoPresentable = forceVideoUnpresentable ? false : isVideoSourceAvaliable;
 
   const handleUpdatePresenterClick = () => {
     updatePresenterId(userId);
@@ -67,7 +68,7 @@ function MediaVideoControllerToMemo(props) {
         visibility={isVideoPresentable ? "visible" : "hidden"}
       />
       <MediaVideoVolumeControllerContainer>
-        {isAudioVolumeControlAvaliable && (
+        {isAudioControlAvaliable && (
           <MediaVideoVolumeController audioProcessor={audioProcessor} />
         )}
       </MediaVideoVolumeControllerContainer>
@@ -78,9 +79,9 @@ function MediaVideoControllerToMemo(props) {
 const arePropsEqual = (prevProps, nextProps) => {
   const isUserIdEqual = Object.is(prevProps.userId, nextProps.userId);
 
-  const isForceAudioUnavaliableEqual = Object.is(
-    prevProps.forceAudioUnavaliable,
-    nextProps.forceAudioUnavaliable
+  const isIsAudioControlAvaliableEqual = Object.is(
+    prevProps.isAudioControlAvaliable,
+    nextProps.isAudioControlAvaliable
   );
   const isAudioProcessorEqual = Object.is(prevProps.audioProcessor, nextProps.audioProcessor);
 
@@ -88,7 +89,7 @@ const arePropsEqual = (prevProps, nextProps) => {
     prevProps.forceVideoUnpresentable,
     nextProps.forceVideoUnpresentable
   );
-  const isIsVideoAvaliableEqual = Object.is(prevProps.isVideoAvaliable, nextProps.isVideoAvaliable);
+  const isIsVideoSourceAvaliableEqual = Object.is(prevProps.isVideoSourceAvaliable, nextProps.isVideoSourceAvaliable);
   const isIsVideoCancellableEqual = Object.is(
     prevProps.isVideoCancellable,
     nextProps.isVideoCancellable
@@ -101,10 +102,10 @@ const arePropsEqual = (prevProps, nextProps) => {
 
   return (
     isUserIdEqual &&
-    isForceAudioUnavaliableEqual &&
+    isIsAudioControlAvaliableEqual &&
     isAudioProcessorEqual &&
     isForceVideoUnpresentableEqual &&
-    isIsVideoAvaliableEqual &&
+    isIsVideoSourceAvaliableEqual &&
     isIsVideoCancellableEqual &&
     isUpdatePresenterIdEqual
   );

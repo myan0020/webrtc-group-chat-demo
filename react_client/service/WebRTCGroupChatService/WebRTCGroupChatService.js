@@ -65,10 +65,7 @@ export default {
         url = `ws://${location.hostname}:${env.EXPRESS_SERVER_PORT}`;
       }
 
-      console.debug(
-        `WebRTCGroupChatService: will use a default WebSocket url to connect`,
-        url
-      );
+      console.debug(`WebRTCGroupChatService: will use a default WebSocket url to connect`, url);
     }
 
     WebRTCSignalingManager.webSocketUrl = url;
