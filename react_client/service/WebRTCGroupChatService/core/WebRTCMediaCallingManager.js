@@ -429,7 +429,7 @@ function _buildLocalMediaDestinationTrancks() {
     const audioGainNode = audioCtx.createGain();
     const audioDestinationNode = audioCtx.createMediaStreamDestination();
     audioGainNode.connect(audioCtx.destination);
-    // audioGainNode.gain.value = 1; // use gain node to prevent echo
+    audioGainNode.gain.value = 0; // use gain node to prevent echo
 
     _localMediaContext.audioProcessor.audioContext = audioCtx;
     _localMediaContext.audioProcessor.audioGainNode = audioGainNode;
