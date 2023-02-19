@@ -421,8 +421,7 @@ function _buildLocalMediaDestinationTracks() {
   const audioGainNode = audioCtx.createGain();
   const audioAnalyserNode = audioCtx.createAnalyser();
   const audioDestinationNode = audioCtx.createMediaStreamDestination();
-  audioGainNode.connect(audioCtx.destination);
-  audioGainNode.gain.value = 1; // use gain node to prevent echo
+  audioGainNode.connect(audioAnalyserNode);
 
   _localMediaContext.audioProcessor.audioContext = audioCtx;
   _localMediaContext.audioProcessor.audioGainNode = audioGainNode;
@@ -456,9 +455,6 @@ function _buildLocalMediaDestinationTracks() {
 
     if (audioDestinationNode.stream.getAudioTracks().length > 0) {
       audioDestinationTrack = audioDestinationNode.stream.getAudioTracks()[0];
-      const audioAnalyserSourceNode = audioCtx.createMediaStreamSource(audioDestinationNode.stream);
-      audioAnalyserSourceNode.connect(audioAnalyserNode);
-      _localMediaContext.audioProcessor.audioAnalyserSourceNode = audioAnalyserSourceNode;
     }
   }
 
@@ -623,10 +619,6 @@ function _releaseLocalMediaContext() {
 
   // release audio processor
   const audioProcessor = _localMediaContext.audioProcessor;
-  if (audioProcessor.audioAnalyserSourceNode) {
-    audioProcessor.audioAnalyserSourceNode.disconnect();
-    audioProcessor.audioAnalyserSourceNode = null;
-  }
   if (audioProcessor.audioAnalyserNode) {
     audioProcessor.audioAnalyserNode = null;
   }
