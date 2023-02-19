@@ -102,7 +102,9 @@ const _peerMediaContextMap = {
       const audioSourceNode = audioProcessor.audioSourceNode;
       audioSourceNode.disconnect();
       audioProcessor.audioSourceNode = null;
-
+      if (audioProcessor.audioAnalyserNode) {
+        audioProcessor.audioAnalyserNode = null;
+      }
       if (audioProcessor.audioGainNode) {
         audioProcessor.audioGainNode.disconnect();
         audioProcessor.audioGainNode = null;
@@ -137,6 +139,7 @@ const _peerMediaContextMap = {
           audioContext: null,
           audioGainNode: null,
           audioSourceNode: null,
+          audioAnalyserNode: null,
 
           // Chromium Issue: MediaStream from RTC is silent for Web Audio API
           // https://bugs.chromium.org/p/chromium/issues/detail?id=933677#c4
@@ -165,9 +168,12 @@ const _peerMediaContextMap = {
             this.audioGainNode = this.audioContext.createGain();
 
             const audioSourceNode = this.audioContext.createMediaStreamSource(audioStream);
+            const audioAnalyserNode = this.audioContext.createAnalyser();
             audioSourceNode.connect(this.audioGainNode);
+            audioSourceNode.connect(audioAnalyserNode);
             this.audioGainNode.connect(this.audioContext.destination);
             this.audioSourceNode = audioSourceNode;
+            this.audioAnalyserNode = audioAnalyserNode;
 
             if (_handlePeerMediaContextMapChanged) {
               _handlePeerMediaContextMapChanged(_shadowCopyPlainObject(thatPeerMediaContextMap));
@@ -279,6 +285,8 @@ let _localMediaContext = {
   audioProcessor: {
     audioContext: null,
     audioGainNode: null,
+    audioAnalyserSourceNode: null,
+    audioAnalyserNode: null,
     audioDestinationNode: null,
     audioSourceNodeMap: new Map(),
     set volumeMultipler(newMultipler) {
@@ -343,7 +351,7 @@ async function _createLocalMediaContext() {
     ) {
       mediaDevices.getUserMedia({ audio: true, video: false }).then((mediaStream) => {
         _localMediaContext.mediaSourceStreams.push(mediaStream);
-        _buildLocalMediaDestinationTrancks();
+        _buildLocalMediaDestinationTracks();
         resolve();
       });
     } else if (
@@ -354,7 +362,7 @@ async function _createLocalMediaContext() {
     ) {
       mediaDevices.getUserMedia({ audio: true, video: true }).then((mediaStream) => {
         _localMediaContext.mediaSourceStreams.push(mediaStream);
-        _buildLocalMediaDestinationTrancks();
+        _buildLocalMediaDestinationTracks();
         resolve();
       });
     } else if (
@@ -365,7 +373,7 @@ async function _createLocalMediaContext() {
     ) {
       mediaDevices.getDisplayMedia({ audio: true, video: false }).then((mediaStream) => {
         _localMediaContext.mediaSourceStreams.push(mediaStream);
-        _buildLocalMediaDestinationTrancks();
+        _buildLocalMediaDestinationTracks();
         resolve();
       });
     } else if (
@@ -385,14 +393,14 @@ async function _createLocalMediaContext() {
         mediaStreams.forEach((mediaStream) => {
           _localMediaContext.mediaSourceStreams.push(mediaStream);
         });
-        _buildLocalMediaDestinationTrancks();
+        _buildLocalMediaDestinationTracks();
         resolve();
       });
     } else {
       // use no video, only microphone
       mediaDevices.getUserMedia({ audio: true, video: false }).then((mediaStream) => {
         _localMediaContext.mediaSourceStreams.push(mediaStream);
-        _buildLocalMediaDestinationTrancks();
+        _buildLocalMediaDestinationTracks();
         resolve();
       });
     }
@@ -401,7 +409,7 @@ async function _createLocalMediaContext() {
   return promise;
 }
 
-function _buildLocalMediaDestinationTrancks() {
+function _buildLocalMediaDestinationTracks() {
   if (_localMediaContext.mediaSourceStreams.length === 0) {
     return;
   }
@@ -409,56 +417,53 @@ function _buildLocalMediaDestinationTrancks() {
   let audioDestinationTrack;
   let videoDestinationTrack;
 
-  if (_localMediaContext.mediaSourceStreams.length === 1) {
-    const singleMediaSourceStream = _localMediaContext.mediaSourceStreams[0];
+  const audioCtx = new AudioContext();
+  const audioGainNode = audioCtx.createGain();
+  const audioAnalyserNode = audioCtx.createAnalyser();
+  const audioDestinationNode = audioCtx.createMediaStreamDestination();
+  audioGainNode.connect(audioCtx.destination);
+  audioGainNode.gain.value = 1; // use gain node to prevent echo
 
-    const videoTracks = singleMediaSourceStream.getTracks().filter((track) => {
-      return track.kind === "video";
+  _localMediaContext.audioProcessor.audioContext = audioCtx;
+  _localMediaContext.audioProcessor.audioGainNode = audioGainNode;
+  _localMediaContext.audioProcessor.audioAnalyserNode = audioAnalyserNode;
+  _localMediaContext.audioProcessor.audioDestinationNode = audioDestinationNode;
+
+  const audioSourceTracks = [];
+  const videoSourceTracks = [];
+
+  _localMediaContext.mediaSourceStreams.forEach((mediaStream) => {
+    mediaStream.getAudioTracks().forEach((audioTrack) => {
+      audioSourceTracks.push(audioTrack);
     });
-    const audioTracks = singleMediaSourceStream.getTracks().filter((track) => {
-      return track.kind === "audio";
+
+    mediaStream.getVideoTracks().forEach((videoTrack) => {
+      videoSourceTracks.push(videoTrack);
     });
-    if (audioTracks.length > 0) {
-      audioDestinationTrack = audioTracks[0];
-    }
-    if (videoTracks.length > 0) {
-      videoDestinationTrack = videoTracks[0];
-    }
-  } else if (_localMediaContext.mediaSourceStreams.length > 1) {
-    const audioCtx = new AudioContext();
-    const audioGainNode = audioCtx.createGain();
-    const audioDestinationNode = audioCtx.createMediaStreamDestination();
-    audioGainNode.connect(audioCtx.destination);
-    audioGainNode.gain.value = 0; // use gain node to prevent echo
+  });
 
-    _localMediaContext.audioProcessor.audioContext = audioCtx;
-    _localMediaContext.audioProcessor.audioGainNode = audioGainNode;
-    _localMediaContext.audioProcessor.audioDestinationNode = audioDestinationNode;
-
-    _localMediaContext.mediaSourceStreams.forEach((mediaStream) => {
-      const videoTracks = mediaStream.getTracks().filter((track) => {
-        return track.kind === "video";
-      });
-      const audioTracks = mediaStream.getTracks().filter((track) => {
-        return track.kind === "audio";
-      });
-      if (videoTracks.length && !videoDestinationTrack) {
-        videoDestinationTrack = videoTracks[0];
-      }
-      if (audioTracks.length > 0) {
-        const audioSourceNode = audioCtx.createMediaStreamSource(mediaStream);
-        audioSourceNode.connect(audioGainNode);
-        audioSourceNode.connect(audioDestinationNode);
-        _localMediaContext.audioProcessor.audioSourceNodeMap.set(
-          audioTracks[0].id,
-          audioSourceNode
-        );
-      }
+  if (audioSourceTracks.length > 0) {
+    audioSourceTracks.forEach((audioSourceTrack) => {
+      const audioSourceStream = new MediaStream([audioSourceTrack]);
+      const audioSourceNode = audioCtx.createMediaStreamSource(audioSourceStream);
+      audioSourceNode.connect(audioGainNode);
+      audioSourceNode.connect(audioDestinationNode);
+      _localMediaContext.audioProcessor.audioSourceNodeMap.set(
+        audioSourceTrack.id,
+        audioSourceNode
+      );
     });
 
     if (audioDestinationNode.stream.getAudioTracks().length > 0) {
       audioDestinationTrack = audioDestinationNode.stream.getAudioTracks()[0];
+      const audioAnalyserSourceNode = audioCtx.createMediaStreamSource(audioDestinationNode.stream);
+      audioAnalyserSourceNode.connect(audioAnalyserNode);
+      _localMediaContext.audioProcessor.audioAnalyserSourceNode = audioAnalyserSourceNode;
     }
+  }
+
+  if (videoSourceTracks.length > 0) {
+    videoDestinationTrack = videoSourceTracks[0];
   }
 
   if (audioDestinationTrack) {
@@ -618,6 +623,13 @@ function _releaseLocalMediaContext() {
 
   // release audio processor
   const audioProcessor = _localMediaContext.audioProcessor;
+  if (audioProcessor.audioAnalyserSourceNode) {
+    audioProcessor.audioAnalyserSourceNode.disconnect();
+    audioProcessor.audioAnalyserSourceNode = null;
+  }
+  if (audioProcessor.audioAnalyserNode) {
+    audioProcessor.audioAnalyserNode = null;
+  }
   if (audioProcessor.audioGainNode) {
     audioProcessor.audioGainNode.disconnect();
     audioProcessor.audioGainNode = null;

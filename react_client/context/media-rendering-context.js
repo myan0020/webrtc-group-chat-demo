@@ -44,12 +44,17 @@ function MediaRenderingContextProvider({ children }) {
     localVideoStream = new MediaStream([localMediaContext.videoTrack]);
   }
 
+  let localAudioProcessor;
+  if (localMediaContext && localMediaContext.audioProcessor) {
+    localAudioProcessor = localMediaContext.audioProcessor;
+  }
+
   const mediaRenderingDataSourceList = [
     {
       userId: authenticatedUserId,
       userName: authenticatedUserName,
       isAudioSourceAvaliable: localMediaContext && localMediaContext.audioTrack ? true : false,
-      audioProcessor: null,
+      audioProcessor: localAudioProcessor,
       videoStream: localVideoStream,
     },
   ];
