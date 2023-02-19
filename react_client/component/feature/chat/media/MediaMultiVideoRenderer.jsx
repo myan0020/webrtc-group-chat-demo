@@ -50,69 +50,75 @@ function MediaMultiVideoRendererToMemo({
 
   return (
     <Wrapper>
-      <PresenterVideoContainer shouldDisplay={shouldDisplayForPresentation}>
-        <MediaVideo
-          userId={mediaRenderingDataSourceForPresenter.userId}
-          userName={mediaRenderingDataSourceForPresenter.userName}
-          forceAudioOutputUnavaliable={true}
-          forceVideoUnpresentable={true}
-          isAudioSourceAvaliable={mediaRenderingDataSourceForPresenter.isAudioSourceAvaliable}
-          audioProcessor={mediaRenderingDataSourceForPresenter.audioProcessor}
-          videoStream={mediaRenderingDataSourceForPresenter.videoStream}
-          isVideoCancellable={mediaRenderingDataSourceForPresenter.videoStream !== undefined}
-        />
-      </PresenterVideoContainer>
-      <EqualityTypeMembersContainer shouldDisplay={shouldDisplayForEquality}>
-        {mediaRenderingDataSourceList.map((mediaRenderingDataSource, index) => {
-          const forceAudioOutputUnavaliable = index === 0;
+      {shouldDisplayForPresentation && (
+        <PresenterVideoContainer>
+          <MediaVideo
+            userId={mediaRenderingDataSourceForPresenter.userId}
+            userName={mediaRenderingDataSourceForPresenter.userName}
+            forceAudioOutputUnavaliable={true}
+            forceVideoUnpresentable={true}
+            isAudioSourceAvaliable={mediaRenderingDataSourceForPresenter.isAudioSourceAvaliable}
+            audioProcessor={mediaRenderingDataSourceForPresenter.audioProcessor}
+            videoStream={mediaRenderingDataSourceForPresenter.videoStream}
+            isVideoCancellable={mediaRenderingDataSourceForPresenter.videoStream !== undefined}
+          />
+        </PresenterVideoContainer>
+      )}
 
-          return (
-            <EqualityTypeMemberContainer
-              key={index}
-              numberOfInitialVisibleMembers={numberOfInitialVisibleMediaMembers}
-            >
-              <MediaVideo
-                key={index}
-                userId={mediaRenderingDataSource.userId}
-                userName={mediaRenderingDataSource.userName}
-                forceAudioOutputUnavaliable={forceAudioOutputUnavaliable}
-                audioProcessor={mediaRenderingDataSource.audioProcessor}
-                forceVideoUnpresentable={true}
-                isAudioSourceAvaliable={mediaRenderingDataSource.isAudioSourceAvaliable}
-                videoStream={mediaRenderingDataSource.videoStream}
-                isVideoCancellable={false}
-              />
-            </EqualityTypeMemberContainer>
-          );
-        })}
-      </EqualityTypeMembersContainer>
-      <PresentationTypeMembersContainer
-        shouldDisplay={shouldDisplayForPresentation}
-        numberOfInitialVisibleMembers={numberOfInitialVisibleMediaMembers}
-      >
-        {mediaRenderingDataSourceList.map((mediaRenderingDataSource, index) => {
-          const forceAudioOutputUnavaliable = index === 0;
+      {shouldDisplayForEquality && (
+        <EqualityTypeMembersContainer>
+          {mediaRenderingDataSourceList.map((mediaRenderingDataSource, index) => {
+            const forceAudioOutputUnavaliable = index === 0;
 
-          return (
-            <PresentationTypeMemberContainer
-              key={index}
-              numberOfInitialVisibleMembers={numberOfInitialVisibleMediaMembers}
-            >
-              <MediaVideo
+            return (
+              <EqualityTypeMemberContainer
                 key={index}
-                userId={mediaRenderingDataSource.userId}
-                userName={mediaRenderingDataSource.userName}
-                forceAudioOutputUnavaliable={forceAudioOutputUnavaliable}
-                audioProcessor={mediaRenderingDataSource.audioProcessor}
-                forceVideoUnpresentable={false}
-                videoStream={mediaRenderingDataSource.videoStream}
-                isVideoCancellable={false}
-                isAudioSourceAvaliable={mediaRenderingDataSource.isAudioSourceAvaliable}
-              />
-            </PresentationTypeMemberContainer>
-          );
-        })}
-      </PresentationTypeMembersContainer>
+                numberOfInitialVisibleMembers={numberOfInitialVisibleMediaMembers}
+              >
+                <MediaVideo
+                  key={index}
+                  userId={mediaRenderingDataSource.userId}
+                  userName={mediaRenderingDataSource.userName}
+                  forceAudioOutputUnavaliable={forceAudioOutputUnavaliable}
+                  audioProcessor={mediaRenderingDataSource.audioProcessor}
+                  forceVideoUnpresentable={true}
+                  isAudioSourceAvaliable={mediaRenderingDataSource.isAudioSourceAvaliable}
+                  videoStream={mediaRenderingDataSource.videoStream}
+                  isVideoCancellable={false}
+                />
+              </EqualityTypeMemberContainer>
+            );
+          })}
+        </EqualityTypeMembersContainer>
+      )}
+      {shouldDisplayForPresentation && (
+        <PresentationTypeMembersContainer
+          numberOfInitialVisibleMembers={numberOfInitialVisibleMediaMembers}
+        >
+          {mediaRenderingDataSourceList.map((mediaRenderingDataSource, index) => {
+            const forceAudioOutputUnavaliable = index === 0;
+
+            return (
+              <PresentationTypeMemberContainer
+                key={index}
+                numberOfInitialVisibleMembers={numberOfInitialVisibleMediaMembers}
+              >
+                <MediaVideo
+                  key={index}
+                  userId={mediaRenderingDataSource.userId}
+                  userName={mediaRenderingDataSource.userName}
+                  forceAudioOutputUnavaliable={forceAudioOutputUnavaliable}
+                  audioProcessor={mediaRenderingDataSource.audioProcessor}
+                  forceVideoUnpresentable={false}
+                  videoStream={mediaRenderingDataSource.videoStream}
+                  isVideoCancellable={false}
+                  isAudioSourceAvaliable={mediaRenderingDataSource.isAudioSourceAvaliable}
+                />
+              </PresentationTypeMemberContainer>
+            );
+          })}
+        </PresentationTypeMembersContainer>
+      )}
     </Wrapper>
   );
 }
@@ -155,13 +161,13 @@ const Wrapper = styled.div`
 `;
 
 const PresenterVideoContainer = styled.div`
-  display: ${(props) => (props.shouldDisplay ? "block" : "none")};
+  display: block;
   flex: 1 0 0%;
   height: 100%;
 `;
 
 const PresentationTypeMembersContainer = styled.div`
-  display: ${(props) => (props.shouldDisplay ? "block" : "none")};
+  display: block;
   flex: 0 0 content;
   aspect-ratio: 1 / ${(props) => props.numberOfInitialVisibleMembers};
   height: 100%;
@@ -174,7 +180,7 @@ const PresentationTypeMemberContainer = styled.div`
 `;
 
 const EqualityTypeMembersContainer = styled.div`
-  display: ${(props) => (props.shouldDisplay ? "flex" : "none")};
+  display: flex;
   flex-direction: row;
   flex-wrap: wrap;
   flex: 0 0 100%;
