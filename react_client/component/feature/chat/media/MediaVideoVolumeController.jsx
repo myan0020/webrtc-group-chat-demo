@@ -4,9 +4,18 @@ import styled from "styled-components";
 import volumeUnmutedIconUrl from "resource/image/sound_volume_unmuted_3x.png";
 import volumeMutedIconUrl from "resource/image/sound_volume_muted_3x.png";
 
+const minVolumeMultipler = 0;
+const defaultVolumeMultipler = 1;
+const maxVolumeMultipler = 10;
+const volumeMultiplerStep = 0.1;
+
 export default function MediaVideoVolumeController({ audioProcessor }) {
   const [volumeMultipler, setVolumeMultipler] = useState(audioProcessor.volumeMultipler);
-  const volumeIconUrl = volumeMultipler === 0 ? volumeMutedIconUrl : volumeUnmutedIconUrl;
+
+  const volumeIconUrl =
+    volumeMultipler <= minVolumeMultipler + volumeMultiplerStep
+      ? volumeMutedIconUrl
+      : volumeUnmutedIconUrl;
 
   const handleVolumnMultiplierChange = (e) => {
     if (!audioProcessor) {
@@ -20,7 +29,8 @@ export default function MediaVideoVolumeController({ audioProcessor }) {
     if (!audioProcessor) {
       return;
     }
-    const newVolumnMultiplier = volumeMultipler === 0 ? 1 : 0;
+    const newVolumnMultiplier =
+      volumeMultipler === minVolumeMultipler ? defaultVolumeMultipler : minVolumeMultipler;
     audioProcessor.volumeMultipler = newVolumnMultiplier;
     setVolumeMultipler(newVolumnMultiplier);
   };
@@ -33,10 +43,10 @@ export default function MediaVideoVolumeController({ audioProcessor }) {
       />
       <VolumeMultiplierInput
         type='range'
-        min='0'
-        max='2'
+        min={minVolumeMultipler}
+        max={maxVolumeMultipler}
         value={volumeMultipler}
-        step='0.1'
+        step={volumeMultiplerStep}
         onChange={handleVolumnMultiplierChange}
       />
     </Wrapper>
