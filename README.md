@@ -2,7 +2,7 @@
 
 A web application to realize P2P features including video calling, screen sharing, text messaging and file transceiving with low lantency
 
-![alt text](https://github.com/myan0020/webrtc-group-chat-demo/blob/master/screenshots/screenshot_chat_text.png?raw=true)
+![alt text](https://github.com/myan0020/webrtc-group-chat-demo/blob/master/screenshots/chat_text.png?raw=true)
 
 ## Prerequisites:
 
