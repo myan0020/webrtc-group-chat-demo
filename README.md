@@ -4,6 +4,8 @@ A web application to realize P2P features including video calling, screen sharin
 
 ![alt text](https://github.com/myan0020/webrtc-group-chat-demo/blob/master/screenshots/chat_text.png?raw=true)
 
+![alt text](https://github.com/myan0020/webrtc-group-chat-demo/blob/master/screenshots/chat_file.png?raw=true)
+
 ## Prerequisites:
 
 avaliable TURN server urls
