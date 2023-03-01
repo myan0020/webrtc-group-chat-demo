@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import * as React from "react";
 import { useSelector } from "react-redux";
 
 import WebRTCGroupChatService from "service/WebRTCGroupChatService/WebRTCGroupChatService";
@@ -109,16 +109,16 @@ const fileMessageContainerBuilder = (
 };
 
 function FileMessageContextProvider({ children }) {
-  const [inputFiles, setInputFiles] = useState(null);
-  const [isSendingStatusSending, setIsSendingStatusSending] = useState(false);
-  const [messageContainer, setMessageContainer] = useState(null);
+  const [inputFiles, setInputFiles] = React.useState(null);
+  const [isSendingStatusSending, setIsSendingStatusSending] = React.useState(false);
+  const [messageContainer, setMessageContainer] = React.useState(null);
   const authenticatedUserId = useSelector(selectAuthenticated);
   const authenticatedUserName = useSelector(selectAuthenticatedUserName);
 
-  const messageContainerRef = useRef(messageContainer);
+  const messageContainerRef = React.useRef(messageContainer);
   messageContainerRef.current = messageContainer;
 
-  useEffect(() => {
+  React.useEffect(() => {
     WebRTCGroupChatService.onFileSendingRelatedDataChanged(
       (sendingRelatedDataContainer, isSendingStatusSending) => {
         if (isSendingStatusSending !== undefined) {

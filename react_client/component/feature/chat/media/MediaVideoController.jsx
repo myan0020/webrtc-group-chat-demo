@@ -1,10 +1,10 @@
-import React, { useContext } from "react";
+import * as React from "react";
 import styled from "styled-components";
 
 import { GlobalContext } from "context/global-context";
 import MediaVideoVolumeController from "./MediaVideoVolumeController";
-import updatePresenterImageUrl from "resource/image/present_video_3x.png";
-import cancelImageUrl from "resource/image/cancel_media_presenting_3x.png";
+import * as updatePresenterImageUrl from "resource/image/present_video_3x.png";
+import * as cancelImageUrl from "resource/image/cancel_media_presenting_3x.png";
 
 export default function MediaVideoController(props) {
   const userId = props.userId;
@@ -16,7 +16,7 @@ export default function MediaVideoController(props) {
   const isVideoSourceAvaliable = props.isVideoSourceAvaliable;
   const isVideoCancellable = props.isVideoCancellable;
 
-  const { updatePresenterId } = useContext(GlobalContext);
+  const { updatePresenterId } = React.useContext(GlobalContext);
 
   return (
     <MemorizedMediaVideoController

@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import * as React from "react";
 
 import { LocalizationContext, LocalizationContextProvider } from "context/localization-context";
 import {
@@ -23,9 +23,9 @@ function ContextProviderComposer({ children }) {
 }
 
 function ChildrenWrapper({ children }) {
-  const localizationContextValue = useContext(LocalizationContext);
-  const mediaRenderingContextValue = useContext(MediaRenderingContext);
-  const messageContextValue = useContext(MessageContext);
+  const localizationContextValue = React.useContext(LocalizationContext);
+  const mediaRenderingContextValue = React.useContext(MediaRenderingContext);
+  const messageContextValue = React.useContext(MessageContext);
 
   const resetGlobalContext = () => {
     if (typeof localizationContextValue.resetLocalizationContext === "function") {

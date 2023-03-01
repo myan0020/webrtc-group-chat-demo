@@ -1,5 +1,4 @@
 {
-  "include": ["**/*"],
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
@@ -10,7 +9,16 @@
       "service/*": ["service/*"],
       "resource/*": ["resource/*"],
       "hook/*": ["hook/*"],
-      "constant/*": ["constant/*"],
-    }
+      "constant/*": ["constant/*"]
+    },
+
+    "sourceMap": true,
+    "jsx": "react",
+    "target": "es5",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "allowJs": true,
+    "outDir": "./built"
   },
+  "include": ["**/*"]
 }

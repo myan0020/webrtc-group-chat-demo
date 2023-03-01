@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import * as React from "react";
 import styled from "styled-components";
 
 const audioAnalyserNodeFFTSize = 512;
@@ -9,19 +9,19 @@ export default function MediaAudioRenderer(props) {
   const isAudioSourceAvaliable = props.isAudioSourceAvaliable;
   const audioProcessor = props.audioProcessor;
 
-  const [audioCanvasSize, setAudioCanvasSize] = useState({ width: 300, height: 150 });
+  const [audioCanvasSize, setAudioCanvasSize] = React.useState({ width: 300, height: 150 });
 
-  const audioCanvasRef = useRef();
+  const audioCanvasRef = React.useRef();
 
-  const audioCanvasSizeRef = useRef();
+  const audioCanvasSizeRef = React.useRef();
   audioCanvasSizeRef.current = audioCanvasSize;
 
-  const isAudioAnalyserAvaliableRef = useRef();
+  const isAudioAnalyserAvaliableRef = React.useRef();
   const isAudioAnalyserAvaliable =
     isAudioSourceAvaliable && audioProcessor && audioProcessor.audioAnalyserNode ? true : false;
   isAudioAnalyserAvaliableRef.current = isAudioAnalyserAvaliable;
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!isAudioAnalyserAvaliableRef.current) {
       return;
     }

@@ -1,15 +1,15 @@
-import React, { useContext } from "react";
+import * as React from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
 
 import { leaveRoom, updateJoinedRoomId } from "store/roomSlice";
-import goBackImageUrl from "resource/image/go_back_3x.png";
+import * as goBackImageUrl from "resource/image/go_back_3x.png";
 import { GlobalContext } from "context/global-context";
 import { reset as resetTextChatSlice } from "store/textChatSlice";
 import { reset as resetMediaChatSlice } from "store/mediaChatSlice";
 
 export default function GoBackNavigator() {
-  const { resetMediaRenderingContext, resetMessageContext } = useContext(GlobalContext);
+  const { resetMediaRenderingContext, resetMessageContext } = React.useContext(GlobalContext);
   return (
     <MemorizedGoBackNavigator
       resetMediaRenderingContext={resetMediaRenderingContext}

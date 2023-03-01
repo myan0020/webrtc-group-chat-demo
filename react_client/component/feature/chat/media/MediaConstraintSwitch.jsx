@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 
@@ -21,7 +21,7 @@ export const MediaConstraintSwitchPropsBuilder = ({}) => {
 };
 
 export default function MediaConstraintSwitch({}) {
-  const { localizedStrings } = useContext(GlobalContext);
+  const { localizedStrings } = React.useContext(GlobalContext);
   return <MemorizedMediaConstraintSwitch localizedStrings={localizedStrings} />;
 }
 

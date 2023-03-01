@@ -1,7 +1,6 @@
-import React from "react";
+import * as React from "react";
 import { createRoot } from "react-dom/client";
 import { Provider as ReduxProvider } from "react-redux";
-// import ReactDOM from 'react-dom';
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import store from "store/store";
@@ -43,7 +42,14 @@ function App() {
               element={<Signin />}
             />
 
-            <Route element={<RequireAuth />}>
+            <Route
+              element={
+                <RequireAuth
+                  children={undefined}
+                  redirectTo={undefined}
+                />
+              }
+            >
               <Route
                 path='/room-list'
                 element={<RoomList />}

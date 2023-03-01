@@ -1,7 +1,7 @@
-import React from "react";
+import * as React from "react";
 import styled from "styled-components";
 
-import personSpeakImageUrl from "resource/image/person_speak_3x.png";
+import * as personSpeakImageUrl from "resource/image/person_speak_3x.png";
 
 export default function MediaUserTag({ userName }) {
   const name = typeof userName === "string" && userName.length > 0 ? userName : "Unknown";

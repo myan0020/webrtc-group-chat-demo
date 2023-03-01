@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import * as React from "react";
 import styled from "styled-components";
 
 import MediaVideo from "./MediaVideo";
@@ -11,7 +11,7 @@ export default function MediaMultiVideoRenderer({}) {
     mediaRenderingDataSourceList,
     mediaRenderingDataSourceForPresenter,
     mediaAccessibilityType,
-  } = useContext(GlobalContext);
+  } = React.useContext(GlobalContext);
 
   return (
     <MemorizedMediaMultiVideoRenderer

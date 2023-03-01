@@ -1,12 +1,12 @@
-import React, { useContext, useRef, useState } from "react";
+import * as React from "react";
 import styled from "styled-components";
 import { useDispatch } from "react-redux";
 
 import * as messageChatEnum from "constant/enum/message-chat";
 import * as localizableEnum from "constant/enum/localizable";
-import enabledMessageSendBubbleImageUrl from "resource/image/send_message_bubble_enabled_3x.png";
-import disabledMessageSendBubbleImageUrl from "resource/image/send_message_bubble_disabled_3x.png";
-import messageSendPlaneImageUrl from "resource/image/send_message_plane_3x.png";
+import * as enabledMessageSendBubbleImageUrl from "resource/image/send_message_bubble_enabled_3x.png";
+import * as disabledMessageSendBubbleImageUrl from "resource/image/send_message_bubble_disabled_3x.png";
+import * as messageSendPlaneImageUrl from "resource/image/send_message_plane_3x.png";
 import { GlobalContext } from "context/global-context";
 import { sendTextMessage } from "store/textChatSlice";
 
@@ -27,7 +27,7 @@ export default function MessageSender({}) {
     sendFiles,
     updateInputFiles,
     visibleMessageType,
-  } = useContext(GlobalContext);
+  } = React.useContext(GlobalContext);
   return (
     <MemorizedMessageSender
       localizedStrings={localizedStrings}
@@ -51,9 +51,9 @@ function MessageSenderToMemo({
   visibleMessageType,
 }) {
   const dispatch = useDispatch();
-  const fileInputRef = useRef(null);
-  const messageSendRef = useRef(null);
-  const [inputText, setInputText] = useState("");
+  const fileInputRef = React.useRef(null);
+  const messageSendRef = React.useRef(null);
+  const [inputText, setInputText] = React.useState("");
 
   const inputFilesCount = inputFiles ? inputFiles.length : 0;
 

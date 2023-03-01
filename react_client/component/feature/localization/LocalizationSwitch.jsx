@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import * as React from "react";
 import styled from "styled-components";
 
 import * as localizableEnum from "constant/enum/localizable";
@@ -13,7 +13,7 @@ export default function LocalizationSwitch({
   selectedTextColor,
   isSelectedTextKeyVisible,
 }) {
-  const { localizedStrings, changeLocalization } = useContext(GlobalContext);
+  const { localizedStrings, changeLocalization } = React.useContext(GlobalContext);
   return (
     <MemorizedLocalizationSwitch
       iconImageUrl={iconImageUrl}

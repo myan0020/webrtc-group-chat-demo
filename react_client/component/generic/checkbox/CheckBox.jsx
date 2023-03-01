@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import * as React from "react";
 import styled from "styled-components";
 
-import checkMarkUrl from "resource/image/check_mark_3x.png";
+import * as checkMarkUrl from "resource/image/check_mark_3x.png";
 
 export const checkBoxPropsBuilder = ({
   initialEnabled,
@@ -96,7 +96,7 @@ export default function CheckBox({
 
   boxCheckMarkSizePercentage,
 }) {
-  const [checked, setChecked] = useState(initalChecked);
+  const [checked, setChecked] = React.useState(initalChecked);
 
   const handleBoxClick = () => {
     if (!initialEnabled) {

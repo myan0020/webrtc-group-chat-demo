@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import * as React from "react";
 
 import { localizableStrings } from "constant/string/localizable-strings";
 import * as localizableEnum from "constant/enum/localizable";
@@ -7,7 +7,7 @@ const LocalizationContext = React.createContext();
 LocalizationContext.displayName = "LocalizationContext";
 
 function LocalizationContextProvider({ children }) {
-  const [localeType, setLocaleType] = useState(localizableEnum.type.ENGLISH);
+  const [localeType, setLocaleType] = React.useState(localizableEnum.type.ENGLISH);
 
   const changeLocalization = (toLocaleType) => {
     switch (toLocaleType) {

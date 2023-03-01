@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import * as React from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
 
@@ -11,7 +11,7 @@ import { reset as resetRoomSlice } from "store/roomSlice";
 
 export default function SignoutNavigator() {
   const { localizedStrings, resetMediaRenderingContext, resetMessageContext } =
-    useContext(GlobalContext);
+    React.useContext(GlobalContext);
 
   return (
     <MemorizedSignoutNavigator

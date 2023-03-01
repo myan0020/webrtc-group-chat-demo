@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import * as React from "react";
 import styled from "styled-components";
 
-import volumeUnmutedIconUrl from "resource/image/sound_volume_unmuted_3x.png";
-import volumeMutedIconUrl from "resource/image/sound_volume_muted_3x.png";
+import * as volumeUnmutedIconUrl from "resource/image/sound_volume_unmuted_3x.png";
+import * as volumeMutedIconUrl from "resource/image/sound_volume_muted_3x.png";
 
 const minVolumeMultipler = 0;
 const defaultVolumeMultipler = 1;
@@ -10,7 +10,7 @@ const maxVolumeMultipler = 10;
 const volumeMultiplerStep = 0.1;
 
 export default function MediaVideoVolumeController({ audioProcessor }) {
-  const [volumeMultipler, setVolumeMultipler] = useState(audioProcessor.volumeMultipler);
+  const [volumeMultipler, setVolumeMultipler] = React.useState(audioProcessor.volumeMultipler);
 
   const volumeIconUrl =
     volumeMultipler <= minVolumeMultipler + volumeMultiplerStep

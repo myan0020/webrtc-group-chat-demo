@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import * as React from "react";
 import styled from "styled-components";
 
 import MediaUserTag from "./MediaUserTag";
@@ -18,7 +18,7 @@ export default function MediaVideo(props) {
   const isAudioSourceAvaliable = props.isAudioSourceAvaliable;
   const audioProcessor = props.audioProcessor;
 
-  const [isMediaControllerVisible, setIsMediaControllerVisible] = useState(false);
+  const [isMediaControllerVisible, setIsMediaControllerVisible] = React.useState(false);
 
   const isAudioGainNodeAvaliable = audioProcessor && audioProcessor.audioGainNode ? true : false;
   const isVideoSourceAvaliable =

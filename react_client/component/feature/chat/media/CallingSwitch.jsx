@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 import styled from "styled-components";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -7,8 +7,8 @@ import SingleTabSwitch, {
   singleTabSwitchPropsBuilder,
 } from "../../../generic/switch/SingleTabSwitch";
 import { startCalling, hangUpCalling, selectIsCalling } from "store/mediaChatSlice";
-import startCallingUrl from "resource/image/start_calling_3x.png";
-import hangUpCallingUrl from "resource/image/hang_up_calling_3x.png";
+import * as startCallingUrl from "resource/image/start_calling_3x.png";
+import * as hangUpCallingUrl from "resource/image/hang_up_calling_3x.png";
 
 export const CallingSwitchPropsBuilder = ({}) => {
   return {};

@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import * as React from "react";
 import { useSelector } from "react-redux";
 
 import { selectAllTextMessages } from "store/textChatSlice";
@@ -17,7 +17,9 @@ function MessageContextProviderWrapper({ children }) {
 }
 
 function MessageContextProviderContent({ children }) {
-  const [visibleMessageType, setVisibleMessageType] = useState(messageChatEnum.type.MESSAGE_TYPE_TEXT);
+  const [visibleMessageType, setVisibleMessageType] = React.useState(
+    messageChatEnum.type.MESSAGE_TYPE_TEXT
+  );
   const {
     messageContainer: fileMessageContainer,
     unreadMessageCount: unreadFileMessageCount,
@@ -33,7 +35,7 @@ function MessageContextProviderContent({ children }) {
     clearAllFileReceived,
 
     resetFileMessageContext,
-  } = useContext(FileMessageContext);
+  } = React.useContext(FileMessageContext);
   const textMessageContainer = useSelector(selectAllTextMessages);
 
   const textMessageList = [];
@@ -66,8 +68,8 @@ function MessageContextProviderContent({ children }) {
     if (typeof resetFileMessageContext === "function") {
       resetFileMessageContext();
     }
-    setVisibleMessageType(messageChatEnum.type.MESSAGE_TYPE_TEXT)
-  }
+    setVisibleMessageType(messageChatEnum.type.MESSAGE_TYPE_TEXT);
+  };
 
   const contextValue = {
     visibleMessageType,

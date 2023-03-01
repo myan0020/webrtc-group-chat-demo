@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import * as React from "react";
 import styled from "styled-components";
 
 import { timeSince } from "util/time-since";

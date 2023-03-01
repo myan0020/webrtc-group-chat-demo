@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import * as React from "react";
 import { useSelector } from "react-redux";
 
 import WebRTCGroupChatService from "service/WebRTCGroupChatService/WebRTCGroupChatService";
@@ -13,17 +13,17 @@ const numberOfInitialVisibleMediaMembers = 4;
 function MediaRenderingContextProvider({ children }) {
   const authenticatedUserId = useSelector(selectAuthenticatedUserId);
   const authenticatedUserName = useSelector(selectAuthenticatedUserName);
-  const [localMediaContext, setLocalMediaContext] = useState();
-  const [peerMediaContextMap, setPeerMediaContextMap] = useState();
-  const [mediaAccessibilityType, setMediaAccessibilityType] = useState(
+  const [localMediaContext, setLocalMediaContext] = React.useState();
+  const [peerMediaContextMap, setPeerMediaContextMap] = React.useState();
+  const [mediaAccessibilityType, setMediaAccessibilityType] = React.useState(
     mediaChatEnum.mediaAccessibilityType.MEDIA_ACCESSIBILITY_TYPE_PRESENTATION
   );
-  const [presenterId, setPresenterId] = useState();
+  const [presenterId, setPresenterId] = React.useState();
 
-  const mediaAccessibilityTypeRef = useRef(mediaAccessibilityType);
+  const mediaAccessibilityTypeRef = React.useRef(mediaAccessibilityType);
   mediaAccessibilityTypeRef.current = mediaAccessibilityType;
 
-  useEffect(() => {
+  React.useEffect(() => {
     WebRTCGroupChatService.onLocalMediaContextChanged((localMediaContext) => {
       setLocalMediaContext(localMediaContext);
     });

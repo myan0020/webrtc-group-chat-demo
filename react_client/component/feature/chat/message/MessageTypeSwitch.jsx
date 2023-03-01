@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import * as React from "react";
 import styled from "styled-components";
 import { useSelector } from "react-redux";
 
@@ -8,7 +8,7 @@ import MultiTabSwitch, {
   multiTabSwitchPropsBuilder,
   multiTabSwitchTabBuilder,
 } from "../../../generic/switch/MultiTabSwitch";
-import badgeBackgroundImageUrl from "resource/image/badge_3x.png";
+import * as badgeBackgroundImageUrl from "resource/image/badge_3x.png";
 import { GlobalContext } from "context/global-context";
 import { selectUnreadTextMessageCount } from "store/textChatSlice";
 
@@ -22,7 +22,7 @@ export default function MessageTypeSwitch({}) {
     visibleMessageType,
     updateVisibleMessageType,
     unreadFileMessageCount,
-  } = useContext(GlobalContext);
+  } = React.useContext(GlobalContext);
   const unreadTextMessageCount = useSelector(selectUnreadTextMessageCount);
 
   let textMessageTabSelected = true;

@@ -1,16 +1,12 @@
-import React, { useContext, useState } from "react";
+import * as React from "react";
 import styled from "styled-components";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate } from "react-router-dom";
 
-import {
-  requestToSignin,
-  selectAuthenticated,
-  selectAuthLoadingStatus,
-} from "store/authSlice";
+import { requestToSignin, selectAuthenticated, selectAuthLoadingStatus } from "store/authSlice";
 import * as localizableEnum from "constant/enum/localizable";
 import LocalizationSwitch from "../localization/LocalizationSwitch";
-import globalGreyImageUrl from "resource/image/global_grey_3x.png";
+import * as globalGreyImageUrl from "resource/image/global_grey_3x.png";
 import { GlobalContext } from "context/global-context";
 import Loading from "component/generic/loading/Loading";
 import * as loadingStatusEnum from "constant/enum/loading-status";
@@ -24,9 +20,9 @@ const sharedStyleValues = {
 export default function Signin() {
   const dispatch = useDispatch();
 
-  const { localizedStrings } = useContext(GlobalContext);
+  const { localizedStrings } = React.useContext(GlobalContext);
   const authenticated = useSelector(selectAuthenticated);
-  const [inputUserName, setInputUserName] = useState("");
+  const [inputUserName, setInputUserName] = React.useState("");
 
   const onInputNewUserNameChange = (e) => {
     setInputUserName(e.target.value);

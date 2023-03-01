@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import * as React from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
 
@@ -8,13 +8,13 @@ import NewRoomNavigator from "./NewRoomNavigator";
 import SignoutNavigator from "./SignoutNavigator";
 import * as localizableEnum from "constant/enum/localizable";
 import LocalizationSwitch from "../localization/LocalizationSwitch";
-import globalWhiteImageUrl from "resource/image/gobal_white_3x.png";
+import * as globalWhiteImageUrl from "resource/image/gobal_white_3x.png";
 import { GlobalContext } from "context/global-context";
 import MembershipRenderer from "../membership/MembershipRenderer";
 import { selectHasJoinedRoom } from "store/roomSlice";
 
 export default function NavigationBar() {
-  const { localizedStrings } = useContext(GlobalContext);
+  const { localizedStrings } = React.useContext(GlobalContext);
   const authenticatedUserName = useSelector(selectAuthenticatedUserName);
   return (
     <MemorizedNavigationBar

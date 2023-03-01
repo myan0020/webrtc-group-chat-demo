@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import * as React from "react";
 import styled from "styled-components";
 
 export const dropdownSwitchOptionBuilder = ({
@@ -74,7 +74,7 @@ export default function DropdownSwitch({
   isSelectedOptionTextKeyVisible,
   options,
 }) {
-  const [dropdownOptionsDisplay, setDropdownOptionsDisplay] = useState("none");
+  const [dropdownOptionsDisplay, setDropdownOptionsDisplay] = React.useState("none");
 
   const toggleDropdownOptionsDisplay = () => {
     if (dropdownOptionsDisplay === "none") {

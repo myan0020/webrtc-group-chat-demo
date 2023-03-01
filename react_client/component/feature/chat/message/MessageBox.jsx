@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef } from "react";
+import * as React from "react";
 import styled from "styled-components";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -34,7 +34,7 @@ export default function MessageBox({}) {
     orderedTextMessageList,
     orderedFileMessageList,
     readAllFileMessage,
-  } = useContext(GlobalContext);
+  } = React.useContext(GlobalContext);
   return (
     <MemorizedMessageBox
       localizedStrings={localizedStrings}
@@ -57,10 +57,10 @@ function MessageBoxToMemo({
 }) {
   const dispatch = useDispatch();
   const unreadTextMessageCount = useSelector(selectUnreadTextMessageCount);
-  const textBoxWrapperRef = useRef(null);
-  const fileBoxWrapperRef = useRef(null);
+  const textBoxWrapperRef = React.useRef(null);
+  const fileBoxWrapperRef = React.useRef(null);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (visibleMessageType === messageChatEnum.type.MESSAGE_TYPE_TEXT) {
       if (unreadTextMessageCount === 0) {
         return;
@@ -71,7 +71,7 @@ function MessageBoxToMemo({
     }
   });
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (textBoxWrapperRef.current) {
       autoScrollToBottomIfNecessary(textBoxWrapperRef.current, autoScrollingThredhold);
     }

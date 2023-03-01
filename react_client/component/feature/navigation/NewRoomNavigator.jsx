@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 
@@ -11,7 +11,7 @@ import * as localizableEnum from "constant/enum/localizable";
 import { GlobalContext } from "context/global-context";
 
 export default function NewRoomNavigator() {
-  const { localizedStrings } = useContext(GlobalContext);
+  const { localizedStrings } = React.useContext(GlobalContext);
   return <MemorizedNewRoomNavigator localizedStrings={localizedStrings} />;
 }
 

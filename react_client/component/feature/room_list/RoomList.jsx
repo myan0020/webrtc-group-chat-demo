@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import * as React from "react";
 import styled from "styled-components";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate } from "react-router-dom";
@@ -11,14 +11,14 @@ import {
   selectNewRoomPopupVisible,
   selectRoomList,
 } from "store/roomSlice";
-import closeImageUrl from "resource/image/close_3x.png";
+import * as closeImageUrl from "resource/image/close_3x.png";
 import * as localizableEnum from "constant/enum/localizable";
 import { GlobalContext } from "context/global-context";
 
 export default function RoomList() {
   const hasJoinedRoom = useSelector(selectHasJoinedRoom);
-  const { localizedStrings } = useContext(GlobalContext);
-  const [newRoomNameInputValue, setNewRoomNameInputValue] = useState("");
+  const { localizedStrings } = React.useContext(GlobalContext);
+  const [newRoomNameInputValue, setNewRoomNameInputValue] = React.useState("");
 
   if (hasJoinedRoom) {
     return <Navigate to={"/chat-room"} />;

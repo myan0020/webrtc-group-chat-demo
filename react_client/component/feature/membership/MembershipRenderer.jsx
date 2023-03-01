@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import * as React from "react";
 import styled from "styled-components";
 
 import MemberOverview from "./MemberOverview";
@@ -10,8 +10,8 @@ const memberDetailDisplayWhenMouseMovedInside = "block";
 const memberDetailDisplayWhenMouseMovedOutside = "none";
 
 export default function MembershipRenderer({}) {
-  const [detailDisplay, setDetailDisplay] = useState(memberDetailDisplayWhenMouseMovedOutside);
-  const [visualMemberAvatarMarginLeft, setVisualMemberAvatarMarginLeft] = useState(
+  const [detailDisplay, setDetailDisplay] = React.useState(memberDetailDisplayWhenMouseMovedOutside);
+  const [visualMemberAvatarMarginLeft, setVisualMemberAvatarMarginLeft] = React.useState(
     visualMemberAvatarMarginLeftWhenMouseMovedOutside
   );
 
