@@ -1,8 +1,8 @@
 import * as React from "react";
 import styled from "styled-components";
 
-import * as volumeUnmutedIconUrl from "resource/image/sound_volume_unmuted_3x.png";
-import * as volumeMutedIconUrl from "resource/image/sound_volume_muted_3x.png";
+import volumeUnmutedIconUrl from "resource/image/sound_volume_unmuted_3x.png";
+import volumeMutedIconUrl from "resource/image/sound_volume_muted_3x.png";
 
 const minVolumeMultipler = 0;
 const defaultVolumeMultipler = 1;

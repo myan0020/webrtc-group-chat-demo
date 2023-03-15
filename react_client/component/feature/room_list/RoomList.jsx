@@ -11,7 +11,7 @@ import {
   selectNewRoomPopupVisible,
   selectRoomList,
 } from "store/roomSlice";
-import * as closeImageUrl from "resource/image/close_3x.png";
+import closeImageUrl from "resource/image/close_3x.png";
 import * as localizableEnum from "constant/enum/localizable";
 import { GlobalContext } from "context/global-context";
 

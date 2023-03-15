@@ -17,6 +17,7 @@ import { GlobalContextProvider } from "context/global-context";
 
 console.debug(`[In ${process.env.NODE_ENV} mode]`);
 
+
 /**
  * The root component to render in the application
  */

@@ -1,8 +1,8 @@
 import { createAsyncThunk, createSelector, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
+import GroupChatService from "webrtc-group-chat-client";
 
 import { fetchInitialRoomList } from "./roomSlice";
-import WebRTCGroupChatService from "service/WebRTCGroupChatService/WebRTCGroupChatService";
 import * as loadingStatusEnum from "constant/enum/loading-status";
 
 const initialState = {
@@ -74,7 +74,14 @@ export const requestToSignin = createAsyncThunk(
 
     // side effects
     thunkAPI.dispatch(fetchInitialRoomList());
-    WebRTCGroupChatService.connect();
+
+    let url;
+    if (process.env.NODE_ENV === "production") {
+      url = `wss://${location.hostname}`;
+    } else {
+      url = `ws://${location.hostname}:${env.EXPRESS_SERVER_PORT}`;
+    }
+    GroupChatService.connect(url);
 
     return {
       responseStatus: response.status,
@@ -95,7 +102,7 @@ export const requestToSignout = createAsyncThunk("auth/requestToSignout", async 
   }
 
   // side effects
-  WebRTCGroupChatService.disconnect();
+  GroupChatService.disconnect();
 
   return {
     responseStatus: response.status,

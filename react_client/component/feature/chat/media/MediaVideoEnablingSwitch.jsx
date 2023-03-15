@@ -7,9 +7,9 @@ import SingleTabSwitch, {
   singleTabSwitchPropsBuilder,
 } from "../../../generic/switch/SingleTabSwitch";
 import { selectVideoRelated, toggleVideoEnabling } from "store/mediaChatSlice";
-import * as enableVideoUrl from "resource/image/enable_video_3x.png";
-import * as disableVideoUrl from "resource/image/disable_video_3x.png";
-import * as videoEnablingDisabledUrl from "resource/image/video_enabling_disabled_3x.png";
+import enableVideoUrl from "resource/image/enable_video_3x.png";
+import disableVideoUrl from "resource/image/disable_video_3x.png";
+import videoEnablingDisabledUrl from "resource/image/video_enabling_disabled_3x.png";
 
 export const MediaVideoEnablingSwitchPropsBuilder = ({}) => {
   return {};

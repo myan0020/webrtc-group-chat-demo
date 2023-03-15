@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSelector, createSlice } from "@reduxjs/toolkit";
+import GroupChatService, { CallingInputType } from "webrtc-group-chat-client";
 
-import WebRTCGroupChatService from "service/WebRTCGroupChatService/WebRTCGroupChatService";
 import * as mediaChatEnum from "constant/enum/media-chat";
 
 const initialState = {
@@ -108,7 +108,7 @@ export const startCalling = createAsyncThunk("mediaChat/startCalling", async (_,
   const videoCallingInputType = sliceState.videoCallingInputType;
 
   const callingInputTypes = [
-    WebRTCGroupChatService.callingInputTypeEnum.CALLING_INPUT_TYPE_AUDIO_MICROPHONE,
+    CallingInputType.CALLING_INPUT_TYPE_AUDIO_MICROPHONE,
   ];
 
   if (enableVideoCallingInput) {
@@ -116,17 +116,17 @@ export const startCalling = createAsyncThunk("mediaChat/startCalling", async (_,
       case mediaChatEnum.videoCallingInputType.VIDEO_CALLING_INPUT_TYPE_CAMERA:
         {
           callingInputTypes.push(
-            WebRTCGroupChatService.callingInputTypeEnum.CALLING_INPUT_TYPE_VIDEO_CAMERA
+            CallingInputType.CALLING_INPUT_TYPE_VIDEO_CAMERA
           );
         }
         break;
       case mediaChatEnum.videoCallingInputType.VIDEO_CALLING_INPUT_TYPE_SCREEN:
         {
           callingInputTypes.push(
-            WebRTCGroupChatService.callingInputTypeEnum.CALLING_INPUT_TYPE_VIDEO_SCREEN
+            CallingInputType.CALLING_INPUT_TYPE_VIDEO_SCREEN
           );
           callingInputTypes.push(
-            WebRTCGroupChatService.callingInputTypeEnum.CALLING_INPUT_TYPE_AUDIO_SCREEN
+            CallingInputType.CALLING_INPUT_TYPE_AUDIO_SCREEN
           );
         }
         break;
@@ -137,12 +137,12 @@ export const startCalling = createAsyncThunk("mediaChat/startCalling", async (_,
     }
   }
 
-  WebRTCGroupChatService.applyCallingInputTypes(callingInputTypes);
-  WebRTCGroupChatService.startCalling();
+  GroupChatService.applyCallingInputTypes(callingInputTypes);
+  GroupChatService.startCalling();
 });
 
 export const hangUpCalling = createAsyncThunk("mediaChat/hangUpCalling", async () => {
-  WebRTCGroupChatService.hangUpCalling();
+  GroupChatService.hangUpCalling();
 });
 
 export const toggleAudioEnabling = createAsyncThunk(
@@ -152,9 +152,9 @@ export const toggleAudioEnabling = createAsyncThunk(
     const isCalling = sliceState.isCalling;
     const isAudioEnablingAvaliable = sliceState.audioRelated.isAudioEnablingAvaliable;
     if (isCalling && isAudioEnablingAvaliable) {
-      const curEnabled = WebRTCGroupChatService.localMicEnabled;
-      WebRTCGroupChatService.localMicEnabled = !curEnabled;
-      thunkAPI.dispatch(updateAudioEnabling(WebRTCGroupChatService.localMicEnabled));
+      const curEnabled = GroupChatService.localMicEnabled;
+      GroupChatService.localMicEnabled = !curEnabled;
+      thunkAPI.dispatch(updateAudioEnabling(GroupChatService.localMicEnabled));
     }
   }
 );
@@ -166,9 +166,9 @@ export const toggleAudioMuting = createAsyncThunk(
     const isCalling = sliceState.isCalling;
     const isAudioMutingAvaliable = sliceState.audioRelated.isAudioMutingAvaliable;
     if (isCalling && isAudioMutingAvaliable) {
-      const curMuted = WebRTCGroupChatService.localMicMuted;
-      WebRTCGroupChatService.localMicMuted = !curMuted;
-      thunkAPI.dispatch(updateAudioMuting(WebRTCGroupChatService.localMicMuted));
+      const curMuted = GroupChatService.localMicMuted;
+      GroupChatService.localMicMuted = !curMuted;
+      thunkAPI.dispatch(updateAudioMuting(GroupChatService.localMicMuted));
     }
   }
 );
@@ -180,9 +180,9 @@ export const toggleVideoEnabling = createAsyncThunk(
     const isCalling = sliceState.isCalling;
     const isVideoEnablingAvaliable = sliceState.videoRelated.isVideoEnablingAvaliable;
     if (isCalling && isVideoEnablingAvaliable) {
-      const curEnabled = WebRTCGroupChatService.localCameraEnabled;
-      WebRTCGroupChatService.localCameraEnabled = !curEnabled;
-      thunkAPI.dispatch(updateVideoEnabling(WebRTCGroupChatService.localCameraEnabled));
+      const curEnabled = GroupChatService.localCameraEnabled;
+      GroupChatService.localCameraEnabled = !curEnabled;
+      thunkAPI.dispatch(updateVideoEnabling(GroupChatService.localCameraEnabled));
     }
   }
 );
@@ -194,9 +194,9 @@ export const toggleVideoMuting = createAsyncThunk(
     const isCalling = sliceState.isCalling;
     const isVideoMutingAvaliable = sliceState.videoRelated.isVideoMutingAvaliable;
     if (isCalling && isVideoMutingAvaliable) {
-      const curMuted = WebRTCGroupChatService.localCameraMuted;
-      WebRTCGroupChatService.localCameraMuted = !curMuted;
-      thunkAPI.dispatch(updateVideoMuting(WebRTCGroupChatService.localCameraMuted));
+      const curMuted = GroupChatService.localCameraMuted;
+      GroupChatService.localCameraMuted = !curMuted;
+      thunkAPI.dispatch(updateVideoMuting(GroupChatService.localCameraMuted));
     }
   }
 );

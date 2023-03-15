@@ -3,7 +3,7 @@ import { useDispatch } from "react-redux";
 import styled from "styled-components";
 
 import { leaveRoom, updateJoinedRoomId } from "store/roomSlice";
-import * as goBackImageUrl from "resource/image/go_back_3x.png";
+import goBackImageUrl from "resource/image/go_back_3x.png";
 import { GlobalContext } from "context/global-context";
 import { reset as resetTextChatSlice } from "store/textChatSlice";
 import { reset as resetMediaChatSlice } from "store/mediaChatSlice";

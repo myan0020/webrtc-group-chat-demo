@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "component/*": ["react_client/component/*"],
+      "context/*": ["react_client/context/*"],
+      "store/*": ["react_client/store/*"],
+      "util/*": ["react_client/util/*"],
+      "service/*": ["react_client/service/*"],
+      "resource/*": ["react_client/resource/*"],
+      "hook/*": ["react_client/hook/*"],
+      "constant/*": ["react_client/constant/*"]
+    },
+    "esModuleInterop": true,
+    "sourceMap": true,
+    "jsx": "preserve",
+    "target": "es6",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "traceResolution": true,
+    "allowJs": true,
+    "noEmit": true
+  },
+  "include": ["react_client/**/*"],
+}

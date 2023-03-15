@@ -4,9 +4,9 @@ import { useDispatch } from "react-redux";
 
 import * as messageChatEnum from "constant/enum/message-chat";
 import * as localizableEnum from "constant/enum/localizable";
-import * as enabledMessageSendBubbleImageUrl from "resource/image/send_message_bubble_enabled_3x.png";
-import * as disabledMessageSendBubbleImageUrl from "resource/image/send_message_bubble_disabled_3x.png";
-import * as messageSendPlaneImageUrl from "resource/image/send_message_plane_3x.png";
+import enabledMessageSendBubbleImageUrl from "resource/image/send_message_bubble_enabled_3x.png";
+import disabledMessageSendBubbleImageUrl from "resource/image/send_message_bubble_disabled_3x.png";
+import messageSendPlaneImageUrl from "resource/image/send_message_plane_3x.png";
 import { GlobalContext } from "context/global-context";
 import { sendTextMessage } from "store/textChatSlice";
 

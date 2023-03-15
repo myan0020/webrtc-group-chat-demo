@@ -5,10 +5,10 @@ import MultiTabSwitch, {
   multiTabSwitchTabBuilder,
   multiTabSwitchPropsBuilder,
 } from "../../../generic/switch/MultiTabSwitch";
-import * as presentationEnabledUrl from "resource/image/presentation_enabled_3x.png";
-import * as presentationDisabledUrl from "resource/image/presentation_disabled_3x.png";
-import * as equalityEnabledUrl from "resource/image/equality_enabled_3x.png";
-import * as equalityDisabledUrl from "resource/image/equality_disabled_3x.png";
+import presentationEnabledUrl from "resource/image/presentation_enabled_3x.png";
+import presentationDisabledUrl from "resource/image/presentation_disabled_3x.png";
+import equalityEnabledUrl from "resource/image/equality_enabled_3x.png";
+import equalityDisabledUrl from "resource/image/equality_disabled_3x.png";
 import { GlobalContext } from "context/global-context";
 import * as mediaChatEnum from "constant/enum/media-chat";
 

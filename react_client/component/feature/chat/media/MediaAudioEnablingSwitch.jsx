@@ -7,9 +7,9 @@ import SingleTabSwitch, {
   singleTabSwitchPropsBuilder,
 } from "../../../generic/switch/SingleTabSwitch";
 import { selectAudioRelated, toggleAudioEnabling } from "store/mediaChatSlice";
-import * as enableAudioUrl from "resource/image/enable_audio_3x.png";
-import * as disableAudioUrl from "resource/image/disable_audio_3x.png";
-import * as audioEnablingDisabledUrl from "resource/image/audio_enabling_disabled_3x.png";
+import enableAudioUrl from "resource/image/enable_audio_3x.png";
+import disableAudioUrl from "resource/image/disable_audio_3x.png";
+import audioEnablingDisabledUrl from "resource/image/audio_enabling_disabled_3x.png";
 
 export const MediaAudioEnablingSwitchPropsBuilder = ({}) => {
   return {};

@@ -1,7 +1,7 @@
 import * as React from "react";
 import styled from "styled-components";
 
-import * as checkMarkUrl from "resource/image/check_mark_3x.png";
+import checkMarkUrl from "resource/image/check_mark_3x.png";
 
 export const checkBoxPropsBuilder = ({
   initialEnabled,

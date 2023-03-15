@@ -8,7 +8,7 @@ import NewRoomNavigator from "./NewRoomNavigator";
 import SignoutNavigator from "./SignoutNavigator";
 import * as localizableEnum from "constant/enum/localizable";
 import LocalizationSwitch from "../localization/LocalizationSwitch";
-import * as globalWhiteImageUrl from "resource/image/gobal_white_3x.png";
+import globalWhiteImageUrl from "resource/image/gobal_white_3x.png";
 import { GlobalContext } from "context/global-context";
 import MembershipRenderer from "../membership/MembershipRenderer";
 import { selectHasJoinedRoom } from "store/roomSlice";

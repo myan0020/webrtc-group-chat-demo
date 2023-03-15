@@ -6,7 +6,7 @@ import { Navigate } from "react-router-dom";
 import { requestToSignin, selectAuthenticated, selectAuthLoadingStatus } from "store/authSlice";
 import * as localizableEnum from "constant/enum/localizable";
 import LocalizationSwitch from "../localization/LocalizationSwitch";
-import * as globalGreyImageUrl from "resource/image/global_grey_3x.png";
+import globalGreyImageUrl from "resource/image/global_grey_3x.png";
 import { GlobalContext } from "context/global-context";
 import Loading from "component/generic/loading/Loading";
 import * as loadingStatusEnum from "constant/enum/loading-status";

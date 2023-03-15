@@ -3,8 +3,8 @@ import styled from "styled-components";
 
 import { GlobalContext } from "context/global-context";
 import MediaVideoVolumeController from "./MediaVideoVolumeController";
-import * as updatePresenterImageUrl from "resource/image/present_video_3x.png";
-import * as cancelImageUrl from "resource/image/cancel_media_presenting_3x.png";
+import updatePresenterImageUrl from "resource/image/present_video_3x.png";
+import cancelImageUrl from "resource/image/cancel_media_presenting_3x.png";
 
 export default function MediaVideoController(props) {
   const userId = props.userId;

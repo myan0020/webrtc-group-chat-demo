@@ -3,9 +3,9 @@ import styled from "styled-components";
 
 import { formatBytes } from "util/format-bytes";
 import { timeSince } from "util/time-since";
-import * as fileIconUrl from "resource/image/dowload_new_file_3x.png";
-import * as cancellingAvaliableImageUrl from "resource/image/cancel_single_download_3x.png";
-import * as exportingAvaliableImageUrl from "resource/image/download_completed_3x.png";
+import fileIconUrl from "resource/image/dowload_new_file_3x.png";
+import cancellingAvaliableImageUrl from "resource/image/cancel_single_download_3x.png";
+import exportingAvaliableImageUrl from "resource/image/download_completed_3x.png";
 
 export const fileMessagePropsBuilder = (isParentVisible, messageItem, localizedStrings) => {
   const defaultMessage = {

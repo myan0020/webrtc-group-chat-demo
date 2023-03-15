@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useSelector } from "react-redux";
+import GroupChatService, { SendingSliceName, ReceivingSliceName } from "webrtc-group-chat-client";
 
-import WebRTCGroupChatService from "service/WebRTCGroupChatService/WebRTCGroupChatService";
 import { selectAuthenticated, selectAuthenticatedUserName } from "store/authSlice";
 
 const FileMessageContext = React.createContext();
@@ -17,16 +17,16 @@ const fileMessageContainerBuilder = (
   const newFileMessageContainer = { ...oldFileMessageContainer };
 
   if (isLocalSender) {
-    const newSendingFileHashToConcatData = newTransceivingRelatedData;
+    const newSendingFileHashToAllSlices = newTransceivingRelatedData;
 
-    Object.entries(newSendingFileHashToConcatData).forEach(([fileHash, newConcatData]) => {
+    Object.entries(newSendingFileHashToAllSlices).forEach(([fileHash, newAllSlices]) => {
       const id = `${authenticatedUserId}-${fileHash}`;
 
       const oldFileMessage = oldFileMessageContainer ? oldFileMessageContainer[id] : null;
 
       let newFileMessage;
 
-      let newFileProgress = newConcatData[WebRTCGroupChatService.fileSendingMinProgressSliceKey];
+      let newFileProgress = newAllSlices[SendingSliceName.SENDING_MIN_PROGRESS];
       if (typeof newFileProgress !== "number") {
         newFileProgress = 0;
       }
@@ -40,11 +40,12 @@ const fileMessageContainerBuilder = (
         newFileMessage.timestamp = Date.parse(new Date());
         newFileMessage.isLocalSender = true;
         newFileMessage.fileSendingCanceller = () => {
-          WebRTCGroupChatService.cancelFileSendingToAllPeer(fileHash);
+          GroupChatService.cancelFileSendingToAllPeer(fileHash);
+          // .cancelFileSendingToAllPeer(fileHash);
         };
 
         const newFileMetaData = {
-          ...newConcatData[WebRTCGroupChatService.fileSendingMetaDataSliceKey],
+          ...newAllSlices[SendingSliceName.SENDING_META_DATA],
         };
         newFileMessage.fileName = newFileMetaData.name;
         newFileMessage.fileSize = newFileMetaData.size;
@@ -61,17 +62,16 @@ const fileMessageContainerBuilder = (
     return newFileMessageContainer;
   }
 
-  const newReceivingPeerMap = newTransceivingRelatedData;
+  const newReceivingPeerMapOfHashToAllSlices = newTransceivingRelatedData;
 
-  newReceivingPeerMap.forEach((hashToConcatData, peerId) => {
-    Object.entries(hashToConcatData).forEach(([fileHash, receivingConcatData]) => {
+  newReceivingPeerMapOfHashToAllSlices.forEach((fileHashToAllSlices, peerId) => {
+    Object.entries(fileHashToAllSlices).forEach(([fileHash, receivingAllSlices]) => {
       const id = `${peerId}-${fileHash}`;
       const oldFileMessage = oldFileMessageContainer ? oldFileMessageContainer[id] : null;
 
       let newFileMessage;
 
-      let newFileProgress =
-        receivingConcatData[WebRTCGroupChatService.fileReceivingProgressSliceKey];
+      let newFileProgress = receivingAllSlices[ReceivingSliceName.RECEIVING_PROGRESS];
       if (typeof newFileProgress !== "number") {
         newFileProgress = 0;
       }
@@ -80,13 +80,13 @@ const fileMessageContainerBuilder = (
         newFileMessage = {};
         newFileMessage.id = `${peerId}-${fileHash}`;
         newFileMessage.userId = peerId;
-        newFileMessage.userName = WebRTCGroupChatService.getPeerNameById(peerId);
+        newFileMessage.userName = GroupChatService.getPeerNameById(peerId);
         newFileMessage.fileHash = fileHash;
         newFileMessage.timestamp = Date.parse(new Date());
         newFileMessage.isLocalSender = false;
 
         const newFileMetaData = {
-          ...receivingConcatData[WebRTCGroupChatService.fileReceivingMetaDataSliceKey],
+          ...receivingAllSlices[ReceivingSliceName.RECEIVING_META_DATA],
         };
         newFileMessage.fileName = newFileMetaData.name;
         newFileMessage.fileSize = newFileMetaData.size;
@@ -99,8 +99,7 @@ const fileMessageContainerBuilder = (
       }
 
       newFileMessage.fileProgress = newFileProgress;
-      newFileMessage.fileExporter =
-        receivingConcatData[WebRTCGroupChatService.fileReceivingFileExporterSliceKey];
+      newFileMessage.fileExporter = receivingAllSlices[ReceivingSliceName.RECEIVING_FILE_EXPORTER];
       newFileMessageContainer[id] = newFileMessage;
     });
   });
@@ -119,49 +118,35 @@ function FileMessageContextProvider({ children }) {
   messageContainerRef.current = messageContainer;
 
   React.useEffect(() => {
-    WebRTCGroupChatService.onFileSendingRelatedDataChanged(
-      (sendingRelatedDataContainer, isSendingStatusSending) => {
+    GroupChatService.onFileSendingRelatedDataChanged(
+      (sendingRelatedDataProxy, isSendingStatusSending) => {
         if (isSendingStatusSending !== undefined) {
           setIsSendingStatusSending(isSendingStatusSending);
         }
-        if (
-          sendingRelatedDataContainer &&
-          sendingRelatedDataContainer[WebRTCGroupChatService.fileSendingSliceContainerKey]
-        ) {
-          const sendingRelatedData =
-            sendingRelatedDataContainer[WebRTCGroupChatService.fileSendingSliceContainerKey];
+        if (sendingRelatedDataProxy && sendingRelatedDataProxy.fileHashToAllSlices) {
           const newMessageContainer = fileMessageContainerBuilder(
             authenticatedUserId,
             authenticatedUserName,
             true,
             messageContainerRef.current,
-            sendingRelatedData
+            sendingRelatedDataProxy.fileHashToAllSlices
           );
           setMessageContainer(newMessageContainer);
         }
       }
     );
-    WebRTCGroupChatService.onFileReceivingRelatedDataChanged(
-      (fileReceivingRelatedDataContainer) => {
-        if (
-          fileReceivingRelatedDataContainer &&
-          fileReceivingRelatedDataContainer[WebRTCGroupChatService.fileReceivingSliceContainerKey]
-        ) {
-          const receivingRelatedData =
-            fileReceivingRelatedDataContainer[
-              WebRTCGroupChatService.fileReceivingSliceContainerKey
-            ];
-          const newMessageContainer = fileMessageContainerBuilder(
-            authenticatedUserId,
-            authenticatedUserName,
-            false,
-            messageContainerRef.current,
-            receivingRelatedData
-          );
-          setMessageContainer(newMessageContainer);
-        }
+    GroupChatService.onFileReceivingRelatedDataChanged((receivingRelatedDataProxy) => {
+      if (receivingRelatedDataProxy && receivingRelatedDataProxy.peerMapOfHashToAllSlices) {
+        const newMessageContainer = fileMessageContainerBuilder(
+          authenticatedUserId,
+          authenticatedUserName,
+          false,
+          messageContainerRef.current,
+          receivingRelatedDataProxy.peerMapOfHashToAllSlices
+        );
+        setMessageContainer(newMessageContainer);
       }
-    );
+    });
   }, []);
 
   let unreadMessageCount = 0;
@@ -191,17 +176,17 @@ function FileMessageContextProvider({ children }) {
   };
   const sendFiles = () => {
     if (inputFiles) {
-      WebRTCGroupChatService.sendFileToAllPeer(inputFiles);
+      GroupChatService.sendFileToAllPeer(inputFiles);
     }
   };
   const cancelAllFileSending = () => {
-    WebRTCGroupChatService.cancelAllFileSending();
+    GroupChatService.cancelAllFileSending();
   };
   const clearAllFileBuffersReceived = () => {
-    WebRTCGroupChatService.clearAllFileBuffersReceived();
+    GroupChatService.clearAllFileBuffersReceived();
   };
   const clearAllFileReceived = () => {
-    WebRTCGroupChatService.clearAllFilesReceived();
+    GroupChatService.clearAllFilesReceived();
   };
   const resetFileMessageContext = () => {
     setInputFiles(null);

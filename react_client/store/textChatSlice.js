@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSelector, createSlice } from "@reduxjs/toolkit";
+import GroupChatService from "webrtc-group-chat-client";
 
-import WebRTCGroupChatService from "service/WebRTCGroupChatService/WebRTCGroupChatService";
 import { selectAuth } from "./authSlice";
 import * as loadingStatusEnum from "constant/enum/loading-status";
 
@@ -42,7 +42,7 @@ export const textChatSlice = createSlice({
 export const sendTextMessage = createAsyncThunk(
   "textChat/sendTextMessage",
   async (text, thunkAPI) => {
-    WebRTCGroupChatService.sendChatMessageToAllPeer(text);
+    GroupChatService.sendChatMessageToAllPeer(text);
 
     const { authenticatedUserId, authenticatedUserName } = selectAuth(thunkAPI.getState());
     const timestamp = (new Date()).getTime();

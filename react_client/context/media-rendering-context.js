@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useSelector } from "react-redux";
+import GroupChatService from "webrtc-group-chat-client";
 
-import WebRTCGroupChatService from "service/WebRTCGroupChatService/WebRTCGroupChatService";
 import { selectAuthenticatedUserId, selectAuthenticatedUserName } from "store/authSlice";
 import * as mediaChatEnum from "constant/enum/media-chat";
 
@@ -24,13 +24,13 @@ function MediaRenderingContextProvider({ children }) {
   mediaAccessibilityTypeRef.current = mediaAccessibilityType;
 
   React.useEffect(() => {
-    WebRTCGroupChatService.onLocalMediaContextChanged((localMediaContext) => {
+    GroupChatService.onLocalMediaContextChanged((localMediaContext) => {
       setLocalMediaContext(localMediaContext);
     });
-    WebRTCGroupChatService.onPeerMediaContextMapChanged((peerMediaContextMap) => {
+    GroupChatService.onPeerMediaContextMapChanged((peerMediaContextMap) => {
       console.debug(
         `onPeerMediaContextMapChanged called with peer stream map size ${
-          peerMediaContextMap ? peerMediaContextMap.size() : "unknown"
+          peerMediaContextMap ? peerMediaContextMap.map.size : "unknown"
         }`
       );
       setPeerMediaContextMap(peerMediaContextMap);
@@ -59,9 +59,9 @@ function MediaRenderingContextProvider({ children }) {
     },
   ];
 
-  if (peerMediaContextMap && peerMediaContextMap.size() > 0 && peerMediaContextMap.map) {
+  if (peerMediaContextMap && peerMediaContextMap.map.size > 0) {
     Array.from(peerMediaContextMap.map.entries()).forEach(([peerId, peerMediaContext]) => {
-      const peerName = WebRTCGroupChatService.getPeerNameById(peerId);
+      const peerName = GroupChatService.getPeerNameById(peerId);
       if (typeof peerName === undefined) {
         return;
       }

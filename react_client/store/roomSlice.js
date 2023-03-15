@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSelector, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
+import GroupChatService from "webrtc-group-chat-client";
 
-import WebRTCGroupChatService from "service/WebRTCGroupChatService/WebRTCGroupChatService";
 import * as loadingStatusEnum from "constant/enum/loading-status";
 
 const initialState = {
@@ -77,18 +77,18 @@ export const fetchInitialRoomList = createAsyncThunk("room/fetchInitialRoomList"
 
 export const createRoom = createAsyncThunk("room/createRoom", async (roomName) => {
   if (!roomName || roomName.length === 0) return;
-  WebRTCGroupChatService.createNewRoom(roomName);
+  GroupChatService.createNewRoom(roomName);
 });
 
 export const joinRoom = createAsyncThunk("room/joinRoom", async (roomId, thunkAPI) => {
   if (!roomId || roomId.length === 0) return;
   thunkAPI.dispatch(updateRoomLoadingStatus(loadingStatusEnum.status.LOADING));
-  WebRTCGroupChatService.joinRoom(roomId);
+  GroupChatService.joinRoom(roomId);
 });
 
 export const leaveRoom = createAsyncThunk("room/leaveRoom", async (_, thunkAPI) => {
-  thunkAPI.dispatch(updateRoomLoadingStatus(loadingStatusEnum.status.LOADING))
-  WebRTCGroupChatService.leaveRoom();
+  thunkAPI.dispatch(updateRoomLoadingStatus(loadingStatusEnum.status.LOADING));
+  GroupChatService.leaveRoom();
 });
 
 /* Reducer */
@@ -97,8 +97,13 @@ export default roomSlice.reducer;
 
 /* Action Creator */
 
-export const { updateRoomList, toggleNewRoomPopupVisibility, updateJoinedRoomId, updateRoomLoadingStatus, reset } =
-  roomSlice.actions;
+export const {
+  updateRoomList,
+  toggleNewRoomPopupVisibility,
+  updateJoinedRoomId,
+  updateRoomLoadingStatus,
+  reset,
+} = roomSlice.actions;
 
 /* Selector */
 

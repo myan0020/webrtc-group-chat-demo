@@ -45,7 +45,7 @@ module.exports = (env, argv) => {
       : {},
 
     entry: {
-      index: "./react_client/index.tsx",
+      index: "./react_client/index.jsx",
     },
 
     output: {
@@ -88,35 +88,31 @@ module.exports = (env, argv) => {
 
     module: {
       rules: [
+        // {
+        //   test: /\.(t|j)sx?$/,
+        //   exclude: /node_modules/,
+        //   loader: "ts-loader",
+        // },
+
         {
           test: /\.(t|j)sx?$/,
           exclude: /node_modules/,
-          loader: "ts-loader",
+          loader: "babel-loader",
+          options: {
+            //
+            // TODO [Created on 2022-5-29]: test react refresh (HMR)
+            //
+            // 1. https://github.com/pmmmwh/react-refresh-webpack-plugin
+            // 2. https://dev.to/workingeeks/speeding-up-your-development-with-webpack-5-hmr-and-react-fast-refresh-of8
+            // 3. https://www.zhihu.com/search?type=content&q=react%20fast%20refresh
+            //
+            plugins: [isEnvDevelopment && require.resolve("react-refresh/babel")].filter(Boolean),
+            //
+          },
         },
 
-        // {
-        //   test: /\.(js|jsx)$/,
-        //   exclude: /node_modules/,
-        //   loader: "babel-loader",
-        //   resolve: {
-        //     extensions: [".js", ".jsx"],
-        //   },
-
-        //   options: {
-        //     //
-        //     // TODO [Created on 2022-5-29]: test react refresh (HMR)
-        //     //
-        //     // 1. https://github.com/pmmmwh/react-refresh-webpack-plugin
-        //     // 2. https://dev.to/workingeeks/speeding-up-your-development-with-webpack-5-hmr-and-react-fast-refresh-of8
-        //     // 3. https://www.zhihu.com/search?type=content&q=react%20fast%20refresh
-        //     //
-        //     plugins: [isEnvDevelopment && require.resolve("react-refresh/babel")].filter(Boolean),
-        //     //
-        //   },
-        // },
-
         // addition - add source-map support
-        { test: /\.js$/, exclude: /node_modules/, loader: "source-map-loader" },
+        // { test: /\.js$/, exclude: /node_modules/, loader: "source-map-loader" },
 
         {
           // local styles should use modular css

@@ -1,4 +1,5 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
+import GroupChatService from "webrtc-group-chat-client";
 
 import authReducer from "./authSlice";
 import roomReducer, {
@@ -19,7 +20,6 @@ import mediaChatReducer, {
 } from "./mediaChatSlice";
 import textChatReducer, { receiveTextMessage } from "./textChatSlice";
 import membershipReducer, { updatePeersInfo as updateMembershipPeersInfo } from "./membershipSlice";
-import WebRTCGroupChatService from "service/WebRTCGroupChatService/WebRTCGroupChatService";
 import * as loadingStatusEnum from "constant/enum/loading-status";
 
 const combinedReducer = combineReducers({
@@ -42,14 +42,14 @@ const store = configureStore({
 });
 
 /**
- * WebRTCGroupChatService preparation
+ * GroupChatService preparation
  */
 
 const iceServerUserName = env.TURN_SERVER_USER_NAME;
 const iceServerCredential = env.TURN_SERVER_CREDENTIAL;
 const iceServerUrls = JSON.parse(env.TURN_SERVER_URLS);
 
-WebRTCGroupChatService.peerConnectionConfig = {
+GroupChatService.peerConnectionConfig = {
   iceServers: [
     {
       username: iceServerUserName,
@@ -59,14 +59,14 @@ WebRTCGroupChatService.peerConnectionConfig = {
   ],
 };
 
-WebRTCGroupChatService.onRoomsInfoUpdated((payload) => {
+GroupChatService.onRoomsInfoUpdated((payload) => {
   const rooms = payload.rooms;
   if (rooms) {
     store.dispatch(updateRoomList(rooms));
   }
 });
 
-WebRTCGroupChatService.onJoinRoomInSuccess((payload) => {
+GroupChatService.onJoinRoomInSuccess((payload) => {
   const roomId = payload.roomId;
   const roomName = payload.roomName;
   if (roomId.length > 0 && roomName.length > 0) {
@@ -75,40 +75,40 @@ WebRTCGroupChatService.onJoinRoomInSuccess((payload) => {
   }
 });
 
-WebRTCGroupChatService.onLeaveRoomInSuccess((payload) => {
+GroupChatService.onLeaveRoomInSuccess((payload) => {
   store.dispatch(updateJoinedRoomId({ roomId: "", roomName: "" }));
   store.dispatch(updateRoomLoadingStatus(loadingStatusEnum.status.IDLE));
 });
-
-WebRTCGroupChatService.onWebRTCCallingStateChanged((isCalling) => {
+ 
+GroupChatService.onWebRTCCallingStateChanged((isCalling) => {
   store.dispatch(updateIsCalling(isCalling));
 });
 
-WebRTCGroupChatService.onLocalAudioEnableAvaliableChanged((avaliable) => {
+GroupChatService.onLocalAudioEnableAvaliableChanged((avaliable) => {
   store.dispatch(updateAudioEnablingAvaliable(avaliable));
-  store.dispatch(updateAudioEnabling(WebRTCGroupChatService.localMicEnabled));
+  store.dispatch(updateAudioEnabling(GroupChatService.localMicEnabled));
 });
 
-WebRTCGroupChatService.onLocalAudioMuteAvaliableChanged((avaliable) => {
+GroupChatService.onLocalAudioMuteAvaliableChanged((avaliable) => {
   store.dispatch(updateAudioMutingAvaliable(avaliable));
-  store.dispatch(updateAudioMuting(WebRTCGroupChatService.localMicMuted));
+  store.dispatch(updateAudioMuting(GroupChatService.localMicMuted));
 });
 
-WebRTCGroupChatService.onLocalVideoEnableAvaliableChanged((avaliable) => {
+GroupChatService.onLocalVideoEnableAvaliableChanged((avaliable) => {
   store.dispatch(updateVideoEnablingAvaliable(avaliable));
-  store.dispatch(updateVideoEnabling(WebRTCGroupChatService.localCameraEnabled));
+  store.dispatch(updateVideoEnabling(GroupChatService.localCameraEnabled));
 });
 
-WebRTCGroupChatService.onLocalVideoMuteAvaliableChanged((avaliable) => {
+GroupChatService.onLocalVideoMuteAvaliableChanged((avaliable) => {
   store.dispatch(updateVideoMutingAvaliable(avaliable));
-  store.dispatch(updateVideoMuting(WebRTCGroupChatService.localCameraMuted));
+  store.dispatch(updateVideoMuting(GroupChatService.localCameraMuted));
 });
 
-WebRTCGroupChatService.onChatMessageReceived((message) => {
+GroupChatService.onChatMessageReceived((message) => {
   store.dispatch(receiveTextMessage(message));
 });
 
-WebRTCGroupChatService.onPeersInfoChanged((peersInfo) => {
+GroupChatService.onPeersInfoChanged((peersInfo) => {
   store.dispatch(updateMembershipPeersInfo(peersInfo));
 });
 

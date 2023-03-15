@@ -8,7 +8,7 @@ import MultiTabSwitch, {
   multiTabSwitchPropsBuilder,
   multiTabSwitchTabBuilder,
 } from "../../../generic/switch/MultiTabSwitch";
-import * as badgeBackgroundImageUrl from "resource/image/badge_3x.png";
+import badgeBackgroundImageUrl from "resource/image/badge_3x.png";
 import { GlobalContext } from "context/global-context";
 import { selectUnreadTextMessageCount } from "store/textChatSlice";
 
