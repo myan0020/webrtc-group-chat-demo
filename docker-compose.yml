@@ -1,6 +1,6 @@
 services:
   app:
-    image: mingdongshensen/webrtc-group-chat-demo
+    image: webrtc-group-chat-demo
     ports:
        - 8000:8000
   
