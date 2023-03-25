@@ -1,0 +1,22 @@
+services:
+  app:
+    command: sh -c "npm run express"
+    network_mode: "host"
+    ports:
+      - 8000:8000
+    volumes:
+      - ./:/app
+  
+  nginx:
+    image: mingdongshensen/nginx
+    network_mode: "host"
+    ports:
+      - 80:80
+
+  coturn:
+    image: coturn/coturn
+    network_mode: "host"
+    volumes:
+      - /etc/coturn/turnserver.conf:/etc/coturn/turnserver.conf
+    
+  
