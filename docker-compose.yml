@@ -6,15 +6,25 @@ services:
   
   nginx:
     image: mingdongshensen/nginx
-    # network_mode: "host"
-    ports:
-      - 80:80
-      - 443:443
+
+    # note: can respond http requests
+    network_mode: "host"
+
+    # note: cannot respond http requests
+    # ports:
+    #   - 80:80
+    #   - 443:443
 
   coturn:
     image: coturn/coturn
-    ports:
-      - 3478:3478
+
+    # note: can pass trickle-ice
+    network_mode: "host"
+
+    # note: cannot pass trickle-ice
+    # ports:
+    #   - 3478:3478
+
     volumes:
       - /etc/coturn/turnserver.conf:/etc/coturn/turnserver.conf
     
