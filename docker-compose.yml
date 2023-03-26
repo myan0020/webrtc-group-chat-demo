@@ -10,9 +10,9 @@ services:
         target: /etc/nginx/nginx.conf
         read_only: true
       - type: bind
-        source: /etc/nginx/conf.d/default.conf
-        target: /etc/nginx/conf.d/default.conf
-        read_only: true
+        source: /etc/nginx/templates
+        target: /etc/nginx/templates
+        # read_only: true
       - type: bind
         source: /etc/nginx/certs
         target: /etc/nginx/certs
@@ -21,7 +21,7 @@ services:
       - 80:80
       - 443:443
     environment:
-      - WEBRTC-GROUP-CHAT-SERVICE-HOST-ALIAS=webrtc-group-chat-service
+      - ALIAS=webrtc-group-chat-service
 
   turn-service:
     image: coturn/coturn
