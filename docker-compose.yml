@@ -1,8 +1,8 @@
 services:
-  webrtc-group-chat-demo:
+  webrtc-group-chat-service:
     image: webrtc-group-chat-demo
   
-  nginx-proxy:
+  reverse-proxy-service:
     image: nginx
     volumes:
       - type: bind
@@ -20,8 +20,10 @@ services:
     ports:
       - 80:80
       - 443:443
+    environment:
+      - WEBRTC-GROUP-CHAT-SERVICE-HOST-ALIAS=webrtc-group-chat-service
 
-  coturn:
+  turn-service:
     image: coturn/coturn
     network_mode: "host" # Note: Docker performs badly with large port ranges, so just use "host"
     volumes:
