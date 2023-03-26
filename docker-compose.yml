@@ -13,13 +13,17 @@ services:
         source: /etc/nginx/conf.d/default.conf
         target: /etc/nginx/conf.d/default.conf
         read_only: true
+      - type: bind
+        source: /etc/nginx/certs
+        target: /etc/nginx/certs
+        read_only: true
     ports:
       - 80:80
       - 443:443
 
   coturn:
     image: coturn/coturn
-    
+
     # Note: Docker performs badly with large port ranges, so just use "host"
     network_mode: "host"
 
