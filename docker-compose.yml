@@ -21,7 +21,8 @@ services:
       - 80:80
       - 443:443
     environment:
-      - ALIAS=webrtc-group-chat-service
+      - WEBRTC_GROUP_CHAT_SERVICE_HOST_ALIAS=webrtc-group-chat-service
+      - WEBRTC_GROUP_CHAT_SERVICE_PORT=8000
 
   turn-service:
     image: coturn/coturn
