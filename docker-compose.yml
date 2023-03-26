@@ -5,7 +5,18 @@ services:
        - 8000:8000
   
   nginx:
-    image: mingdongshensen/nginx
+    image: nginx
+
+    volumes:
+      - type: bind
+        source: /etc/nginx/nginx.conf
+        target: /etc/nginx/nginx.conf
+        read_only: true
+      - type: bind
+        source: /etc/nginx/conf.d/default.conf
+        target: /etc/nginx/conf.d/default.conf
+        read_only: true
+
 
     # note: can respond http requests
     network_mode: "host"
