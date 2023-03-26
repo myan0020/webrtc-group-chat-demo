@@ -19,13 +19,9 @@ services:
 
   coturn:
     image: coturn/coturn
-
-    # note: can pass trickle-ice
-    # network_mode: "host"
-
-    # note: cannot pass trickle-ice
-    ports:
-      - 3478:3478
+    
+    # Note: Docker performs badly with large port ranges, so just use "host"
+    network_mode: "host"
 
     volumes:
       - /etc/coturn/turnserver.conf:/etc/coturn/turnserver.conf
