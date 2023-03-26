@@ -9,7 +9,6 @@ COPY ["package.json", "package-lock.json", "./"]
 RUN npm install
 
 COPY webpack.config.js ./webpack.config.js
-# COPY tsconfig.json ./tsconfig.json
 COPY .env ./.env
 COPY public ./public
 COPY react_client ./react_client

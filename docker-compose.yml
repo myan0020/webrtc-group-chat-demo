@@ -1,5 +1,5 @@
 services:
-  app:
+  webrtc-group-chat-demo:
     image: webrtc-group-chat-demo
   
   nginx-proxy:
@@ -23,10 +23,7 @@ services:
 
   coturn:
     image: coturn/coturn
-
-    # Note: Docker performs badly with large port ranges, so just use "host"
-    network_mode: "host"
-
+    network_mode: "host" # Note: Docker performs badly with large port ranges, so just use "host"
     volumes:
       - /etc/coturn/turnserver.conf:/etc/coturn/turnserver.conf
     
