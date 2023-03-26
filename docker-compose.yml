@@ -1,12 +1,9 @@
 services:
   app:
     image: webrtc-group-chat-demo
-    # ports:
-    #    - 8000:8000
   
   nginx-proxy:
     image: nginx
-
     volumes:
       - type: bind
         source: /etc/nginx/nginx.conf
@@ -16,12 +13,6 @@ services:
         source: /etc/nginx/conf.d/default.conf
         target: /etc/nginx/conf.d/default.conf
         read_only: true
-
-
-    # note: can respond http requests
-    # network_mode: "host"
-
-    # note: cannot respond http requests
     ports:
       - 80:80
       - 443:443
@@ -30,11 +21,11 @@ services:
     image: coturn/coturn
 
     # note: can pass trickle-ice
-    network_mode: "host"
+    # network_mode: "host"
 
     # note: cannot pass trickle-ice
-    # ports:
-    #   - 3478:3478
+    ports:
+      - 3478:3478
 
     volumes:
       - /etc/coturn/turnserver.conf:/etc/coturn/turnserver.conf
