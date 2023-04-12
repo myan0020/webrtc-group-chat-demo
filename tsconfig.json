@@ -11,15 +11,8 @@
       "hook/*": ["react_client/hook/*"],
       "constant/*": ["react_client/constant/*"]
     },
-    "esModuleInterop": true,
-    "sourceMap": true,
-    "jsx": "preserve",
-    "target": "es6",
-    "module": "CommonJS",
-    "moduleResolution": "node",
-    "traceResolution": true,
     "allowJs": true,
-    "noEmit": true
+    "noEmit": true,
   },
   "include": ["react_client/**/*"],
 }

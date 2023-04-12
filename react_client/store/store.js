@@ -30,15 +30,13 @@ const combinedReducer = combineReducers({
   membership: membershipReducer,
 });
 
-const rootReducer = (state, action) => {
-  if (action.type === "RESET") {
-    state = undefined;
-  }
-  return combinedReducer(state, action);
-};
-
 const store = configureStore({
-  reducer: rootReducer,
+  reducer: (state, action) => {
+    if (action.type === "RESET") {
+      state = undefined;
+    }
+    return combinedReducer(state, action);
+  },
 });
 
 /**

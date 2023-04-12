@@ -1,15 +1,15 @@
-const mongoose = require('mongoose');
+// const mongoose = require('mongoose');
 // const moment = require('moment');
-const Schema = mongoose.Schema;
+// const Schema = mongoose.Schema;
 
-const AuthorSchema = new Schema(
-  {
-    first_name: { type: String, required: true, max: 100 },
-    family_name: { type: String, required: true, max: 100 },
-    date_of_birth: { type: Date },
-    date_of_death: { type: Date },
-  }
-);
+// const AuthorSchema = new Schema(
+//   {
+//     first_name: { type: String, required: true, max: 100 },
+//     family_name: { type: String, required: true, max: 100 },
+//     date_of_birth: { type: Date },
+//     date_of_death: { type: Date },
+//   }
+// );
 
 // // 虚拟属性'name'：表示作者全名
 // AuthorSchema
@@ -57,4 +57,4 @@ const AuthorSchema = new Schema(
 //   })
 
 // 导出 Author 模型
-module.exports = mongoose.model('Author', AuthorSchema);
+// module.exports = mongoose.model('Author', AuthorSchema);

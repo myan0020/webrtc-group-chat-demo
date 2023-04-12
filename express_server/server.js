@@ -54,14 +54,16 @@ app.use(express.static(path.join(process.cwd(), "public")));
  */
 
 // middleware to test if authenticated
-function isAuthenticated (req, res, next) {
-  if (req.session.userId) next()
-  else next('route')
-}
-
+// function isAuthenticated (req, res, next) {
+//   if (req.session.userId) next()
+//   else next('route')
+// }
 app.get("/signin", function (req, res) {
   res.sendFile(path.join(process.cwd(), "build", "index.html"));
 });
+// app.get("/signin", function (req, res) {
+//   res.status(403).send("<h1>403 Forbidden</h1>");
+// });
 
 app.get("/", function (req, res) {
   res.redirect("/signin");
