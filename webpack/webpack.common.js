@@ -19,6 +19,10 @@ module.exports = (env, args) => {
       publicPath: "",
       clean: true,
     },
+    cache: {
+      type: 'filesystem',
+      profile: true,
+    },
     resolve: {
       extensions: [".jsx", "..."],
       // aiming to shorten so long module path names when importing these modules inside a << different type >> of module
@@ -62,6 +66,7 @@ module.exports = (env, args) => {
           loader: "babel-loader",
           options: {
             plugins: [isEnvDevelopment && require.resolve("react-refresh/babel")].filter(Boolean),
+            cacheDirectory: true,
           },
         },
         {
